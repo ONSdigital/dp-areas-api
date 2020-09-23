@@ -1,0 +1,21 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.13
+
+inputs:
+  - name: dp-topic-api
+
+outputs:
+  - name: build
+
+caches:
+  - path: go/
+
+run:
+  path: dp-topic-api/ci/scripts/build.sh
