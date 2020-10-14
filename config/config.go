@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 // Config represents service configuration for dp-topic-api
@@ -22,9 +23,9 @@ func Get() (*Config, error) {
 		return cfg, nil
 	}
 
-	cfg := &Config{
-		BindAddr:                   ":25300",
-		GracefulShutdownTimeout:    5 * time.Second,
+	cfg = &Config{
+		BindAddr:                   "localhost:25300",
+		GracefulShutdownTimeout:    10 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 	}
