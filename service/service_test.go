@@ -10,8 +10,6 @@ import (
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 
-	//	apiMock "github.com/ONSdigital/dp-topic-api/api/mock"
-
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/service"
 	"github.com/ONSdigital/dp-topic-api/service/mock"

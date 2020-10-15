@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync"
 
-	//	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/service"
 )
