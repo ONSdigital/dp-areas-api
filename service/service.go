@@ -27,7 +27,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	log.Event(ctx, "using service configuration", log.Data{"config": cfg}, log.INFO)
 
-	// Get HTTP Server with ... ?
+	// Get HTTP Server and ... // ADD CODE: Add any middleware that your service requires
 	r := mux.NewRouter()
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
