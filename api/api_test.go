@@ -1,21 +1,23 @@
-package api
+package api_test
 
 import (
 	"context"
-	"github.com/gorilla/mux"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ONSdigital/dp-topic-api/api"
+	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
-		r := mux.NewRouter()
+		r := &mux.Router{}
 		ctx := context.Background()
-		api := Setup(ctx, r)
+		api := api.Setup(ctx, r)
 
 		Convey("When created the following routes should have been added", func() {
+			So(api, ShouldNotBeNil)
 			// Replace the check below with any newly added api endpoints
 			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
 		})
@@ -26,7 +28,7 @@ func TestClose(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		r := mux.NewRouter()
 		ctx := context.Background()
-		a := Setup(ctx, r)
+		a := api.Setup(ctx, r)
 
 		Convey("When the api is closed any dependencies are closed also", func() {
 			err := a.Close(ctx)
