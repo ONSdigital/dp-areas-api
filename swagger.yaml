@@ -55,25 +55,6 @@ paths:
           description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
-  /topics/{id}/subtopics:
-    get:
-      tags:
-        - "Topics"
-      summary: "Get a list of subtopics"
-      description: "Get a list of all documents for ID contained in the stored list of subtopics"
-      parameters:
-        - $ref: '#/parameters/id'
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "Json object containing an array of subtopics"
-          schema:
-            $ref: '#/definitions/ListOfTopics'
-        404:
-          description: "Subtopics not found"
-        500:
-          $ref: '#/responses/InternalError'
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
@@ -122,22 +103,6 @@ definitions:
       href:
         type: string
         description: "A URL to the content for this topic"
-  ListOfTopics:
-    type: object
-    description: "A list of Topics"
-    properties:
-      items:
-        type: array
-        items:
-          $ref: '#/definitions/Topic'
-      count:
-        $ref: '#/definitions/Count'
-      total_count:
-        $ref: '#/definitions/TotalCount'
-      limit:
-        $ref: '#/definitions/Limit'
-      offset:
-        $ref: '#/definitions/Offset'
   SelfHref:
     type: object
     properties:
@@ -147,15 +112,3 @@ definitions:
       href:
         type: string
         description: "The URL to the resource"
-  Count:
-    type: string
-    description: "The number of results returned in this response"
-  TotalCount:
-    type: string
-    description: "The total number of results available"
-  Limit:
-    type: string
-    description: "The limit applied to the number of results returned"
-  Offset:
-    type: string
-    description: "The offset applied to the number of results returned"
