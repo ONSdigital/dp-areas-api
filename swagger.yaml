@@ -12,7 +12,6 @@ schemes:
   - http
 tags:
   - name: "Topics"
-  - name: "hello"
 parameters:
   id:
     name: id
@@ -21,21 +20,6 @@ parameters:
     type: string
     required: true
 paths:
-  /hello:
-    get:
-      tags:
-        - hello
-      summary: Example hello world endpoint
-      description: Returns an example payload.
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/HelloResponse"
-        500:
-          $ref: '#/responses/InternalError'
   /topics/{id}:
     get:
       tags:
@@ -59,13 +43,6 @@ responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
 definitions:
-  HelloResponse:
-    type: object
-    properties:
-      message:
-        type: string
-        description: "Message returned by hello world endpoint"
-        example: "Hello, world!"
   Topic:
     type: object
     properties:
