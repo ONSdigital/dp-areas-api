@@ -48,7 +48,7 @@ paths:
         - "application/json"
       responses:
         200:
-          description: "Json object containing information about the code list"
+          description: "Json object containing information about the topic"
           schema:
             $ref: '#/definitions/Topic'
         404:
@@ -58,7 +58,6 @@ paths:
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
-
 definitions:
   HelloResponse:
     type: object
@@ -87,14 +86,23 @@ definitions:
           self:
             $ref: '#/definitions/SelfHref'
           subtopics:
-            $ref: '#/definitions/Subtopics'
-  Subtopics:
+            $ref: '#/definitions/SubtopicsLink'
+          content:
+            $ref: '#/definitions/ContentLink'
+  SubtopicsLink:
     type: object
     description: "A link to the subtopics of this topic"
     properties:
       href:
         type: string
         description: "A URL to the subtopics of this topic"
+  ContentLink:
+    type: object
+    description: "A link to the content for this topic"
+    properties:
+      href:
+        type: string
+        description: "A URL to the content for this topic"
   SelfHref:
     type: object
     properties:
