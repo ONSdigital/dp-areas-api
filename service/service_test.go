@@ -168,8 +168,9 @@ func TestRun(t *testing.T) {
 				So(err.Error(), ShouldResemble, fmt.Sprintf("unable to register checkers: %s", errAddheckFail.Error()))
 				So(svcList.HealthCheck, ShouldBeTrue)
 				// ADD CODE: add code to confirm checkers exist
-				So(len(hcMockAddFail.AddCheckCalls()), ShouldEqual, 1) // ADD CODE: change the '0' to the number of checkers you have registered
+				So(len(hcMockAddFail.AddCheckCalls()), ShouldEqual, 2) // ADD CODE: change the '0' to the number of checkers you have registered
 				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "Mongo DB")
+				So(hcMockAddFail.AddCheckCalls()[1].Name, ShouldResemble, "Zebedee")
 			})
 			Reset(func() {
 				// This reset is run after each `Convey` at the same scope (indentation)
@@ -197,8 +198,9 @@ func TestRun(t *testing.T) {
 			})
 
 			Convey("The checkers are registered and the healthcheck and http server started", func() {
-				So(len(hcMock.AddCheckCalls()), ShouldEqual, 1)
+				So(len(hcMock.AddCheckCalls()), ShouldEqual, 2)
 				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "Mongo DB")
+				So(hcMock.AddCheckCalls()[1].Name, ShouldEqual, "Zebedee")
 				So(len(initMock.DoGetHTTPServerCalls()), ShouldEqual, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25300")
 				So(len(hcMock.StartCalls()), ShouldEqual, 1)
