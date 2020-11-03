@@ -13,6 +13,7 @@ type Config struct {
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	MongoConfig                MongoConfiguration
+	ZebedeeURL                 string `envconfig:"ZEBEDEE_URL"`
 }
 
 // MongoConfiguration contains the config required to connect to MongoDB.
@@ -43,6 +44,7 @@ func Get() (*Config, error) {
 			TopicsCollection:  "topics",
 			ContentCollection: "content",
 		},
+		ZebedeeURL: "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)
