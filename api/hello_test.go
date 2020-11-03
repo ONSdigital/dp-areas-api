@@ -22,6 +22,5 @@ func TestHelloHandler(t *testing.T) {
 			So(resp.Code, ShouldEqual, http.StatusOK)
 			So(resp.Body.String(), ShouldResemble, `{"message":"Hello, World!"}`)
 		})
-
 	})
 }
