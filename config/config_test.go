@@ -33,6 +33,7 @@ func TestConfig(t *testing.T) {
 				So(configuration.MongoConfig.Database, ShouldEqual, "topics")
 				So(configuration.MongoConfig.TopicsCollection, ShouldEqual, "topics")
 				So(configuration.MongoConfig.ContentCollection, ShouldEqual, "content")
+				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

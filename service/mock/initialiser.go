@@ -49,7 +49,7 @@ type InitialiserMock struct {
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
-	// DoGetHealthClientFunc mocks the DoGetHealthClient method. //!!! whats the diff between this and one above ... rename ?
+	// DoGetHealthClientFunc mocks the DoGetHealthClient method.
 	DoGetHealthClientFunc func(name string, url string) *health.Client
 
 	// DoGetMongoDBFunc mocks the DoGetMongoDB method.
