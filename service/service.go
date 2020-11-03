@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/log.go/log"
@@ -31,7 +32,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Get HTTP Server
 	r := mux.NewRouter()
 
-    // and ... // ADD CODE: Add any middleware that your service requires
+	// and ... // ADD CODE: Add any middleware that your service requires
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
@@ -47,6 +48,10 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Setup the API
 	a := api.Setup(ctx, r, mongoDB)
 
+	var zc *health.Client //!!! does this only come into play for Publishing (and thus NOT web) ?  (so will need some PRIVATE_ENDPOINTS flag to gate it)
+
+	zc = serviceList.GetHealthClient("Zebedee", cfg.ZebedeeURL)
+
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
 	if err != nil {
@@ -54,7 +59,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, mongoDB); err != nil {
+	if err := registerCheckers(ctx, hc, mongoDB, zc); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -135,7 +140,8 @@ func (svc *Service) Close(ctx context.Context) error {
 
 func registerCheckers(ctx context.Context,
 	hc HealthChecker,
-	mongoDB api.MongoServer) (err error) {
+	mongoDB api.MongoServer,
+	zebedeeClient *health.Client) (err error) {
 
 	// ADD CODE: add other health checks here, as per dp-upload-service
 
@@ -144,6 +150,11 @@ func registerCheckers(ctx context.Context,
 	if err = hc.AddCheck("Mongo DB", mongoDB.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "error adding check for mongo db", log.ERROR, log.Error(err))
+	}
+
+	if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "error adding check for zebedee", log.ERROR, log.Error(err))
 	}
 
 	if hasErrors {
