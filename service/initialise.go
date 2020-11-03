@@ -1,10 +1,14 @@
 package service
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
+	"github.com/ONSdigital/dp-topic-api/mongo"
 
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
 )
@@ -13,13 +17,13 @@ import (
 type ExternalServiceList struct {
 	HealthCheck bool
 	Init        Initialiser
+	MongoDB     bool
 }
 
 // NewServiceList creates a new service list with the provided initialiser
 func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
-		HealthCheck: false,
-		Init:        initialiser,
+		Init: initialiser,
 	}
 }
 
@@ -30,6 +34,21 @@ type Init struct{}
 func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := e.Init.DoGetHTTPServer(bindAddr, router)
 	return s
+}
+
+// GetMongoDB creates a mongoDB client and sets the Mongo flag to true
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	e.MongoDB = true
+	return mongoDB, nil
+}
+
+// GetHealthClient returns a healthclient for the provided URL
+func (e *ExternalServiceList) GetHealthClient(name, url string) *health.Client {
+	return e.Init.DoGetHealthClient(name, url)
 }
 
 // GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
@@ -47,6 +66,25 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
 	return s
+}
+
+// DoGetMongoDB returns a MongoDB
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+	mongodb := &mongo.Mongo{
+		TopicsCollection:  cfg.MongoConfig.TopicsCollection,
+		ContentCollection: cfg.MongoConfig.ContentCollection,
+		Database:          cfg.MongoConfig.Database,
+		URI:               cfg.MongoConfig.BindAddr,
+	}
+	if err := mongodb.Init(ctx); err != nil {
+		return nil, err
+	}
+	return mongodb, nil
+}
+
+// DoGetHealthClient creates a new Health Client for the provided name and url
+func (e *Init) DoGetHealthClient(name, url string) *health.Client {
+	return health.NewClient(name, url)
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo
