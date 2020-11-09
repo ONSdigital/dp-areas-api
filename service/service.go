@@ -66,6 +66,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
+	// add 'health' end point for this application
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
 	hc.Start(ctx)
 
@@ -141,6 +142,8 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
+// registerCheckers - registers functions which are periodically called to validate
+//      the health state of external services that this application depends upon.
 func registerCheckers(ctx context.Context,
 	cfg *config.Config,
 	hc HealthChecker,
