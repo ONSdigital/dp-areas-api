@@ -16,7 +16,7 @@ type Service struct {
 	Config      *config.Config
 	Server      HTTPServer
 	Router      *mux.Router
-	Api         *api.API
+	API         *api.API
 	ServiceList *ExternalServiceList
 	HealthCheck HealthChecker
 	MongoDB     api.MongoServer
@@ -48,9 +48,12 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// Setup the API
 	a := api.Setup(ctx, r, mongoDB)
 
-	var zc *health.Client //!!! does this only come into play for Publishing (and thus NOT web) ?  (so will need some PRIVATE_ENDPOINTS flag to gate it)
+	var zc *health.Client
+	if cfg.EnablePrivateEndpoints {
+		// Only in Publishing ... create client(s):
 
-	zc = serviceList.GetHealthClient("Zebedee", cfg.ZebedeeURL)
+		zc = serviceList.GetHealthClient("Zebedee", cfg.ZebedeeURL)
+	}
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
@@ -59,7 +62,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, mongoDB, zc); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, mongoDB, zc); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -76,7 +79,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	return &Service{
 		Config:      cfg,
 		Router:      r,
-		Api:         a,
+		API:         a,
 		HealthCheck: hc,
 		ServiceList: serviceList,
 		Server:      s,
@@ -139,6 +142,7 @@ func (svc *Service) Close(ctx context.Context) error {
 }
 
 func registerCheckers(ctx context.Context,
+	cfg *config.Config,
 	hc HealthChecker,
 	mongoDB api.MongoServer,
 	zebedeeClient *health.Client) (err error) {
@@ -152,9 +156,13 @@ func registerCheckers(ctx context.Context,
 		log.Event(ctx, "error adding check for mongo db", log.ERROR, log.Error(err))
 	}
 
-	if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "error adding check for zebedee", log.ERROR, log.Error(err))
+	if cfg.EnablePrivateEndpoints {
+		// Only in Publishing ... add check(s):
+
+		if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "error adding check for zebedee", log.ERROR, log.Error(err))
+		}
 	}
 
 	if hasErrors {

@@ -12,8 +12,9 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
+	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	MongoConfig                MongoConfiguration
-	ZebedeeURL                 string `envconfig:"ZEBEDEE_URL"`
 }
 
 // MongoConfiguration contains the config required to connect to MongoDB.
@@ -38,13 +39,14 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    10 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
+		ZebedeeURL:                 "http://localhost:8082",
+		EnablePrivateEndpoints:     true,
 		MongoConfig: MongoConfiguration{
 			BindAddr:          "localhost:27017",
 			Database:          "topics",
 			TopicsCollection:  "topics",
 			ContentCollection: "content",
 		},
-		ZebedeeURL: "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)
