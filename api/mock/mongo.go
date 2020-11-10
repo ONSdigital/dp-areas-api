@@ -9,11 +9,13 @@ import (
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/api"
+	"github.com/ONSdigital/dp-topic-api/models"
 )
 
 var (
-	lockMongoServerMockChecker sync.RWMutex
-	lockMongoServerMockClose   sync.RWMutex
+	lockMongoServerMockChecker  sync.RWMutex
+	lockMongoServerMockClose    sync.RWMutex
+	lockMongoServerMockGetTopic sync.RWMutex
 )
 
 // Ensure, that MongoServerMock does implement api.MongoServer.
@@ -32,6 +34,9 @@ var _ api.MongoServer = &MongoServerMock{}
 //             CloseFunc: func(ctx context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
+//             GetTopicFunc: func(ctx context.Context, id string) (*models.Image, error) { //!!! fix return type
+// 	               panic("mock out the GetTopic method")
+//             },
 //         }
 //
 //         // use mockedMongoServer in code that requires api.MongoServer
@@ -44,6 +49,9 @@ type MongoServerMock struct {
 
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
+
+	// GetTopicFunc mocks the GetTopic method.
+	GetTopicFunc func(ctx context.Context, id string) (*models.Image, error) //!!! fix return type
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -58,6 +66,13 @@ type MongoServerMock struct {
 		Close []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+		}
+		// GetTopic holds details about calls to the GetTopic method.
+		GetTopic []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID string
 		}
 	}
 }
@@ -125,5 +140,40 @@ func (mock *MongoServerMock) CloseCalls() []struct {
 	lockMongoServerMockClose.RLock()
 	calls = mock.calls.Close
 	lockMongoServerMockClose.RUnlock()
+	return calls
+}
+
+// GetTopic calls GetTopicFunc.
+func (mock *MongoServerMock) GetTopic(ctx context.Context, id string) (*models.Image, error) { //!!! fix return type
+	if mock.GetTopicFunc == nil {
+		panic("MongoServerMock.GetTopicFunc: method is nil but MongoServer.GetTopic was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  string
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	lockMongoServerMockGetTopic.Lock()
+	mock.calls.GetTopic = append(mock.calls.GetTopic, callInfo)
+	lockMongoServerMockGetTopic.Unlock()
+	return mock.GetTopicFunc(ctx, id)
+}
+
+// GetTopicCalls gets all the calls that were made to GetTopic.
+// Check the length with:
+//     len(mockedMongoServer.GetTopicCalls())
+func (mock *MongoServerMock) GetTopicCalls() []struct {
+	Ctx context.Context
+	ID  string
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  string
+	}
+	lockMongoServerMockGetTopic.RLock()
+	calls = mock.calls.GetTopic
+	lockMongoServerMockGetTopic.RUnlock()
 	return calls
 }
