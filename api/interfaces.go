@@ -6,6 +6,7 @@ import (
 
 	dpauth "github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-topic-api/models"
 )
 
 //go:generate moq -out mock/mongo.go -pkg mock . MongoServer
@@ -15,6 +16,7 @@ import (
 type MongoServer interface {
 	Close(ctx context.Context) error
 	Checker(ctx context.Context, state *healthcheck.CheckState) (err error)
+	GetTopic(ctx context.Context, id string) (image *models.Image, err error) //!!! fix return type
 }
 
 // AuthHandler interface for adding auth to endpoints

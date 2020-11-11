@@ -7,7 +7,11 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongodb "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
+	errs "github.com/ONSdigital/dp-topic-api/apierrors"
+	"github.com/ONSdigital/dp-topic-api/models"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Mongo represents a simplistic MongoDB configuration, with session, health and lock clients
@@ -51,4 +55,23 @@ func (m *Mongo) Close(ctx context.Context) error {
 // Checker is called by the healthcheck library to check the health state of this mongoDB instance
 func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) error {
 	return m.healthClient.Checker(ctx, state)
+}
+
+// GetTopic retrieves a topic document by its ID
+func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.Image, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+	log.Event(ctx, "getting topic by ID", log.Data{"id": id})
+
+	var image models.Image //!!! what object is use in the existing api to read mongo schema ?
+
+	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"_id": id}).One(&image) //!!! should the '_id' be 'id' for topic-api ?
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, errs.ErrImageNotFound
+		}
+		return nil, err
+	}
+
+	return &image, nil
 }
