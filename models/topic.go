@@ -1,6 +1,7 @@
 package models
 
-// Topic represents topic metadata model as it is stored in mongoDB and json representation for API
+// Topic represents topic schema as it is stored in mongoDB
+// and is used for marshaling and unmarshaling json representation for API
 type Topic struct {
 	ID          string   `bson:"_id,omitempty"          json:"id,omitempty"`
 	Description string   `bson:"description,omitempty"  json:"description,omitempty"`
