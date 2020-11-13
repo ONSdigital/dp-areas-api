@@ -68,7 +68,6 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// add 'health' end point for this application
 	router.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
-
 	hc.Start(ctx)
 
 	// Run the http server in a new go-routine
