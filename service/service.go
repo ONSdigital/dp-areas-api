@@ -30,11 +30,11 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	log.Event(ctx, "using service configuration", log.Data{"config": cfg}, log.INFO)
 
 	// Get HTTP Server
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 
 	// and ... // ADD CODE: Add any middleware that your service requires
 
-	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
+	srv := serviceList.GetHTTPServer(cfg.BindAddr, router)
 
 	// ADD CODE: Add other(s) to serviceList here
 
@@ -46,13 +46,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Setup the API
-	a := api.Setup(ctx, cfg, r, mongoDB)
+	a := api.Setup(ctx, cfg, router, mongoDB)
 
-	var zc *health.Client
+	var zebedeeClient *health.Client
 	if cfg.EnablePrivateEndpoints {
 		// Only in Publishing ... create client(s):
 
-		zc = serviceList.GetHealthClient("Zebedee", cfg.ZebedeeURL)
+		zebedeeClient = serviceList.GetHealthClient("Zebedee", cfg.ZebedeeURL)
 	}
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -62,27 +62,27 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, cfg, hc, mongoDB, zc); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, mongoDB, zebedeeClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
-	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
+	router.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
 	hc.Start(ctx)
 
 	// Run the http server in a new go-routine
 	go func() {
-		if err := s.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			svcErrors <- errors.Wrap(err, "failure in http listen and serve")
 		}
 	}()
 
 	return &Service{
 		Config:      cfg,
-		Router:      r,
+		Router:      router,
 		API:         a,
 		HealthCheck: hc,
 		ServiceList: serviceList,
-		Server:      s,
+		Server:      srv,
 		MongoDB:     mongoDB,
 	}, nil
 }

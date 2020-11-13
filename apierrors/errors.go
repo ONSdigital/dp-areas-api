@@ -6,9 +6,9 @@ import (
 
 //!!! fix this list for this service ...
 
-// A list of error messages for Image API
+// A list of error messages for Topic API
 var (
-	ErrImageNotFound                    = errors.New("image not found")
+	ErrTopicNotFound                    = errors.New("topic not found")
 	ErrVariantNotFound                  = errors.New("image download variant not found")
 	ErrVariantAlreadyExists             = errors.New("image download variant already exists")
 	ErrInternalServer                   = errors.New("internal error")

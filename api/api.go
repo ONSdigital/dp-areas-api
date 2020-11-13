@@ -28,7 +28,7 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, mongoDB Mongo
 
 	//!!! see dp-image for possible best code ...
 	if cfg.EnablePrivateEndpoints {
-		//!!! adjust this for authentication
+		//!!! adjust this for authorisation, and have comment that states 'add authorisation', etc.
 		r.HandleFunc("/topics/{id}", api.GetTopicHandler).Methods(http.MethodGet)
 	} else {
 		r.HandleFunc("/topics/{id}", api.GetTopicHandler).Methods(http.MethodGet)
@@ -88,7 +88,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	if err != nil {
 		switch err {
 		//!!! fix this list for this service
-		case apierrors.ErrImageNotFound,
+		case apierrors.ErrTopicNotFound,
 			apierrors.ErrVariantNotFound:
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,
