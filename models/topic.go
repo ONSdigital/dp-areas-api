@@ -1,6 +1,6 @@
 package models
 
-// Topic represents topic !!! fix this !!! model as it is stored in mongoDB and json representation for API
+// Topic represents topic metadata model as it is stored in mongoDB and json representation for API
 type Topic struct {
 	ID          string   `bson:"_id,omitempty"          json:"id,omitempty"`
 	Description string   `bson:"description,omitempty"  json:"description,omitempty"`
