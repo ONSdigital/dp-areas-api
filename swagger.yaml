@@ -1,7 +1,8 @@
 swagger: "2.0"
 info:
   title: dp-topic-api
-  description: "Enables greater flexibility in creating journeys through the website"
+  description: "This service is used to retrieve information about the Topic's used
+  to categorize ONS data"
   version: 1.0.0
   license:
     name: "Open Government Licence v3.0"
@@ -10,33 +11,81 @@ basePath: "/v1"
 schemes:
   - http
 tags:
-  - name: "hello"
+  - name: "Topics"
+parameters:
+  id:
+    name: id
+    description: "The ID of a topic"
+    in: path
+    type: string
+    required: true
 paths:
-  /hello:
+  /topics/{id}:
     get:
       tags:
-        - hello
-      summary: Example hello world endpoint
-      description: Returns an example payload.
+        - "Topics"
+      summary: "Get a topic by ID"
+      description: "provides a high level description of the topic and relevant links"
+      parameters:
+        - $ref: '#/parameters/id'
       produces:
-        - application/json
+        - "application/json"
       responses:
         200:
-          description: OK
+          description: "Json object containing information about the topic"
           schema:
-            $ref: "#/definitions/HelloResponse"
+            $ref: '#/definitions/Topic'
+        404:
+          description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
-
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
-
 definitions:
-  HelloResponse:
+  Topic:
     type: object
     properties:
-      message:
+      description:
         type: string
-        description: "Message returned by hello world endpoint"
-        example: "Hello, world!"
+        description: "A description of the topic"
+      title:
+        type: string
+        description: "The title of the topic"
+      keywords:
+        type: array
+        items:
+          type: string
+        description: "List of keywords that relate to the topic"
+      links:
+        type: object
+        properties:
+          self:
+            $ref: '#/definitions/SelfHref'
+          subtopics:
+            $ref: '#/definitions/SubtopicsLink'
+          content:
+            $ref: '#/definitions/ContentLink'
+  SubtopicsLink:
+    type: object
+    description: "A link to the subtopics of this topic"
+    properties:
+      href:
+        type: string
+        description: "A URL to the subtopics of this topic"
+  ContentLink:
+    type: object
+    description: "A link to the content for this topic"
+    properties:
+      href:
+        type: string
+        description: "A URL to the content for this topic"
+  SelfHref:
+    type: object
+    properties:
+      id:
+        type: string
+        description: "The id of the resource"
+      href:
+        type: string
+        description: "The URL to the resource"
