@@ -18,17 +18,17 @@ func (api *API) GetTopicHandler(w http.ResponseWriter, req *http.Request) {
 	logdata := log.Data{
 		handlers.CollectionID.Header(): hColID,
 		"request-id":                   ctx.Value(dprequest.RequestIdKey),
-		"image-id":                     id,
+		"topic-id":                     id,
 	}
 
-	// get image from mongoDB by id
-	image, err := api.mongoDB.GetTopic(req.Context(), id)
+	// get topic from mongoDB by id
+	topic, err := api.mongoDB.GetTopic(req.Context(), id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
 	}
 
-	if err := WriteJSONBody(ctx, image, w, logdata); err != nil {
+	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
 		handleError(ctx, w, err, logdata)
 		return
 	}
