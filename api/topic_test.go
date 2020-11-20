@@ -50,10 +50,9 @@ func dbTopicWithId(state models.State, id string) *models.Topic {
 	return &models.Topic{
 		ID:          id,
 		Description: "test description - 1",
-		//		CollectionID: testCollectionID1,
-		Title:    "test title - 1",
-		Keywords: []string{"keyword 1", "keyword 2", "keyword 3"},
-		State:    state.String(),
+		Title:       "test title - 1",
+		Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
+		State:       state.String(),
 	}
 }
 
@@ -119,7 +118,7 @@ func doTestGetTopicHandler(cfg *config.Config) {
 			})
 		})
 
-		// !!! this message probably needs changing once the system implements the ret of the spec more fully.
+		// !!! this message probably needs changing once the system implements the rest of the spec more fully.
 
 		/*		Convey("When an existing 'published' topic is requested without a Collection-Id context value", func() {
 				r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/images/%s", testImageID2), nil)
