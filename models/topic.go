@@ -45,6 +45,7 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 func (t *Topic) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
+		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
 		currentState = StateCreated // default value, if state is not present or invalid value
 	}
 	targetState, err := ParseState(target)
