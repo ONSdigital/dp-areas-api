@@ -28,9 +28,11 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, mongoDB Mongo
 
 	//!!! see dp-image for possible best code ...
 	if cfg.EnablePrivateEndpoints {
+		// create publishing related endpoints ...
 		//!!! adjust this for authorisation, and have comment that states 'add authorisation', etc.
 		r.HandleFunc("/topics/{id}", api.GetTopicHandler).Methods(http.MethodGet)
 	} else {
+		// create web related endpoints ...
 		r.HandleFunc("/topics/{id}", api.GetTopicHandler).Methods(http.MethodGet)
 	}
 
@@ -87,7 +89,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	var status int
 	if err != nil {
 		switch err {
-		//!!! fix this list for this service
+		//!!! fix this list for this service as the application develops to all features
 		case apierrors.ErrTopicNotFound,
 			apierrors.ErrVariantNotFound:
 			status = http.StatusNotFound
@@ -95,15 +97,15 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrImageFilenameTooLong,
 			apierrors.ErrImageNoCollectionID,
-			apierrors.ErrImageInvalidState,
+			apierrors.ErrTopicInvalidState,
 			apierrors.ErrImageDownloadTypeMismatch,
 			apierrors.ErrImageDownloadInvalidState,
 			apierrors.ErrImageIDMismatch,
 			apierrors.ErrVariantIDMismatch:
 			status = http.StatusBadRequest
 		case apierrors.ErrImageAlreadyPublished,
-			apierrors.ErrImageAlreadyCompleted,
-			apierrors.ErrImageStateTransitionNotAllowed,
+			apierrors.ErrTopicAlreadyCompleted,
+			apierrors.ErrTopicStateTransitionNotAllowed,
 			apierrors.ErrImageBadInitialState,
 			apierrors.ErrImageNotImporting,
 			apierrors.ErrImageNotPublished,
