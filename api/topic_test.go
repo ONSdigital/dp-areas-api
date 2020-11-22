@@ -58,7 +58,7 @@ func dbTopicWithId(state models.State, id string) *models.Topic {
 
 // API model corresponding to dbCreatedTopic !!! ?
 func createdTopic() *models.Topic {
-	return dbTopic(models.StateCreated)
+	return dbTopic(models.StateTopicCreated)
 }
 
 func TestGetTopicHandler(t *testing.T) {
@@ -86,9 +86,9 @@ func doTestGetTopicHandler(cfg *config.Config) {
 			GetTopicFunc: func(ctx context.Context, id string) (*models.Topic, error) {
 				switch id {
 				case testTopicID1:
-					return dbTopic(models.StateCreated), nil //!!! might want to change this to StateTrue
+					return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue
 					//				case testImageID2:
-					//					return dbFullImageWithDownloads(models.StatePublished, dbDownload(models.StateDownloadPublished)), nil
+					//					return dbFullImageWithDownloads(models.StateTopicPublished, dbDownload(models.StateDownloadPublished)), nil
 				default:
 					return nil, apierrors.ErrTopicNotFound
 				}
@@ -132,7 +132,7 @@ func doTestGetTopicHandler(cfg *config.Config) {
 					retImage := models.Image{}
 					err = json.Unmarshal(payload, &retImage)
 					So(err, ShouldBeNil)
-					So(retImage, ShouldResemble, *apiFullImage(models.StatePublished))
+					So(retImage, ShouldResemble, *apiFullImage(models.StateTopicPublished))
 				})
 			})*/
 

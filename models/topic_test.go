@@ -12,7 +12,7 @@ func TestTopicValidation(t *testing.T) {
 	//!!! adjust this functions code to suite topic
 	Convey("Given an empty topic, it is successfully validated", t, func() {
 		topic := models.Topic{
-			State: models.StateCreated.String(),
+			State: models.StateTopicCreated.String(),
 		}
 		err := topic.Validate()
 		So(err, ShouldBeNil)
@@ -36,7 +36,7 @@ func TestTopicValidation(t *testing.T) {
 	Convey("Given a fully populated valid topic with a valid download variant, it is successfully validated", t, func() {
 		topic := models.Topic{
 			ID:    "123",
-			State: models.StatePublished.String(),
+			State: models.StateTopicPublished.String(),
 		}
 		err := topic.Validate()
 		So(err, ShouldBeNil)
@@ -47,12 +47,12 @@ func TestTopicValidateTransitionFrom(t *testing.T) {
 	//!!! fix this to suite topic
 	Convey("Given an existing topic in an uploaded state", t, func() {
 		existing := &models.Topic{
-			State: models.StateUploaded.String(),
+			State: models.StateTopicUploaded.String(),
 		}
 
 		Convey("When we try to transition to an Importing state", func() {
 			topic := &models.Topic{
-				State: models.StateImporting.String(),
+				State: models.StateTopicImporting.String(),
 			}
 			err := topic.ValidateTransitionFrom(existing)
 			So(err, ShouldBeNil)
@@ -60,7 +60,7 @@ func TestTopicValidateTransitionFrom(t *testing.T) {
 
 		Convey("When we try to transition to a Created state", func() {
 			topic := &models.Topic{
-				State: models.StateCreated.String(),
+				State: models.StateTopicCreated.String(),
 			}
 			err := topic.ValidateTransitionFrom(existing)
 			So(err, ShouldResemble, apierrors.ErrTopicStateTransitionNotAllowed)
@@ -69,12 +69,12 @@ func TestTopicValidateTransitionFrom(t *testing.T) {
 
 	Convey("Given an existing topic in a Completed state", t, func() {
 		existing := &models.Topic{
-			State: models.StateCompleted.String(),
+			State: models.StateTopicCompleted.String(),
 		}
 
 		Convey("When we try to transition to an Importing state", func() {
 			topic := &models.Topic{
-				State: models.StateImporting.String(),
+				State: models.StateTopicImporting.String(),
 			}
 			err := topic.ValidateTransitionFrom(existing)
 			So(err, ShouldResemble, apierrors.ErrTopicStateTransitionNotAllowed)
@@ -82,7 +82,7 @@ func TestTopicValidateTransitionFrom(t *testing.T) {
 
 		Convey("When we try to transition to a Deleted state", func() {
 			topic := &models.Topic{
-				State: models.StateDeleted.String(),
+				State: models.StateTopicDeleted.String(),
 			}
 			err := topic.ValidateTransitionFrom(existing)
 			So(err, ShouldResemble, apierrors.ErrTopicAlreadyCompleted)
@@ -94,7 +94,7 @@ func TestTopicStateTransitionAllowed(t *testing.T) {
 	//!!! fix this to suite topic
 	Convey("Given an topic in created state", t, func() {
 		topic := models.Topic{
-			State: models.StateCreated.String(),
+			State: models.StateTopicCreated.String(),
 		}
 		validateTransitionsToCreated(topic)
 	})
@@ -115,10 +115,10 @@ func TestTopicStateTransitionAllowed(t *testing.T) {
 // and not to any forbidden of invalid state
 func validateTransitionsToCreated(topic models.Topic) {
 	Convey("Then an allowed transition is successfully checked", func() {
-		So(topic.StateTransitionAllowed(models.StateUploaded.String()), ShouldBeTrue)
+		So(topic.StateTransitionAllowed(models.StateTopicUploaded.String()), ShouldBeTrue)
 	})
 	Convey("Then a forbidden transition to a valid state is not allowed", func() {
-		So(topic.StateTransitionAllowed(models.StatePublished.String()), ShouldBeFalse)
+		So(topic.StateTransitionAllowed(models.StateTopicPublished.String()), ShouldBeFalse)
 	})
 	Convey("Then a transition to an invalid state is not allowed", func() {
 		So(topic.StateTransitionAllowed("wrong"), ShouldBeFalse)
