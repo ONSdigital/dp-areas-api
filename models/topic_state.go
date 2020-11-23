@@ -25,51 +25,69 @@ const (
 )
 
 type stateTransition struct {
+	state            State
 	name             string
 	validTransitions []State
 }
 
-// This List MUST be in the same order as the 'iota' list above that starts with 'StateTopicCreated' for
-// the the following state transition table and code to work and be efficient
 var stateTransitionTable = []stateTransition{
-	{ // StateTopicCreated
+	{
+		state:            StateTopicCreated,
 		name:             "created",
 		validTransitions: []State{StateTopicUploaded, StateTopicDeleted}},
-	{ // StateTopicUploaded
+	{
+		state:            StateTopicUploaded,
 		name:             "uploaded",
 		validTransitions: []State{StateTopicImporting, StateTopicDeleted}},
-	{ // StateTopicImporting
+	{
+		state:            StateTopicImporting,
 		name:             "importing",
 		validTransitions: []State{StateTopicImported, StateTopicFailedImport, StateTopicDeleted}},
-	{ // StateTopicImported
+	{
+		state:            StateTopicImported,
 		name:             "imported",
 		validTransitions: []State{StateTopicPublished, StateTopicDeleted}},
-	{ // StateTopicPublished
+	{
+		state:            StateTopicPublished,
 		name:             "published",
 		validTransitions: []State{StateTopicCompleted, StateTopicFailedPublish, StateTopicDeleted}},
-	{ // StateTopicCompleted
+	{
+		state:            StateTopicCompleted,
 		name:             "completed",
 		validTransitions: []State{StateTopicDeleted}},
-	{ // StateTopicDeleted
+	{
+		state:            StateTopicDeleted,
 		name:             "deleted",
 		validTransitions: []State{}},
-	{ // StateTopicFailedImport
+	{
+		state:            StateTopicFailedImport,
 		name:             "failed_import",
 		validTransitions: []State{StateTopicDeleted}},
-	{ // StateTopicFailedPublish
+	{
+		state:            StateTopicFailedPublish,
 		name:             "failed_import",
 		validTransitions: []State{StateTopicDeleted}},
-	{ // StateTopicTrue // to be removed at some point
+	{
+		state:            StateTopicTrue, // to be removed at some point
 		name:             "true",
 		validTransitions: []State{StateTopicFalse}},
-	{ // StateTopicFalse // to be removed at some point
+	{
+		state:            StateTopicFalse, // to be removed at some point
 		name:             "false",
 		validTransitions: []State{StateTopicTrue}},
 }
 
 // String returns the string representation of a state
 func (s State) String() string {
-	return stateTransitionTable[s].name
+	var name string = ""
+
+	// search for state in table to find name
+	for _, aState := range stateTransitionTable {
+		if s == aState.state {
+			name = aState.name
+		}
+	}
+	return name
 }
 
 // ParseState returns a state from its string representation
