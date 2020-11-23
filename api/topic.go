@@ -17,8 +17,8 @@ func (api *API) GetTopicHandler(w http.ResponseWriter, req *http.Request) {
 	hColID := ctx.Value(handlers.CollectionID.Context())
 	logdata := log.Data{
 		handlers.CollectionID.Header(): hColID,
-		"request-id":                   ctx.Value(dprequest.RequestIdKey),
-		"topic-id":                     id,
+		"request_id":                   ctx.Value(dprequest.RequestIdKey),
+		"topic_id":                     id,
 	}
 
 	// get topic from mongoDB by id

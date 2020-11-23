@@ -1,0 +1,165 @@
+package models_test
+
+import (
+	"testing"
+
+	"github.com/ONSdigital/dp-topic-api/models"
+	. "github.com/smartystreets/goconvey/convey"
+)
+
+func TestStateValidation(t *testing.T) {
+	//!!! these need rationalising when final code is done
+	Convey("Given a Created State, then only transitions to uploaded and deleted are allowed", t, func() {
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicUploaded), ShouldBeTrue)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicCreated.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a Uploaded State, then only transitions to importing and deleted are allowed", t, func() {
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicImporting), ShouldBeTrue)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicUploaded.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given an Importing State, then only transitions to imported, failedImport and deleted are allowed", t, func() {
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicImported), ShouldBeTrue)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicFailedImport), ShouldBeTrue)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicImporting.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given an Imported State, then only transitions to published and deleted are allowed", t, func() {
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicPublished), ShouldBeTrue)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicImported.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a Published State, then only transitions to failedPublish, completed and deleted are allowed", t, func() {
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicCompleted), ShouldBeTrue)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeTrue)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicPublished.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a Completed State, then only transitions to deleted are allowed", t, func() {
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicCompleted.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a Deleted State, then no transitions are allowed", t, func() {
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicDeleted), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicDeleted.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a FailedImport State, then only transitions to deleted are allowed", t, func() {
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicFailedImport.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a FailedPublish State, then only transitions to deleted are allowed", t, func() {
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicDeleted), ShouldBeTrue)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicFailedPublish.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+
+	Convey("Given a StateTopicTrue State, then only transitions to false are allowed", t, func() {
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicDeleted), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicTrue), ShouldBeFalse)
+		So(models.StateTopicTrue.TransitionAllowed(models.StateTopicFalse), ShouldBeTrue)
+	})
+
+	Convey("Given a StateTopicFalse State, then only transitions to true are allowed", t, func() {
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicCreated), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicUploaded), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicImporting), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicImported), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicPublished), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicCompleted), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicDeleted), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicFailedImport), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicFailedPublish), ShouldBeFalse)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicTrue), ShouldBeTrue)
+		So(models.StateTopicFalse.TransitionAllowed(models.StateTopicFalse), ShouldBeFalse)
+	})
+}
