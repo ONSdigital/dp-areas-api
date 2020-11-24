@@ -5,11 +5,25 @@ import "github.com/ONSdigital/dp-topic-api/apierrors"
 // Topic represents topic schema as it is stored in mongoDB
 // and is used for marshaling and unmarshaling json representation for API
 type Topic struct {
-	ID          string   `bson:"_id,omitempty"          json:"id,omitempty"`
-	Description string   `bson:"description,omitempty"  json:"description,omitempty"`
-	Title       string   `bson:"title,omitempty"        json:"title,omitempty"`
-	Keywords    []string `bson:"keywords,omitempty"     json:"keywords,omitempty"`
-	State       string   `bson:"state,omitempty"        json:"state,omitempty"`
+	ID          string      `bson:"_id,omitempty"          json:"id,omitempty"`
+	Description string      `bson:"description,omitempty"  json:"description,omitempty"`
+	Title       string      `bson:"title,omitempty"        json:"title,omitempty"`
+	Keywords    []string    `bson:"keywords,omitempty"     json:"keywords,omitempty"`
+	State       string      `bson:"state,omitempty"        json:"state,omitempty"`
+	Links       *TopicLinks `bson:"links,omitempty"        json:"links,omitempty"`
+}
+
+// LinkObject represents a generic structure for all links
+type LinkObject struct {
+	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
+	ID   string `bson:"id,omitempty"    json:"id,omitempty"`
+}
+
+// TopicLinks represents a list of specific links related to the topic resource
+type TopicLinks struct {
+	Self      *LinkObject `bson:"self,omitempty"       json:"self,omitempty"`
+	Subtopics *LinkObject `bson:"subtopics,omitempty"  json:"subtopics,omitempty"`
+	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
 }
 
 // Validate checks that a topic struct complies with the state constraints, if provided. !!! may want to add more in future
