@@ -53,6 +53,18 @@ func dbTopicWithId(state models.State, id string) *models.Topic {
 		Title:       "test title - 1",
 		Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
 		State:       state.String(),
+		Links: &models.TopicLinks{
+			Self: &models.LinkObject{
+				HRef: fmt.Sprintf("http://example.com/topics/%s", id),
+				ID:   fmt.Sprintf("%s", id),
+			},
+			Subtopics: &models.LinkObject{
+				HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
+			},
+			Content: &models.LinkObject{
+				HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
+			},
+		},
 	}
 }
 
