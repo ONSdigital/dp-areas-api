@@ -16,7 +16,7 @@ import (
 type MongoServer interface {
 	Close(ctx context.Context) error
 	Checker(ctx context.Context, state *healthcheck.CheckState) (err error)
-	GetTopic(ctx context.Context, id string) (topic *models.Topic, err error)
+	GetTopic(ctx context.Context, id string) (topic *models.TopicUpdate, err error)
 }
 
 // AuthHandler interface for adding auth to endpoints
