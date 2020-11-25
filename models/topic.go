@@ -2,8 +2,19 @@ package models
 
 import "github.com/ONSdigital/dp-topic-api/apierrors"
 
+// TopicUpdate represents an evolving topic with the current topic and the updated topic
+// The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
+// the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
+type TopicUpdate struct {
+	ID      string `bson:"_id,omitempty"      json:"id,omitempty"`
+	Current *Topic `bson:"current,omitempty"  json:"current,omitempty"`
+	Next    *Topic `bson:"next,omitempty"     json:"next,omitempty"`
+}
+
 // Topic represents topic schema as it is stored in mongoDB
 // and is used for marshaling and unmarshaling json representation for API
+// ID is a duplicate of ID in TopicUpdate, to facilitate each subdocument being a full-formed
+// response in its own right depending upon request being in publish or web and also authentication.
 type Topic struct {
 	ID          string      `bson:"_id,omitempty"          json:"id,omitempty"`
 	Description string      `bson:"description,omitempty"  json:"description,omitempty"`

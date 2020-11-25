@@ -58,14 +58,14 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 }
 
 // GetTopic retrieves a topic document by its ID
-func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.Topic, error) {
+func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicUpdate, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 	log.Event(ctx, "getting topic by ID", log.Data{"id": id})
 
-	var topic models.Topic //!!! what object is use in the existing api to read mongo schema ?
+	var topic models.TopicUpdate
 
-	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"_id": id}).One(&topic) //!!! should the '_id' be 'id' for topic-api ?
+	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"_id": id}).One(&topic)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, errs.ErrTopicNotFound

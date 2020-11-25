@@ -41,35 +41,57 @@ const ( // !!! remove not needed const's at some point
 
 var errMongoDB = errors.New("MongoDB generic error")
 
-// DB model corresponding to a topic in the provided state, without any download variant !!! fix this comment for topic-api
-func dbTopic(state models.State) *models.Topic {
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic(state models.State) *models.TopicUpdate {
 	return dbTopicWithId(state, testTopicID1)
 }
 
-func dbTopicWithId(state models.State, id string) *models.Topic {
-	return &models.Topic{
-		ID:          id,
-		Description: "test description - 1",
-		Title:       "test title - 1",
-		Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
-		State:       state.String(),
-		Links: &models.TopicLinks{
-			Self: &models.LinkObject{
-				HRef: fmt.Sprintf("http://example.com/topics/%s", id),
-				ID:   fmt.Sprintf("%s", id),
+func dbTopicWithId(state models.State, id string) *models.TopicUpdate {
+	return &models.TopicUpdate{
+		ID: id,
+		Current: &models.Topic{
+			ID:          id,
+			Description: "test description - 1",
+			Title:       "test title - 1",
+			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
+			State:       state.String(),
+			Links: &models.TopicLinks{
+				Self: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
+					ID:   fmt.Sprintf("%s", id),
+				},
+				Subtopics: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
+				},
+				Content: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
+				},
 			},
-			Subtopics: &models.LinkObject{
-				HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
-			},
-			Content: &models.LinkObject{
-				HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
+		},
+		Next: &models.Topic{
+			ID:          id,
+			Description: "test description - 1",
+			Title:       "test title - 1",
+			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
+			State:       state.String(),
+			Links: &models.TopicLinks{
+				Self: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
+					ID:   fmt.Sprintf("%s", id),
+				},
+				Subtopics: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
+				},
+				Content: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
+				},
 			},
 		},
 	}
 }
 
 // API model corresponding to dbCreatedTopic !!! ?
-func createdTopic() *models.Topic {
+func createdTopic() *models.TopicUpdate {
 	return dbTopic(models.StateTopicCreated)
 }
 
@@ -95,7 +117,7 @@ func doTestGetTopicHandler(cfg *config.Config) {
 	Convey("And a topic API with mongoDB returning 'created' and 'published' topics", func() {
 
 		mongoDBMock := &mock.MongoServerMock{
-			GetTopicFunc: func(ctx context.Context, id string) (*models.Topic, error) {
+			GetTopicFunc: func(ctx context.Context, id string) (*models.TopicUpdate, error) {
 				switch id {
 				case testTopicID1:
 					return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue
@@ -123,7 +145,7 @@ func doTestGetTopicHandler(cfg *config.Config) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
-				retTopic := models.Topic{}
+				retTopic := models.TopicUpdate{}
 				err = json.Unmarshal(payload, &retTopic)
 				So(err, ShouldBeNil)
 				So(retTopic, ShouldResemble, *createdTopic())

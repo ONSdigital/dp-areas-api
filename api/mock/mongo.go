@@ -34,7 +34,7 @@ var _ api.MongoServer = &MongoServerMock{}
 //             CloseFunc: func(ctx context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
-//             GetTopicFunc: func(ctx context.Context, id string) (*models.Topic, error) { //!!! fix return type
+//             GetTopicFunc: func(ctx context.Context, id string) (*models.TopicUpdate, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
@@ -51,7 +51,7 @@ type MongoServerMock struct {
 	CloseFunc func(ctx context.Context) error
 
 	// GetTopicFunc mocks the GetTopic method.
-	GetTopicFunc func(ctx context.Context, id string) (*models.Topic, error) //!!! fix return type
+	GetTopicFunc func(ctx context.Context, id string) (*models.TopicUpdate, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -144,7 +144,7 @@ func (mock *MongoServerMock) CloseCalls() []struct {
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *MongoServerMock) GetTopic(ctx context.Context, id string) (*models.Topic, error) { //!!! fix return type
+func (mock *MongoServerMock) GetTopic(ctx context.Context, id string) (*models.TopicUpdate, error) {
 	if mock.GetTopicFunc == nil {
 		panic("MongoServerMock.GetTopicFunc: method is nil but MongoServer.GetTopic was just called")
 	}
