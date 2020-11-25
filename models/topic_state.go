@@ -103,9 +103,16 @@ func ParseState(stateStr string) (State, error) {
 // TransitionAllowed returns true only if the transition from the current state and the provided next is allowed
 func (s State) TransitionAllowed(next State) bool {
 	if (s >= 0) && (int(s) < len(stateTransitionTable)) {
-		for _, allowedState := range stateTransitionTable[s].validTransitions {
-			if next == allowedState {
-				return true
+		// search for state in table
+		// (to allow for states in table not being in the same order as 'StateTopicCreated' iota list)
+		for _, transition := range stateTransitionTable {
+			if s == transition.state {
+				// see if transition allowed
+				for _, allowedState := range transition.validTransitions {
+					if next == allowedState {
+						return true
+					}
+				}
 			}
 		}
 	}
