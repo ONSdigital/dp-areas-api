@@ -149,8 +149,6 @@ func (api *API) authenticate(r *http.Request, logData log.Data) bool {
 			authenticated = true
 		}
 		logData["authenticated"] = authenticated
-
-		return authenticated
 	}
 	return authenticated
 }

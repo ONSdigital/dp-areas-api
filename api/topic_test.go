@@ -142,8 +142,8 @@ func TestGetTopicPublicHandler(t *testing.T) {
 
 	Convey("Given a topic API in web mode (private endpoints disabled)", t, func() {
 		cfg, err := config.Get()
-		cfg.EnablePrivateEndpoints = false
 		So(err, ShouldBeNil)
+		cfg.EnablePrivateEndpoints = false
 		Convey("And a topic API with mongoDB returning 'created' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
@@ -209,8 +209,8 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 
 	Convey("Given a topic API in publishing mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
-		cfg.EnablePrivateEndpoints = true
 		So(err, ShouldBeNil)
+		cfg.EnablePrivateEndpoints = true
 		Convey("And a topic API with mongoDB returning 'created' and 'full' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
