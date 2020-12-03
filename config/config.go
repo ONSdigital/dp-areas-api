@@ -6,14 +6,15 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// Config represents service configuration for dp-topic-api
-type Config struct {
+// Configuration represents service configuration for dp-topic-api
+type Configuration struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
+	EnablePermissionsAuth      bool          `envconfig:"ENABLE_PERMISSIONS_AUTH"` // !!! this key needs adding to secrets files
 	MongoConfig                MongoConfiguration
 }
 
@@ -25,22 +26,23 @@ type MongoConfiguration struct {
 	ContentCollection string `envconfig:"MONGODB_CONTENT_COLLECTION"`
 }
 
-var cfg *Config
+var cfg *Configuration
 
 // Get returns the default config with any modifications through environment
 // variables
-func Get() (*Config, error) {
+func Get() (*Configuration, error) {
 	if cfg != nil {
 		return cfg, nil
 	}
 
-	cfg = &Config{
+	cfg = &Configuration{
 		BindAddr:                   "localhost:25300",
 		GracefulShutdownTimeout:    10 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		EnablePrivateEndpoints:     true,
+		EnablePermissionsAuth:      false,
 		MongoConfig: MongoConfiguration{
 			BindAddr:          "localhost:27017",
 			Database:          "topics",

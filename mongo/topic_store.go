@@ -37,8 +37,12 @@ func (m *Mongo) Init(ctx context.Context) (err error) {
 	m.Session.EnsureSafe(&mgo.Safe{WMode: "majority"})
 	m.Session.SetMode(mgo.Strong, true)
 
-	// Create client and healthclient from session
-	client := dpMongoHealth.NewClient(m.Session)
+	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
+	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.TopicsCollection), (dpMongoHealth.Collection)(m.ContentCollection)}
+
+	// Create client and healthclient from session AND collections
+	client := dpMongoHealth.NewClientWithCollections(m.Session, databaseCollectionBuilder)
+
 	m.healthClient = &dpMongoHealth.CheckMongoClient{
 		Client:      *client,
 		Healthcheck: client.Healthcheck,
@@ -49,6 +53,9 @@ func (m *Mongo) Init(ctx context.Context) (err error) {
 
 // Close closes the mongo session and returns any error
 func (m *Mongo) Close(ctx context.Context) error {
+	if m.Session == nil {
+		return errors.New("cannot close a mongoDB connection without a valid session")
+	}
 	return dpMongodb.Close(ctx, m.Session)
 }
 
@@ -65,7 +72,7 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicUpdate, e
 
 	var topic models.TopicUpdate
 
-	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"_id": id}).One(&topic)
+	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"id": id}).One(&topic)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, errs.ErrTopicNotFound

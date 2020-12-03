@@ -11,7 +11,7 @@ import (
 func TestConfig(t *testing.T) {
 	os.Clearenv()
 	var err error
-	var configuration *Config
+	var configuration *Configuration
 
 	Convey("Given an environment with no environment variables set", t, func() {
 		Convey("Then cfg should be nil", func() {
@@ -35,6 +35,7 @@ func TestConfig(t *testing.T) {
 				So(configuration.MongoConfig.ContentCollection, ShouldEqual, "content")
 				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
 				So(cfg.EnablePrivateEndpoints, ShouldEqual, true)
+				So(cfg.EnablePermissionsAuth, ShouldBeFalse)
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

@@ -37,7 +37,7 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 }
 
 // GetMongoDB creates a mongoDB client and sets the Mongo flag to true
-func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Configuration) (api.MongoServer, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (e *ExternalServiceList) GetHealthClient(name, url string) *health.Client {
 }
 
 // GetHealthCheck creates a healthcheck with versionInfo and sets the HealthCheck flag to true
-func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error) {
+func (e *ExternalServiceList) GetHealthCheck(cfg *config.Configuration, buildTime, gitCommit, version string) (HealthChecker, error) {
 	hc, err := e.Init.DoGetHealthCheck(cfg, buildTime, gitCommit, version)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 }
 
 // DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Configuration) (api.MongoServer, error) {
 	mongodb := &mongo.Mongo{
 		TopicsCollection:  cfg.MongoConfig.TopicsCollection,
 		ContentCollection: cfg.MongoConfig.ContentCollection,
@@ -88,7 +88,7 @@ func (e *Init) DoGetHealthClient(name, url string) *health.Client {
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo
-func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error) {
+func (e *Init) DoGetHealthCheck(cfg *config.Configuration, buildTime, gitCommit, version string) (HealthChecker, error) {
 	versionInfo, err := healthcheck.NewVersionInfo(buildTime, gitCommit, version)
 	if err != nil {
 		return nil, err

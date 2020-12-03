@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	dpauth "github.com/ONSdigital/dp-authorisation/auth"
+	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/models"
 )
@@ -21,5 +21,5 @@ type MongoServer interface {
 
 // AuthHandler interface for adding auth to endpoints
 type AuthHandler interface {
-	Require(required dpauth.Permissions, handler http.HandlerFunc) http.HandlerFunc
+	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
