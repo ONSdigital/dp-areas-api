@@ -36,7 +36,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	if err := WriteJSONBody(ctx, topic.Current, w, logdata); err != nil {
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) //!!! is this a good log to have ? ... as in is there too much logging going on ?
+	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
 // getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB
@@ -69,5 +69,5 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) //!!! is this a good log to have ? ... as in is there too much logging going on ?
+	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }

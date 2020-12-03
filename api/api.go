@@ -247,8 +247,4 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 		log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
 		http.Error(w, apierrors.ErrInternalServer.Error(), status)
 	}
-
-	//	data["response_status"] = status
-	//	log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
-	//	http.Error(w, err.Error(), status)
 }
