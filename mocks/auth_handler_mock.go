@@ -2,8 +2,13 @@ package mocks
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/ONSdigital/dp-authorisation/auth"
+)
+
+var (
+	muAuthHandlerMock sync.Mutex
 )
 
 type PermissionCheckCalls struct {
@@ -15,6 +20,9 @@ type AuthHandlerMock struct {
 }
 
 func NewAuthHandlerMock() *AuthHandlerMock {
+	muAuthHandlerMock.Lock()
+	defer muAuthHandlerMock.Unlock()
+
 	return &AuthHandlerMock{
 		Required: &PermissionCheckCalls{
 			Calls: 0,
@@ -27,8 +35,11 @@ func (a AuthHandlerMock) Require(required auth.Permissions, handler http.Handler
 }
 
 func (c *PermissionCheckCalls) checkPermissions(h http.HandlerFunc) http.HandlerFunc {
+	muAuthHandlerMock.Lock()
+	defer muAuthHandlerMock.Unlock()
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.Calls += 1
+		c.Calls++
 		h.ServeHTTP(w, r)
 	}
 }
