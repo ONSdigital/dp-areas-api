@@ -14,7 +14,7 @@ type Configuration struct {
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
-	EnablePermissionsAuth      bool          `envconfig:"ENABLE_PERMISSIONS_AUTH"` // !!! this key needs adding to secrets files
+	EnablePermissionsAuth      bool          `envconfig:"ENABLE_PERMISSIONS_AUTHZ"`
 	MongoConfig                MongoConfiguration
 }
 

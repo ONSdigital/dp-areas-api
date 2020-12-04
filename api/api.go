@@ -73,7 +73,7 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 	api.get(
 		"/topics/{id}",
 		api.isAuthenticated(
-			api.isAuthorised(readPermission, api.getTopicPrivateHandler)), //...ask Eleanor if its this line that should be used ?
+			api.isAuthorised(readPermission, api.getTopicPrivateHandler)),
 		/*api.isAuthorisedForTopics(readPermission, api.getTopicPrivateHandler*/
 	)
 }

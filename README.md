@@ -25,7 +25,7 @@ Enables greater flexibility in creating journeys through the website
 | MONGODB_CONTENT_COLLECTION   | content                | MongoDB content collection
 | ZEBEDEE_URL                  | http://localhost:8082  | The URL to Zebedee (for authentication)
 | ENABLE_PRIVATE_ENDPOINTS     | false                  | Enable private endpoints for the API
-| ENABLE_PERMISSIONS_AUTH      | false                  | Enable/disable user/service permissions checking for private endpoints
+| ENABLE_PERMISSIONS_AUTHZ     | false                  | Enable/disable user/service permissions checking for private endpoints
 ### Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for details.
