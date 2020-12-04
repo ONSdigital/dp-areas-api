@@ -72,7 +72,7 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 		return err
 	}
 
-	if err := svc.registerCheckers(ctx /*svc.Config, healthCheck, mongoDB, zebedeeClient*/); err != nil {
+	if err := svc.registerCheckers(ctx); err != nil {
 		return errors.Wrap(err, "unable to register checkers")
 	}
 

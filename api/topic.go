@@ -52,12 +52,6 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 		"function":                     "getTopicPrivateHandler",
 	}
 
-	//logData := log.Data{}
-	//authenticated := api.authenticate(req, logData) //!!! is this needed ? ... i suspect not as to get here we have already come through: api.isAuthenticated( api.isAuthorised(
-
-	//fmt.Printf("authenticated is %v\n", authenticated)
-	//fmt.Printf("logData is %+v\n", logData)
-
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(req.Context(), id)
 	if err != nil {
