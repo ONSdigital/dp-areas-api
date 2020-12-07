@@ -52,7 +52,7 @@ func run(ctx context.Context) error {
 	// Read config
 	cfg, err := config.Get()
 	if err != nil {
-		return errors.Wrap(err, "error getting configuration")
+		return errors.Wrap(err, "error getting config")
 	}
 	log.Event(ctx, "config on startup", log.INFO, log.Data{"config": cfg, "build_time": BuildTime, "git-commit": GitCommit})
 

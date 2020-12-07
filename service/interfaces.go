@@ -17,9 +17,9 @@ import (
 // Initialiser defines the methods to initialise external services
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
-	DoGetMongoDB(ctx context.Context, cfg *config.Configuration) (api.MongoServer, error)
+	DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error)
 	DoGetHealthClient(name, url string) *health.Client
-	DoGetHealthCheck(cfg *config.Configuration, buildTime, gitCommit, version string) (HealthChecker, error)
+	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server

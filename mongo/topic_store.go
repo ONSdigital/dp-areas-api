@@ -13,7 +13,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// Mongo represents a simplistic MongoDB configuration, with session, health and lock clients
+// Mongo represents a simplistic MongoDB config, with session, health and lock clients
 type Mongo struct {
 	Session           *mgo.Session
 	URI               string

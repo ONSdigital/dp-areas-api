@@ -234,7 +234,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 }
 
 // GetAPIWithMocks also used in other tests, so exported
-func GetAPIWithMocks(cfg *config.Configuration, mockedDataStore store.Storer) *API {
+func GetAPIWithMocks(cfg *config.Config, mockedDataStore store.Storer) *API {
 	mu.Lock()
 	defer mu.Unlock()
 	//	urlBuilder := url.NewBuilder("http://example.com")

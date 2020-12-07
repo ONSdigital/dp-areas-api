@@ -102,7 +102,7 @@ func TestSetup(t *testing.T) {
 }
 
 // GetWebAPIWithMocks also used in other tests, so exported
-func GetWebAPIWithMocks(ctx context.Context, cfg *config.Configuration, mockedDataStore store.Storer, topicPermissions AuthHandler, permissions AuthHandler) *API {
+func GetWebAPIWithMocks(ctx context.Context, cfg *config.Config, mockedDataStore store.Storer, topicPermissions AuthHandler, permissions AuthHandler) *API {
 	mu.Lock()
 	defer mu.Unlock()
 	//	urlBuilder := url.NewBuilder("http://example.com")

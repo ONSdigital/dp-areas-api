@@ -29,7 +29,7 @@ type DatsetAPIStore struct {
 
 // Service contains all the configs, server and clients to run the dp-topic-api API
 type Service struct {
-	Config         *config.Configuration
+	Config         *config.Config
 	ServiceList    *ExternalServiceList
 	Server         HTTPServer
 	Router         *mux.Router
@@ -40,7 +40,7 @@ type Service struct {
 }
 
 // New creates a new service
-func New(cfg *config.Configuration, serviceList *ExternalServiceList) *Service {
+func New(cfg *config.Config, serviceList *ExternalServiceList) *Service {
 	svc := &Service{
 		Config:      cfg,
 		ServiceList: serviceList,
@@ -97,7 +97,7 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	return nil
 }
 
-func getAuthorisationHandlers(ctx context.Context, cfg *config.Configuration) (api.AuthHandler, api.AuthHandler) {
+func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) (api.AuthHandler, api.AuthHandler) {
 	if cfg.EnablePermissionsAuth == false {
 		log.Event(ctx, "feature flag not enabled defaulting to nop authZ impl", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
 		return &auth.NopHandler{}, &auth.NopHandler{}
@@ -127,7 +127,7 @@ func getAuthorisationHandlers(ctx context.Context, cfg *config.Configuration) (a
 
 // CreateMiddleware creates an Alice middleware chain of handlers
 // to forward collectionID from cookie from header
-func (svc *Service) createMiddleware(cfg *config.Configuration) alice.Chain {
+func (svc *Service) createMiddleware(cfg *config.Config) alice.Chain {
 
 	// healthcheck
 	healthcheckHandler := newMiddleware(svc.HealthCheck.Handler, "/health")
