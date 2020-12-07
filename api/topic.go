@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ONSdigital/dp-net/handlers"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/log.go/log"
@@ -16,12 +15,10 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
-	hColID := ctx.Value(handlers.CollectionID.Context())
 	logdata := log.Data{
-		handlers.CollectionID.Header(): hColID,
-		"request_id":                   ctx.Value(dprequest.RequestIdKey),
-		"topic_id":                     id,
-		"function":                     "getTopicPublicHandler",
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getTopicPublicHandler",
 	}
 
 	// get topic from mongoDB by id
@@ -48,12 +45,10 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
-	hColID := ctx.Value(handlers.CollectionID.Context())
 	logdata := log.Data{
-		handlers.CollectionID.Header(): hColID,
-		"request_id":                   ctx.Value(dprequest.RequestIdKey),
-		"topic_id":                     id,
-		"function":                     "getTopicPrivateHandler",
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getTopicPrivateHandler",
 	}
 
 	// get topic from mongoDB by id
@@ -74,12 +69,10 @@ func (api *API) getDataset(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
-	hColID := ctx.Value(handlers.CollectionID.Context()) //!!! dataset-api does not log this
 	logdata := log.Data{
-		handlers.CollectionID.Header(): hColID,
-		"request_id":                   ctx.Value(dprequest.RequestIdKey), //!!! dataset-api does not log this
-		"topic_id":                     id,
-		"function":                     "getDataset",
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getDataset",
 	}
 
 	b, err := func() ([]byte, error) {
