@@ -52,21 +52,20 @@ func run(ctx context.Context) error {
 	// Read config
 	cfg, err := config.Get()
 	if err != nil {
-		return errors.Wrap(err, "error getting configuration")
+		return errors.Wrap(err, "error getting config")
 	}
+	log.Event(ctx, "config on startup", log.INFO, log.Data{"config": cfg, "build_time": BuildTime, "git-commit": GitCommit})
 
-	// Start service
-	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
-	if err != nil {
+	// Run the service
+	svc := service.New(cfg, svcList)
+	if err := svc.Run(ctx, BuildTime, GitCommit, Version, svcErrors); err != nil {
 		return errors.Wrap(err, "running service failed")
 	}
 
-	// blocks until an os interrupt or a fatal error occurs
+	// Blocks until an os interrupt or a fatal error occurs
 	select {
 	case err := <-svcErrors:
-		// ADD CODE HERE : call svc.Close(ctx) (or something specific)
-		//  if there are any service connections like Kafka that you need to shut down
-		return errors.Wrap(err, "service error received")
+		log.Event(ctx, "service error received", log.ERROR, log.Error(err))
 	case sig := <-signals:
 		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
 	}

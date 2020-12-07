@@ -6,7 +6,7 @@ import "github.com/ONSdigital/dp-topic-api/apierrors"
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
 // the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
 type TopicUpdate struct {
-	ID      string `bson:"_id,omitempty"      json:"id,omitempty"`
+	ID      string `bson:"id,omitempty"       json:"id,omitempty"`
 	Current *Topic `bson:"current,omitempty"  json:"current,omitempty"`
 	Next    *Topic `bson:"next,omitempty"     json:"next,omitempty"`
 }
@@ -59,9 +59,9 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 	}
 
 	// if the topic is already completed, it cannot be updated
-	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
-		return apierrors.ErrTopicAlreadyCompleted
-	}
+	//	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
+	//		return apierrors.ErrTopicAlreadyCompleted
+	//	}
 
 	return nil
 }
