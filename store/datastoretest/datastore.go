@@ -35,7 +35,7 @@ var _ store.Storer = &StorerMock{}
 //     }
 
 type StorerMock struct {
-	// GetTopicFunc mocks the GetDataset method.
+	// GetTopicFunc mocks the GetTopic method.
 	GetTopicFunc func(ID string) (*models.TopicUpdate, error)
 
 	// calls tracks calls to the methods.

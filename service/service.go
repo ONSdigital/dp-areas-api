@@ -138,9 +138,6 @@ func (svc *Service) createMiddleware(cfg *config.Configuration) alice.Chain {
 		middleware = middleware.Append(dphandlers.IdentityWithHTTPClient(svc.IdentityClient))
 	}
 
-	// collection ID
-	middleware = middleware.Append(dphandlers.CheckHeader(dphandlers.CollectionID)) //!!! is this appropriate for topic-api ? ... ask Eleanor and David Subiros
-
 	return middleware
 }
 

@@ -31,26 +31,13 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 	}
 
 	publishSubnetEndpoints := map[testEndpoint]int{
+		//!!! the following commented out block is for reference usage some time later and will eventually be removed
 		// Dataset Endpoints
 		/*{Method: "POST", URL: "http://localhost:22000/datasets/1234"}:                            http.StatusMethodNotAllowed,
-		{Method: "PUT", URL: "http://localhost:22000/datasets/1234"}:                             http.StatusMethodNotAllowed,
 		{Method: "PUT", URL: "http://localhost:22000/datasets/1234/editions/1234/versions/2123"}: http.StatusMethodNotAllowed,*/
 
-		// Instance endpoints
-		{Method: "GET", URL: "http://localhost:22000/instances"}: http.StatusNotFound,
-		/*{Method: "POST", URL: "http://localhost:22000/instances"}:                           http.StatusNotFound,
-		{Method: "GET", URL: "http://localhost:22000/instances/1234"}:                       http.StatusNotFound,
-		{Method: "PUT", URL: "http://localhost:22000/instances/123"}:                        http.StatusNotFound,
-		{Method: "PUT", URL: "http://localhost:22000/instances/123/dimensions/test"}:        http.StatusNotFound,
-		{Method: "POST", URL: "http://localhost:22000/instances/1/events"}:                  http.StatusNotFound,
-		{Method: "PUT", URL: "http://localhost:22000/instances/1/inserted_observations/11"}: http.StatusNotFound,
-		{Method: "PUT", URL: "http://localhost:22000/instances/1/import_tasks"}:             http.StatusNotFound,*/
-
-		// Dimension endpoints
-		/*{Method: "GET", URL: "http://localhost:22000/instances/1/dimensions"}:                       http.StatusNotFound,
-		{Method: "POST", URL: "http://localhost:22000/instances/1/dimensions"}:                      http.StatusNotFound,
-		{Method: "GET", URL: "http://localhost:22000/instances/1/dimensions/1/options"}:             http.StatusNotFound,
-		{Method: "PUT", URL: "http://localhost:22000/instances/1/dimensions/1/options/1/node_id/1"}: http.StatusNotFound,*/
+		// Topics endpoints
+		{Method: "GET", URL: "http://localhost:25300/instances"}: http.StatusNotFound,
 	}
 
 	Convey("When the API is started with private endpoints disabled", t, func() {
@@ -77,7 +64,7 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 }
 
 func TestSetup(t *testing.T) {
-	Convey("Given an API insetAuttance", t, func() {
+	Convey("Given an API instance", t, func() {
 		topicPermissions := mocks.NewAuthHandlerMock()
 		permissions := mocks.NewAuthHandlerMock()
 

@@ -59,9 +59,9 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 	}
 
 	// if the topic is already completed, it cannot be updated
-	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
-		return apierrors.ErrTopicAlreadyCompleted
-	}
+	//	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
+	//		return apierrors.ErrTopicAlreadyCompleted
+	//	}
 
 	return nil
 }

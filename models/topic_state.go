@@ -1,27 +1,38 @@
 package models
 
-//!!! this will all need a re-work for topic-api
-
 import (
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 )
+
+// 7th December 2020 ... What the states are as detailed in slack message from Eleanor:
+// NOTE: this comment to be eventually deleted ...
+//
+// possible states and transitions ...
+//
+// Created -> Completed
+// Completed -> Published
+//
+// Within the next subdocument, a topic may go from published to created when it is next
+// edited after being published.
+//
+// At the point a topic is published, both next and current should equal each other exactly,
+// including having the state 'published' so when we next want to make a change to it it
+// needs to go to 'created' state while being worked on.
+//
+// !!! (my note), so from last sentence, add a state change of: Published -> Created
+//
+// Deleted and Failed I dont think will be needed (we wont want to allow people to delete pages,
+// and failed publishes in this area I would expect not to be reported through a state change.
 
 // State - iota enum of possible topic states
 type State int
 
 // Possible values for a State of a topic. It can only be one of the following:
 const (
-	StateTopicCreated State = iota
-	StateTopicUploaded
-	StateTopicImporting
-	StateTopicImported
+	// these from dp-image-api :
+	StateTopicCreated State = iota // this is 'in_progress'
 	StateTopicPublished
 	StateTopicCompleted
-	StateTopicDeleted
-	StateTopicFailedImport
-	StateTopicFailedPublish
-	StateTopicTrue  // to be removed at some point
-	StateTopicFalse // to be removed at some point
 )
 
 type stateTransition struct {
@@ -32,49 +43,17 @@ type stateTransition struct {
 
 var stateTransitionTable = []stateTransition{
 	{
-		state:            StateTopicCreated,
+		state:            StateTopicCreated, // this is 'in_progress'
 		name:             "created",
-		validTransitions: []State{StateTopicUploaded, StateTopicDeleted}},
-	{
-		state:            StateTopicUploaded,
-		name:             "uploaded",
-		validTransitions: []State{StateTopicImporting, StateTopicDeleted}},
-	{
-		state:            StateTopicImporting,
-		name:             "importing",
-		validTransitions: []State{StateTopicImported, StateTopicFailedImport, StateTopicDeleted}},
-	{
-		state:            StateTopicImported,
-		name:             "imported",
-		validTransitions: []State{StateTopicPublished, StateTopicDeleted}},
+		validTransitions: []State{StateTopicCompleted}},
 	{
 		state:            StateTopicPublished,
 		name:             "published",
-		validTransitions: []State{StateTopicCompleted, StateTopicFailedPublish, StateTopicDeleted}},
+		validTransitions: []State{StateTopicCreated}},
 	{
 		state:            StateTopicCompleted,
 		name:             "completed",
-		validTransitions: []State{StateTopicDeleted}},
-	{
-		state:            StateTopicDeleted,
-		name:             "deleted",
-		validTransitions: []State{}},
-	{
-		state:            StateTopicFailedImport,
-		name:             "failed_import",
-		validTransitions: []State{StateTopicDeleted}},
-	{
-		state:            StateTopicFailedPublish,
-		name:             "failed_import",
-		validTransitions: []State{StateTopicDeleted}},
-	{
-		state:            StateTopicTrue, // to be removed at some point
-		name:             "true",
-		validTransitions: []State{StateTopicFalse}},
-	{
-		state:            StateTopicFalse, // to be removed at some point
-		name:             "false",
-		validTransitions: []State{StateTopicTrue}},
+		validTransitions: []State{StateTopicPublished}},
 }
 
 // String returns the string representation of a state

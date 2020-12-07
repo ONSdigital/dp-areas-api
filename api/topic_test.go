@@ -134,7 +134,7 @@ func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
 }
 
 func createdTopicCurrent() *models.Topic {
-	return dbTopicCurrent(models.StateTopicCreated)
+	return dbTopicCurrent(models.StateTopicPublished)
 }
 
 func TestGetTopicPublicHandler(t *testing.T) {
@@ -149,9 +149,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
 					switch id {
 					case testTopicID1:
-						return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue
-						//				case testImageID2:
-						//					return dbFullImageWithDownloads(models.StateTopicPublished, dbDownload(models.StateDownloadPublished)), nil
+						return dbTopic(models.StateTopicPublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -160,12 +158,12 @@ func TestGetTopicPublicHandler(t *testing.T) {
 
 			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
 
-			Convey("When an existing 'current' topic is requested with the valid Topic-Id context value", func() {
+			Convey("When an existing 'published' topic is requested with the valid Topic-Id context value", func() {
 				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s", testTopicID1), nil)
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected topic is returned with status code 200", func() {
+				Convey("Then the expected sub-document topic is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -175,24 +173,6 @@ func TestGetTopicPublicHandler(t *testing.T) {
 					So(retTopic, ShouldResemble, *createdTopicCurrent())
 				})
 			})
-
-			// !!! this message probably needs changing once the system implements the rest of the spec more fully.
-
-			/*		Convey("When an existing 'published' topic is requested without a Collection-Id context value", func() {
-					r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/images/%s", testImageID2), nil)
-					r = r.WithContext(context.WithValue(r.Context(), dphttp.FlorenceIdentityKey, testUserAuthToken))
-					w := httptest.NewRecorder()
-					topicAPI.Router.ServeHTTP(w, r)
-					Convey("Then the published topic is returned with status code 200", func() {
-						So(w.Code, ShouldEqual, http.StatusOK)
-						payload, err := ioutil.ReadAll(w.Body)
-						So(err, ShouldBeNil)
-						retImage := models.Image{}
-						err = json.Unmarshal(payload, &retImage)
-						So(err, ShouldBeNil)
-						So(retImage, ShouldResemble, *apiFullImage(models.StateTopicPublished))
-					})
-				})*/
 
 			Convey("Requesting an nonexistent topic ID results in a NotFound response", func() {
 				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent", nil)
@@ -216,9 +196,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
 					switch id {
 					case testTopicID1:
-						return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue
-						//				case testImageID2:
-						//					return dbFullImageWithDownloads(models.StateTopicPublished, dbDownload(models.StateDownloadPublished)), nil
+						return dbTopic(models.StateTopicCreated), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -242,24 +220,6 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 					So(retTopic, ShouldResemble, *createdTopicAll())
 				})
 			})
-
-			// !!! this message probably needs changing once the system implements the rest of the spec more fully.
-
-			/*		Convey("When an existing 'published' topic is requested without a Collection-Id context value", func() {
-					r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/images/%s", testImageID2), nil)
-					r = r.WithContext(context.WithValue(r.Context(), dphttp.FlorenceIdentityKey, testUserAuthToken))
-					w := httptest.NewRecorder()
-					topicAPI.Router.ServeHTTP(w, r)
-					Convey("Then the published topic is returned with status code 200", func() {
-						So(w.Code, ShouldEqual, http.StatusOK)
-						payload, err := ioutil.ReadAll(w.Body)
-						So(err, ShouldBeNil)
-						retImage := models.Image{}
-						err = json.Unmarshal(payload, &retImage)
-						So(err, ShouldBeNil)
-						So(retImage, ShouldResemble, *apiFullImage(models.StateTopicPublished))
-					})
-				})*/
 
 			Convey("Requesting an nonexistent topic ID results in a NotFound response", func() {
 				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent"), nil)
