@@ -82,8 +82,8 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	svc.Server = svc.ServiceList.GetHTTPServer(svc.Config.BindAddr, middle.Then(router))
 
 	// Setup the API
-	topicPermissions, permissions := getAuthorisationHandlers(ctx, svc.Config)
-	svc.API = api.Setup(ctx, svc.Config, router, store, topicPermissions, permissions)
+	permissions := getAuthorisationHandlers(ctx, svc.Config)
+	svc.API = api.Setup(ctx, svc.Config, router, store, permissions)
 
 	svc.HealthCheck.Start(ctx)
 
@@ -97,23 +97,16 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	return nil
 }
 
-func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) (api.AuthHandler, api.AuthHandler) {
+func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) api.AuthHandler {
 	if cfg.EnablePermissionsAuth == false {
 		log.Event(ctx, "feature flag not enabled defaulting to nop authZ impl", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
-		return &auth.NopHandler{}, &auth.NopHandler{}
+		return &auth.NopHandler{}
 	}
 
 	log.Event(ctx, "feature flag enabled", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
 
 	authClient := auth.NewPermissionsClient(dphttp.NewClient())
 	authVerifier := auth.DefaultPermissionsVerifier()
-
-	// for checking caller permissions when we have a datasetID, collection ID and user/service token
-	datasetPermissions := auth.NewHandler(
-		auth.NewDatasetPermissionsRequestBuilder(cfg.ZebedeeURL, "dataset_id", mux.Vars),
-		authClient,
-		authVerifier,
-	)
 
 	// for checking caller permissions when we only have a user/service token
 	permissions := auth.NewHandler(
@@ -122,7 +115,7 @@ func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) (api.Auth
 		authVerifier,
 	)
 
-	return datasetPermissions, permissions
+	return permissions
 }
 
 // CreateMiddleware creates an Alice middleware chain of handlers

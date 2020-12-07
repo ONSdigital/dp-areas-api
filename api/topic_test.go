@@ -239,10 +239,9 @@ func GetAPIWithMocks(cfg *config.Config, mockedDataStore store.Storer) *API {
 	defer mu.Unlock()
 	//	urlBuilder := url.NewBuilder("http://example.com")
 
-	topicPermissions := mocks.NewAuthHandlerMock()
 	permissions := mocks.NewAuthHandlerMock()
 
-	return Setup(testContext, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, topicPermissions, permissions)
+	return Setup(testContext, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, permissions)
 }
 
 func BenchmarkGetTopicPrivateHandler(b *testing.B) {

@@ -65,7 +65,6 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
-		topicPermissions := mocks.NewAuthHandlerMock()
 		permissions := mocks.NewAuthHandlerMock()
 
 		Convey("When created in Publishing mode", func() {
@@ -74,7 +73,7 @@ func TestSetup(t *testing.T) {
 			cfg.EnablePrivateEndpoints = true
 			mockedDataStore := &storetest.StorerMock{}
 
-			api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, topicPermissions, permissions)
+			api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, permissions)
 
 			Convey("When created the following routes should have been added", func() {
 				So(api, ShouldNotBeNil)
@@ -89,7 +88,7 @@ func TestSetup(t *testing.T) {
 			cfg.EnablePrivateEndpoints = false
 			mockedDataStore := &storetest.StorerMock{}
 
-			api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, topicPermissions, permissions)
+			api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, permissions)
 
 			Convey("When created the following routes should have been added", func() {
 				So(api, ShouldNotBeNil)
@@ -97,12 +96,11 @@ func TestSetup(t *testing.T) {
 				So(hasRoute(api.Router, "/topics/{id}", "GET"), ShouldBeTrue)
 			})
 		})
-
 	})
 }
 
 // GetWebAPIWithMocks also used in other tests, so exported
-func GetWebAPIWithMocks(ctx context.Context, cfg *config.Config, mockedDataStore store.Storer, topicPermissions AuthHandler, permissions AuthHandler) *API {
+func GetWebAPIWithMocks(ctx context.Context, cfg *config.Config, mockedDataStore store.Storer, permissions AuthHandler) *API {
 	mu.Lock()
 	defer mu.Unlock()
 	//	urlBuilder := url.NewBuilder("http://example.com")
@@ -110,7 +108,7 @@ func GetWebAPIWithMocks(ctx context.Context, cfg *config.Config, mockedDataStore
 	//	cfg.ServiceAuthToken = authToken
 	//	cfg.DatasetAPIURL = host
 
-	return Setup(ctx, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, topicPermissions, permissions)
+	return Setup(ctx, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, permissions)
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {

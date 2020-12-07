@@ -30,17 +30,15 @@ var (
 type API struct {
 	Router                 *mux.Router
 	dataStore              store.DataStore
-	topicPermissions       AuthHandler
 	permissions            AuthHandler
 	enablePrivateEndpoints bool
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStore store.DataStore, topicPermissions AuthHandler, permissions AuthHandler) *API {
+func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStore store.DataStore, permissions AuthHandler) *API {
 	api := &API{
 		Router:                 router,
 		dataStore:              dataStore,
-		topicPermissions:       topicPermissions,
 		permissions:            permissions,
 		enablePrivateEndpoints: cfg.EnablePrivateEndpoints,
 	}
@@ -95,14 +93,6 @@ func (api *API) isAuthenticated(handler http.HandlerFunc) http.HandlerFunc {
 // apply the check to. The wrapped handler is only called if the caller has the required permissions.
 func (api *API) isAuthorised(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc {
 	return api.permissions.Require(required, handler)
-}
-
-// isAuthorised wraps a http.HandlerFunc another http.HandlerFunc that checks the caller is authorised to perform the
-// requested topics action. This authorisation check is specific to topics. required is the permissions required to
-// perform the action, handler is the http.HandlerFunc to apply the check to. The wrapped handler is only called if the
-// caller has the required topic permissions.
-func (api *API) isAuthorisedForTopics(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc {
-	return api.topicPermissions.Require(required, handler)
 }
 
 // get register a GET http.HandlerFunc.
