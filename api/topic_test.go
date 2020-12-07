@@ -284,3 +284,213 @@ func GetAPIWithMocks(cfg *config.Configuration, mockedDataStore store.Storer) *A
 
 	return Setup(testContext, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, topicPermissions, permissions)
 }
+
+func BenchmarkGetTopicPrivateHandler(b *testing.B) {
+
+	// Given a topic API in publishing mode (private endpoints enabled)
+	cfg, err := config.Get()
+	if err != nil {
+		fmt.Printf("config fail\n")
+		return
+	}
+	cfg.EnablePrivateEndpoints = true
+	// And a topic API with mongoDB returning 'created' and 'full' topics
+
+	mongoDBMock := &storeMock.MongoDBMock{
+		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+			switch id {
+			case testTopicID1:
+				return dbTopic(models.StateTopicCreated), nil
+			default:
+				return nil, apierrors.ErrTopicNotFound
+			}
+		},
+	}
+	topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
+
+	b.ReportAllocs()
+
+	// test all event types
+	for i := 0; i < b.N; i++ {
+
+		// When an existing 'created' topic is requested with the valid Topic-Id context value
+		request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s", testTopicID1), nil)
+		if err != nil {
+			fmt.Printf("request fail\n")
+			return
+		}
+
+		w := httptest.NewRecorder()
+		topicAPI.Router.ServeHTTP(w, request)
+		// Then the expected topic is returned with status code 200
+		payload, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			fmt.Printf("readall fail\n")
+			return
+		}
+		retTopic := models.TopicUpdate{}
+		err = json.Unmarshal(payload, &retTopic)
+		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
+		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
+		if err != nil {
+			fmt.Printf("unmarshal fail\n")
+			return
+		}
+	}
+}
+
+func BenchmarkGetDatasetPrivate(b *testing.B) {
+
+	// Given a topic API in publishing mode (private endpoints enabled)
+	cfg, err := config.Get()
+	if err != nil {
+		fmt.Printf("config fail\n")
+		return
+	}
+	cfg.EnablePrivateEndpoints = true
+	//	And a topic API with mongoDB returning 'created' and 'full' topics
+
+	mongoDBMock := &storeMock.MongoDBMock{
+		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+			switch id {
+			case testTopicID1:
+				return dbTopic(models.StateTopicCreated), nil
+			default:
+				return nil, apierrors.ErrTopicNotFound
+			}
+		},
+	}
+	topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
+
+	b.ReportAllocs()
+
+	// test all event types
+	for i := 0; i < b.N; i++ {
+
+		//	When an existing 'created' topic is requested with the valid Topic-Id context value
+		request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/datasets/%s", testTopicID1), nil)
+		if err != nil {
+			fmt.Printf("request fail\n")
+			return
+		}
+
+		w := httptest.NewRecorder()
+		topicAPI.Router.ServeHTTP(w, request)
+		// Then the expected topic is returned with status code 200
+		payload, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			fmt.Printf("readall fail\n")
+			return
+		}
+		retTopic := models.TopicUpdate{}
+		err = json.Unmarshal(payload, &retTopic)
+		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
+		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
+		if err != nil {
+			fmt.Printf("unmarshal fail\n")
+			return
+		}
+	}
+}
+
+func BenchmarkGetTopicPublicHandler(b *testing.B) {
+
+	// Given a topic API in web mode (private endpoints disabled)
+	cfg, err := config.Get()
+	if err != nil {
+		fmt.Printf("config fail\n")
+		return
+	}
+
+	cfg.EnablePrivateEndpoints = false
+	// And a topic API with mongoDB returning 'next' and 'current' topics
+
+	mongoDBMock := &storeMock.MongoDBMock{
+		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+			switch id {
+			case testTopicID1:
+				return dbTopic(models.StateTopicCreated), nil
+			default:
+				return nil, apierrors.ErrTopicNotFound
+			}
+		},
+	}
+
+	topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
+
+	b.ReportAllocs()
+
+	// test all event types
+	for i := 0; i < b.N; i++ {
+
+		// When an existing 'current' topic is requested with the valid Topic-Id context value
+		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s", testTopicID1), nil)
+
+		w := httptest.NewRecorder()
+		topicAPI.Router.ServeHTTP(w, request)
+		// Then the expected topic is returned with status code 200
+		payload, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			fmt.Printf("readall fail\n")
+			return
+		}
+		retTopic := models.Topic{}
+		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
+		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
+		err = json.Unmarshal(payload, &retTopic)
+		if err != nil {
+			fmt.Printf("unmarshal fail\n")
+			return
+		}
+	}
+}
+
+func BenchmarkGetDatasetPublic(b *testing.B) {
+
+	// Given a topic API in publishing mode (private endpoints enabled)
+	cfg, err := config.Get()
+	if err != nil {
+		fmt.Printf("config fail\n")
+		return
+	}
+	cfg.EnablePrivateEndpoints = false
+	//	And a topic API with mongoDB returning 'created' and 'full' topics
+
+	mongoDBMock := &storeMock.MongoDBMock{
+		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+			switch id {
+			case testTopicID1:
+				return dbTopic(models.StateTopicCreated), nil
+			default:
+				return nil, apierrors.ErrTopicNotFound
+			}
+		},
+	}
+	topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
+
+	b.ReportAllocs()
+
+	// test all event types
+	for i := 0; i < b.N; i++ {
+
+		// When an existing 'created' topic is requested with the valid Topic-Id context value
+		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/datasets/%s", testTopicID1), nil)
+
+		w := httptest.NewRecorder()
+		topicAPI.Router.ServeHTTP(w, request)
+		// Then the expected topic is returned with status code 200
+		payload, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			fmt.Printf("readall fail\n")
+			return
+		}
+		retTopic := models.Topic{}
+		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
+		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
+		err = json.Unmarshal(payload, &retTopic)
+		if err != nil {
+			fmt.Printf("unmarshal fail\n")
+			return
+		}
+	}
+}

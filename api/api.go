@@ -10,7 +10,6 @@ import (
 
 	"github.com/ONSdigital/dp-authorisation/auth"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
-	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/store"
@@ -65,6 +64,7 @@ func Setup(ctx context.Context, cfg *config.Configuration, router *mux.Router, d
 // enablePublicEndpoints register only the public GET endpoints.
 func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
+	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
@@ -75,6 +75,11 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getTopicPrivateHandler)),
 		/*api.isAuthorisedForTopics(readPermission, api.getTopicPrivateHandler*/
+	)
+
+	api.get(
+		"/datasets/{id}",
+		api.isAuthorised(readPermission, api.getDataset), //!!! added for benchmarking
 	)
 }
 
@@ -120,44 +125,12 @@ func (api *API) delete(path string, handler http.HandlerFunc) {
 	api.Router.HandleFunc(path, handler).Methods("DELETE")
 }
 
-func (api *API) authenticate(r *http.Request, logData log.Data) bool {
-	var authenticated bool
-
-	if api.enablePrivateEndpoints {
-		var hasCallerIdentity, hasUserIdentity bool
-
-		// NOTE:
-		// If the identity exists then the user has been authenticated.
-		// There is an earlier step in the middleware which will call off to zebedee to
-		// authenticate the request (user/service) and this will add the identity to the
-		// request context for later use in the application ...
-		// ... which happens to be here:
-
-		callerIdentity := dprequest.Caller(r.Context())
-		if callerIdentity != "" {
-			logData["caller_identity"] = callerIdentity
-			hasCallerIdentity = true
-		}
-
-		userIdentity := dprequest.User(r.Context())
-		if userIdentity != "" {
-			logData["user_identity"] = userIdentity
-			hasUserIdentity = true
-		}
-
-		if hasCallerIdentity || hasUserIdentity {
-			authenticated = true
-		}
-		logData["authenticated"] = authenticated
-	}
-	return authenticated
-}
-
 // WriteJSONBody marshals the provided interface into json, and writes it to the response body.
 func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, data log.Data) error {
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	//	w.Header().Set("Content-Type", "application/json")// !!! which is best ?
 
 	// Marshal provided model
 	payload, err := json.Marshal(v)
