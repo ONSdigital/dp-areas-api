@@ -53,7 +53,7 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				mockedDataStore := &storetest.StorerMock{}
-				api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, nil, nil)
+				api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, nil)
 
 				api.Router.ServeHTTP(w, request)
 
