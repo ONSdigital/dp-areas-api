@@ -123,7 +123,7 @@ func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) api.AuthH
 func (svc *Service) createMiddleware(cfg *config.Config) alice.Chain {
 
 	// healthcheck
-	healthcheckHandler := newMiddleware(svc.HealthCheck.Handler, "/health")
+	healthcheckHandler := healthcheckMiddleware(svc.HealthCheck.Handler, "/health")
 	middleware := alice.New(healthcheckHandler)
 
 	// Only add the identity middleware when running in publishing.
@@ -134,8 +134,8 @@ func (svc *Service) createMiddleware(cfg *config.Config) alice.Chain {
 	return middleware
 }
 
-// newMiddleware creates a new http.Handler to intercept /health requests.
-func newMiddleware(healthcheckHandler func(http.ResponseWriter, *http.Request), path string) func(http.Handler) http.Handler {
+// healthcheckMiddleware creates a new http.Handler to intercept /health requests.
+func healthcheckMiddleware(healthcheckHandler func(http.ResponseWriter, *http.Request), path string) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
