@@ -19,11 +19,11 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		handlers.CollectionID.Header(): hColID,
 		"request_id":                   ctx.Value(dprequest.RequestIdKey),
 		"topic_id":                     id,
-		"function":                     "getTopicHandler",
+		"function":                     "getTopicPublicHandler",
 	}
 
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(req.Context(), id)
+	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -37,6 +37,8 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	// NOTE 1st log.Event() in CheckIdentity() needs removing, that looks like:
+	// log.Event(ctx, "checking for an identity in request context", log.HTTP(r, 0, 0, nil, nil), logData)
 }
 
 // getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB
@@ -53,7 +55,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	}
 
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(req.Context(), id)
+	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return

@@ -29,7 +29,7 @@ var (
 //             CloseFunc: func(ctx context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
-//             GetTopicFunc: func(ctx context.Context, id string) (*models.TopicUpdate, error) {
+//             GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
@@ -46,7 +46,7 @@ type MongoDBMock struct {
 	CloseFunc func(ctx context.Context) error
 
 	// GetTopicFunc mocks the GetTopic method.
-	GetTopicFunc func(ctx context.Context, id string) (*models.TopicUpdate, error)
+	GetTopicFunc func(id string) (*models.TopicUpdate, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -64,8 +64,6 @@ type MongoDBMock struct {
 		}
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
 			// ID is the id argument value.
 			ID string
 		}
@@ -139,33 +137,29 @@ func (mock *MongoDBMock) CloseCalls() []struct {
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *MongoDBMock) GetTopic(ctx context.Context, id string) (*models.TopicUpdate, error) {
+func (mock *MongoDBMock) GetTopic(id string) (*models.TopicUpdate, error) {
 	if mock.GetTopicFunc == nil {
 		panic("MongoDBMock.GetTopicFunc: method is nil but MongoServer.GetTopic was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
-		ID  string
+		ID string
 	}{
-		Ctx: ctx,
-		ID:  id,
+		ID: id,
 	}
 	lockMongoDBMockGetTopic.Lock()
 	mock.calls.GetTopic = append(mock.calls.GetTopic, callInfo)
 	lockMongoDBMockGetTopic.Unlock()
-	return mock.GetTopicFunc(ctx, id)
+	return mock.GetTopicFunc(id)
 }
 
 // GetTopicCalls gets all the calls that were made to GetTopic.
 // Check the length with:
 //     len(mockedMongoServer.GetTopicCalls())
 func (mock *MongoDBMock) GetTopicCalls() []struct {
-	Ctx context.Context
-	ID  string
+	ID string
 } {
 	var calls []struct {
-		Ctx context.Context
-		ID  string
+		ID string
 	}
 	lockMongoDBMockGetTopic.RLock()
 	calls = mock.calls.GetTopic

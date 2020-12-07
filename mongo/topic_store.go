@@ -9,7 +9,6 @@ import (
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
-	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -65,10 +64,9 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 }
 
 // GetTopic retrieves a topic document by its ID
-func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicUpdate, error) {
+func (m *Mongo) GetTopic(id string) (*models.TopicUpdate, error) {
 	s := m.Session.Copy()
 	defer s.Close()
-	log.Event(ctx, "getting topic by ID", log.Data{"id": id})
 
 	var topic models.TopicUpdate
 

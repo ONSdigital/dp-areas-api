@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,7 +62,7 @@ func dbTopicWithID(state models.State, id string) *models.TopicUpdate {
 		ID: id,
 		Current: &models.Topic{
 			ID:          id,
-			Description: "test description - 1",
+			Description: "current test description - 1",
 			Title:       "test title - 1",
 			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
 			State:       state.String(),
@@ -82,7 +81,7 @@ func dbTopicWithID(state models.State, id string) *models.TopicUpdate {
 		},
 		Next: &models.Topic{
 			ID:          id,
-			Description: "test description - 1",
+			Description: "next test description - 1",
 			Title:       "test title - 1",
 			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
 			State:       state.String(),
@@ -115,7 +114,7 @@ func dbTopicCurrent(state models.State) *models.Topic {
 func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
 	return &models.Topic{
 		ID:          id,
-		Description: "test description - 1",
+		Description: "current test description - 1",
 		Title:       "test title - 1",
 		Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
 		State:       state.String(),
@@ -144,10 +143,10 @@ func TestGetTopicPublicHandler(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = false
-		Convey("And a topic API with mongoDB returning 'created' and 'current' topics", func() {
+		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicUpdate, error) {
+				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue
@@ -161,7 +160,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 
 			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
 
-			Convey("When an existing 'created' topic is requested with the valid Topic-Id context value", func() {
+			Convey("When an existing 'current' topic is requested with the valid Topic-Id context value", func() {
 				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s", testTopicID1), nil)
 
 				w := httptest.NewRecorder()
@@ -214,7 +213,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'created' and 'full' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicUpdate, error) {
+				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StateTopicCreated), nil //!!! might want to change this to StateTopicTrue

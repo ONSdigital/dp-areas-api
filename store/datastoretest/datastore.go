@@ -4,7 +4,6 @@
 package storetest
 
 import (
-	"context"
 	"sync"
 
 	"github.com/ONSdigital/dp-topic-api/models"
@@ -25,7 +24,7 @@ var _ store.Storer = &StorerMock{}
 //
 //         // make and configure a mocked store.Storer
 //         mockedStorer := &StorerMock{
-//             GetTopicFunc: func(ctx context.Context, ID string) (*models.DatasetUpdate, error) {
+//             GetTopicFunc: func(ID string) (*models.DatasetUpdate, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
@@ -37,14 +36,12 @@ var _ store.Storer = &StorerMock{}
 
 type StorerMock struct {
 	// GetTopicFunc mocks the GetDataset method.
-	GetTopicFunc func(ctx context.Context, ID string) (*models.TopicUpdate, error)
+	GetTopicFunc func(ID string) (*models.TopicUpdate, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
 			// ID is the ID argument value.
 			ID string
 		}
@@ -52,33 +49,29 @@ type StorerMock struct {
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *StorerMock) GetTopic(ctx context.Context, ID string) (*models.TopicUpdate, error) {
+func (mock *StorerMock) GetTopic(ID string) (*models.TopicUpdate, error) {
 	if mock.GetTopicFunc == nil {
 		panic("StorerMock.GetTopicFunc: method is nil but Storer.GetTopic was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
-		ID  string
+		ID string
 	}{
-		Ctx: ctx,
-		ID:  ID,
+		ID: ID,
 	}
 	lockStorerMockGetTopic.Lock()
 	mock.calls.GetTopic = append(mock.calls.GetTopic, callInfo)
 	lockStorerMockGetTopic.Unlock()
-	return mock.GetTopicFunc(ctx, ID)
+	return mock.GetTopicFunc(ID)
 }
 
 // GetTopicCalls gets all the calls that were made to GetTopic.
 // Check the length with:
 //     len(mockedStorer.GetTopicCalls())
 func (mock *StorerMock) GetTopicCalls() []struct {
-	Ctx context.Context
-	ID  string
+	ID string
 } {
 	var calls []struct {
-		Ctx context.Context
-		ID  string
+		ID string
 	}
 	lockStorerMockGetTopic.RLock()
 	calls = mock.calls.GetTopic
