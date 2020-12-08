@@ -120,7 +120,6 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	//	w.Header().Set("Content-Type", "application/json")// !!! which is best ?
 
 	// Marshal provided model
 	payload, err := json.Marshal(v)
