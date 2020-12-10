@@ -34,7 +34,9 @@ paths:
         200:
           description: "Json object containing information about the topic"
           schema:
-            $ref: '#/definitions/Topic'
+            $ref: '#/definitions/TopicResponse'
+        401:
+          description: "Unauthorised to read Topic"
         404:
           description: "Topic not found"
         500:
@@ -66,6 +68,17 @@ definitions:
             $ref: '#/definitions/SubtopicsLink'
           content:
             $ref: '#/definitions/ContentLink'
+  TopicResponse:
+    description: "A model for the response body when reading a Topic"
+    type: object
+    properties:
+      id:
+        description: "A unique id for the topic"
+        type: string
+      current:
+        $ref: '#/definitions/Topic'
+      next:
+        $ref: '#/definitions/Topic'
   SubtopicsLink:
     type: object
     description: "A link to the subtopics of this topic"

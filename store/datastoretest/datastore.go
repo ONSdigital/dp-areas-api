@@ -36,7 +36,7 @@ var _ store.Storer = &StorerMock{}
 
 type StorerMock struct {
 	// GetTopicFunc mocks the GetTopic method.
-	GetTopicFunc func(ID string) (*models.TopicUpdate, error)
+	GetTopicFunc func(ID string) (*models.TopicResponse, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -49,7 +49,7 @@ type StorerMock struct {
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *StorerMock) GetTopic(ID string) (*models.TopicUpdate, error) {
+func (mock *StorerMock) GetTopic(ID string) (*models.TopicResponse, error) {
 	if mock.GetTopicFunc == nil {
 		panic("StorerMock.GetTopicFunc: method is nil but Storer.GetTopic was just called")
 	}

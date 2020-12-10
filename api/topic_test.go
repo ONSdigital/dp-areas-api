@@ -53,12 +53,12 @@ const (
 var errMongoDB = errors.New("MongoDB generic error")
 
 // DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic(state models.State) *models.TopicUpdate {
+func dbTopic(state models.State) *models.TopicResponse {
 	return dbTopicWithID(state, testTopicID1)
 }
 
-func dbTopicWithID(state models.State, id string) *models.TopicUpdate {
-	return &models.TopicUpdate{
+func dbTopicWithID(state models.State, id string) *models.TopicResponse {
+	return &models.TopicResponse{
 		ID: id,
 		Current: &models.Topic{
 			ID:          id,
@@ -102,7 +102,7 @@ func dbTopicWithID(state models.State, id string) *models.TopicUpdate {
 }
 
 // API model corresponding to dbCreatedTopic
-func createdTopicAll() *models.TopicUpdate {
+func createdTopicAll() *models.TopicResponse {
 	return dbTopic(models.StateTopicCreated)
 }
 
@@ -146,7 +146,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StateTopicPublished), nil
@@ -193,7 +193,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'created' and 'full' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StateTopicCreated), nil
@@ -214,7 +214,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					retTopic := models.TopicUpdate{}
+					retTopic := models.TopicResponse{}
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic, ShouldResemble, *createdTopicAll())
@@ -256,7 +256,7 @@ func BenchmarkGetTopicPrivateHandler(b *testing.B) {
 	// And a topic API with mongoDB returning 'created' and 'full' topics
 
 	mongoDBMock := &storeMock.MongoDBMock{
-		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
 				return dbTopic(models.StateTopicCreated), nil
@@ -287,7 +287,7 @@ func BenchmarkGetTopicPrivateHandler(b *testing.B) {
 			fmt.Printf("readall fail\n")
 			return
 		}
-		retTopic := models.TopicUpdate{}
+		retTopic := models.TopicResponse{}
 		err = json.Unmarshal(payload, &retTopic)
 		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
 		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
@@ -310,7 +310,7 @@ func BenchmarkGetDatasetPrivate(b *testing.B) {
 	//	And a topic API with mongoDB returning 'created' and 'full' topics
 
 	mongoDBMock := &storeMock.MongoDBMock{
-		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
 				return dbTopic(models.StateTopicCreated), nil
@@ -341,7 +341,7 @@ func BenchmarkGetDatasetPrivate(b *testing.B) {
 			fmt.Printf("readall fail\n")
 			return
 		}
-		retTopic := models.TopicUpdate{}
+		retTopic := models.TopicResponse{}
 		err = json.Unmarshal(payload, &retTopic)
 		// NOTE: to check that the correct structure is unmarshaled and the contents of the structure
 		// are as expected, run this benchmark in the debugger with a breakpoint on the next line ...
@@ -365,7 +365,7 @@ func BenchmarkGetTopicPublicHandler(b *testing.B) {
 	// And a topic API with mongoDB returning 'next' and 'current' topics
 
 	mongoDBMock := &storeMock.MongoDBMock{
-		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
 				return dbTopic(models.StateTopicCreated), nil
@@ -416,7 +416,7 @@ func BenchmarkGetDatasetPublic(b *testing.B) {
 	//	And a topic API with mongoDB returning 'created' and 'full' topics
 
 	mongoDBMock := &storeMock.MongoDBMock{
-		GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
 				return dbTopic(models.StateTopicCreated), nil
