@@ -29,7 +29,7 @@ var (
 //             CloseFunc: func(ctx context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
-//             GetTopicFunc: func(id string) (*models.TopicUpdate, error) {
+//             GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
@@ -46,7 +46,7 @@ type MongoDBMock struct {
 	CloseFunc func(ctx context.Context) error
 
 	// GetTopicFunc mocks the GetTopic method.
-	GetTopicFunc func(id string) (*models.TopicUpdate, error)
+	GetTopicFunc func(id string) (*models.TopicResponse, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -137,7 +137,7 @@ func (mock *MongoDBMock) CloseCalls() []struct {
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *MongoDBMock) GetTopic(id string) (*models.TopicUpdate, error) {
+func (mock *MongoDBMock) GetTopic(id string) (*models.TopicResponse, error) {
 	if mock.GetTopicFunc == nil {
 		panic("MongoDBMock.GetTopicFunc: method is nil but MongoServer.GetTopic was just called")
 	}

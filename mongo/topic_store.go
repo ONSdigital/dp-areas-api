@@ -64,11 +64,11 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 }
 
 // GetTopic retrieves a topic document by its ID
-func (m *Mongo) GetTopic(id string) (*models.TopicUpdate, error) {
+func (m *Mongo) GetTopic(id string) (*models.TopicResponse, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
-	var topic models.TopicUpdate
+	var topic models.TopicResponse
 
 	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"id": id}).One(&topic)
 	if err != nil {
