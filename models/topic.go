@@ -22,7 +22,7 @@ type Topic struct {
 	Keywords    []string    `bson:"keywords,omitempty"     json:"keywords,omitempty"`
 	State       string      `bson:"state,omitempty"        json:"state,omitempty"`
 	Links       *TopicLinks `bson:"links,omitempty"        json:"links,omitempty"`
-	Subtopics   []string    `bson:"subtopics,omitempty"    json:"-"` // !!! move this In the future when this is filled out for a PUT, this would 'if' extracted be removed for GET's
+	//	Subtopics   []string    `bson:"subtopics,omitempty"    json:"-"` // !!! move this In the future when this is filled out for a PUT, this would 'if' extracted be removed for GET's
 }
 
 // LinkObject represents a generic structure for all links
