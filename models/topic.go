@@ -7,22 +7,23 @@ import "github.com/ONSdigital/dp-topic-api/apierrors"
 // the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
 type TopicResponse struct {
 	ID      string `bson:"id,omitempty"       json:"id,omitempty"`
-	Current *Topic `bson:"current,omitempty"  json:"current,omitempty"`
 	Next    *Topic `bson:"next,omitempty"     json:"next,omitempty"`
+	Current *Topic `bson:"current,omitempty"  json:"current,omitempty"`
 }
 
 // Topic represents topic schema as it is stored in mongoDB
 // and is used for marshaling and unmarshaling json representation for API
 // ID is a duplicate of ID in TopicResponse, to facilitate each subdocument being a full-formed
 // response in its own right depending upon request being in publish or web and also authentication.
+// Subtopics contains TopicResonse ID(s).
 type Topic struct {
-	ID          string      `bson:"_id,omitempty"          json:"id,omitempty"`
-	Description string      `bson:"description,omitempty"  json:"description,omitempty"`
-	Title       string      `bson:"title,omitempty"        json:"title,omitempty"`
-	Keywords    []string    `bson:"keywords,omitempty"     json:"keywords,omitempty"`
-	State       string      `bson:"state,omitempty"        json:"state,omitempty"`
-	Links       *TopicLinks `bson:"links,omitempty"        json:"links,omitempty"`
-	//	Subtopics   []string    `bson:"subtopics,omitempty"    json:"-"` // !!! move this In the future when this is filled out for a PUT, this would 'if' extracted be removed for GET's
+	ID          string      `bson:"_id,omitempty"            json:"id,omitempty"`
+	Description string      `bson:"description,omitempty"    json:"description,omitempty"`
+	Title       string      `bson:"title,omitempty"          json:"title,omitempty"`
+	Keywords    []string    `bson:"keywords,omitempty"       json:"keywords,omitempty"`
+	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
+	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
+	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 }
 
 // LinkObject represents a generic structure for all links
