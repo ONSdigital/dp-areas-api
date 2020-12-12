@@ -26,7 +26,7 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/1/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "2",
             "3"
         ]
@@ -49,7 +49,7 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/1/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "2",
             "3"
         ]
@@ -76,7 +76,7 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/2/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "4"
         ]
     },
@@ -98,7 +98,7 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/2/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "4"
         ]
     }

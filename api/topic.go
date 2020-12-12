@@ -6,6 +6,7 @@ import (
 
 	dprequest "github.com/ONSdigital/dp-net/request"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
+	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
@@ -28,7 +29,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	// Ensure the sub document has the main document ID
+	// Ensure the sub document has the main document ID (!!! does this need doing for dp-topic-api ?)
 	topic.Current.ID = topic.ID
 
 	// User is not authenticated and hence has only access to current sub document
@@ -36,8 +37,6 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
-	// NOTE 1st log.Event() in CheckIdentity() needs removing, that looks like:
-	// log.Event(ctx, "checking for an identity in request context", log.HTTP(r, 0, 0, nil, nil), logData)
 }
 
 // getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB
@@ -60,6 +59,94 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 
 	// User has valid authentication to get raw topic document
 	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
+		return
+	}
+	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+}
+
+// getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB
+func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	vars := mux.Vars(req)
+	id := vars["id"]
+	logdata := log.Data{
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getSubtopicsPublicHandler",
+	}
+
+	// get topic from mongoDB by id
+	topic, err := api.dataStore.Backend.GetTopic(id)
+	if err != nil {
+		//!!! do we want this to report 'subtopics not found' or is 'topic not found ok' ???
+		handleError(ctx, w, err, logdata)
+		return
+	}
+
+	var result models.PublicSubtopics
+
+	if len(topic.Current.SubtopicIds) > 0 {
+		for _, item := range topic.Current.SubtopicIds {
+			// get topic from mongoDB by item
+			topic, err := api.dataStore.Backend.GetTopic(item)
+			if err != nil {
+				//!!! what sort of error should we have here if one of the ids for the subtopic list fails to read the doc ?
+				handleError(ctx, w, err, logdata)
+				return
+			}
+			// Ensure the sub document has the main document ID (!!! does this need doing for dp-topic-api ?)
+			topic.Current.ID = topic.ID
+			result.PublicItems = append(result.PublicItems, topic.Current)
+			result.TotalCount++
+		}
+	}
+	// else, no subtopics exist (there should be, so do we do an error and/or an error log !!!) so a 'TotalCount' of zero is returned
+
+	// User is not authenticated and hence has only access to current sub document
+	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+		return
+	}
+	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+}
+
+// getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB
+func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	vars := mux.Vars(req)
+	id := vars["id"]
+	logdata := log.Data{
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getSubtopicsPrivateHandler",
+	}
+
+	// get topic from mongoDB by id
+	topic, err := api.dataStore.Backend.GetTopic(id)
+	if err != nil {
+		//!!! do we want this to report 'subtopics not found' or is 'topic not found ok' ???
+		handleError(ctx, w, err, logdata)
+		return
+	}
+
+	var result models.PrivateSubtopics
+
+	if len(topic.Current.SubtopicIds) > 0 {
+		for _, item := range topic.Current.SubtopicIds {
+			// get topic from mongoDB by item
+			topic, err := api.dataStore.Backend.GetTopic(item)
+			if err != nil {
+				//!!! what sort of error should we have here if one of the ids for the subtopic list fails to read the doc ?
+				handleError(ctx, w, err, logdata)
+				return
+			}
+			result.PrivateItems = append(result.PrivateItems, topic)
+			result.TotalCount++
+		}
+	}
+	// else, no subtopics exist (there should be, so do we do an error and/or an error log !!!) so a 'TotalCount' of zero is returned
+
+	// User has valid authentication to get raw topic document
+	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
