@@ -6,6 +6,7 @@ db = db.getSiblingDB('topics')
 
 db.topics.remove({})
 
+// 1 has subtopics & points to 2 & 3
 db.topics.insertOne({
     "id" : "1", 
     "next" : {
@@ -56,6 +57,7 @@ db.topics.insertOne({
     }
 })
 
+// 2 has subtopics & points to 4
 db.topics.insertOne({
     "id" : "2", 
     "next" : {
@@ -104,6 +106,7 @@ db.topics.insertOne({
     }
 })
 
+// 3 has subtopics, but is missing the subtopics list
 db.topics.insertOne({
     "id" : "3", 
     "next" : {
@@ -116,6 +119,9 @@ db.topics.insertOne({
             "self": {
                 "href": "http://localhost:8080/topics/3",
                 "id": "3"
+            },
+            "subtopics": {
+                "href": "http://localhost:8080/topics/3/subtopics",
             },
             "content": {
                 "href": "http://localhost:8080/topics/3/content",
@@ -133,6 +139,9 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/3",
                 "id": "3"
             },
+            "subtopics": {
+                "href": "http://localhost:8080/topics/3/subtopics",
+            },
             "content": {
                 "href": "http://localhost:8080/topics/3/content",
             }
@@ -140,6 +149,7 @@ db.topics.insertOne({
     }
 })
 
+// 4 has NO subtopics
 db.topics.insertOne({
     "id" : "4", 
     "next" : {
