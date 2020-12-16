@@ -51,7 +51,7 @@ db.topics.insertOne({
     }
 })
 
-// 2 has subtopics & points to 4
+// 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
 db.topics.insertOne({
     "id" : "2", 
     "next" : {
@@ -96,7 +96,7 @@ db.topics.insertOne({
     }
 })
 
-// 3 has subtopics, but is missing the subtopics list
+// 3 has subtopics, but the ID 5 in the list does not exist
 db.topics.insertOne({
     "id" : "3", 
     "next" : {
@@ -139,7 +139,7 @@ db.topics.insertOne({
     }
 })
 
-// 4 has NO subtopics
+// 4 has NO subtopics, so is an end node that has a content link
 db.topics.insertOne({
     "id" : "4", 
     "next" : {

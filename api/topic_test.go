@@ -52,33 +52,9 @@ const (
 
 var errMongoDB = errors.New("MongoDB generic error")
 
-// DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic(state models.State) *models.TopicResponse {
-	return dbTopicWithID(state, testTopicID1)
-}
-
 func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: id,
-		Current: &models.Topic{
-			ID:          id,
-			Description: "current test description - 1",
-			Title:       "test title - 1",
-			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
-			State:       state.String(),
-			Links: &models.TopicLinks{
-				Self: &models.LinkObject{
-					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
-					ID:   fmt.Sprintf("%s", id),
-				},
-				Subtopics: &models.LinkObject{
-					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
-				},
-				Content: &models.LinkObject{
-					HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
-				},
-			},
-		},
 		Next: &models.Topic{
 			ID:          id,
 			Description: "next test description - 1",
@@ -98,17 +74,36 @@ func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 				},
 			},
 		},
+		Current: &models.Topic{
+			ID:          id,
+			Description: "current test description - 1",
+			Title:       "test title - 1",
+			Keywords:    []string{"keyword 1", "keyword 2", "keyword 3"},
+			State:       state.String(),
+			Links: &models.TopicLinks{
+				Self: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
+					ID:   fmt.Sprintf("%s", id),
+				},
+				Subtopics: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
+				},
+				Content: &models.LinkObject{
+					HRef: fmt.Sprintf("http://example.com/topics/%s/content", id),
+				},
+			},
+		},
 	}
+}
+
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic(state models.State) *models.TopicResponse {
+	return dbTopicWithID(state, testTopicID1)
 }
 
 // API model corresponding to dbCreatedTopic
 func createdTopicAll() *models.TopicResponse {
 	return dbTopic(models.StateTopicCreated)
-}
-
-// create just the 'current' sub-document
-func dbTopicCurrent(state models.State) *models.Topic {
-	return dbTopicCurrentWithID(state, testTopicID1)
 }
 
 func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
@@ -131,6 +126,11 @@ func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
 			},
 		},
 	}
+}
+
+// create just the 'current' sub-document
+func dbTopicCurrent(state models.State) *models.Topic {
+	return dbTopicCurrentWithID(state, testTopicID1)
 }
 
 func createdTopicCurrent() *models.Topic {
@@ -225,6 +225,234 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent"), nil)
 				So(err, ShouldBeNil)
 
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+		})
+	})
+}
+
+// NOTE: The data within the following four sets of data returning functions
+//       are interlinked with one another by the SubtopicsIds
+
+// ================= - 1 has subtopics & points to 2 & 3
+func dbTopicWithID1(state models.State) *models.TopicResponse {
+	return &models.TopicResponse{
+		ID: "1",
+		Next: &models.Topic{
+			ID:    "1",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/1/subtopics",
+				},
+			},
+			SubtopicIds: []string{"2", "3"},
+		},
+		Current: &models.Topic{
+			ID:    "1",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/1/subtopics",
+				},
+			},
+			SubtopicIds: []string{"2", "3"},
+		},
+	}
+}
+
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic1(state models.State) *models.TopicResponse {
+	return dbTopicWithID1(state)
+}
+
+// ================= - 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
+func dbTopicWithID2(state models.State) *models.TopicResponse {
+	return &models.TopicResponse{
+		ID: "2",
+		Next: &models.Topic{
+			ID:    "2",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/2/subtopics",
+				},
+			},
+			SubtopicIds: []string{"4", "6"},
+		},
+		Current: &models.Topic{
+			ID:    "2",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/2/subtopics",
+				},
+			},
+			SubtopicIds: []string{"4", "6"},
+		},
+	}
+}
+
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic2(state models.State) *models.TopicResponse {
+	return dbTopicWithID2(state)
+}
+
+// ================= - 3 has subtopics, but the ID 5 in the list does not exist
+func dbTopicWithID3(state models.State) *models.TopicResponse {
+	return &models.TopicResponse{
+		ID: "3",
+		Next: &models.Topic{
+			ID:    "3",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/3/subtopics",
+				},
+			},
+			SubtopicIds: []string{"5"},
+		},
+		Current: &models.Topic{
+			ID:    "3",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Subtopics: &models.LinkObject{
+					HRef: "http://example.com/topics/3/subtopics",
+				},
+			},
+			SubtopicIds: []string{"5"},
+		},
+	}
+}
+
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic3(state models.State) *models.TopicResponse {
+	return dbTopicWithID3(state)
+}
+
+// ================= - 4 has NO subtopics, so is an end node that has a content link
+func dbTopicWithID4(state models.State) *models.TopicResponse {
+	return &models.TopicResponse{
+		ID: "4",
+		Next: &models.Topic{
+			ID:    "4",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Content: &models.LinkObject{
+					HRef: "http://example.com/topics/4/content",
+				},
+			},
+		},
+		Current: &models.Topic{
+			ID:    "1",
+			State: state.String(),
+			Links: &models.TopicLinks{
+				Content: &models.LinkObject{
+					HRef: "http://example.com/topics/4/content",
+				},
+			},
+		},
+	}
+}
+
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic4(state models.State) *models.TopicResponse {
+	return dbTopicWithID4(state)
+}
+
+func TestGetSubtopicsPublicHandler(t *testing.T) {
+
+	Convey("Given a topic API in web mode (private endpoints disabled)", t, func() {
+		cfg, err := config.Get()
+		So(err, ShouldBeNil)
+		cfg.EnablePrivateEndpoints = false
+		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
+
+			mongoDBMock := &storeMock.MongoDBMock{
+				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+					switch id {
+					case "1":
+						return dbTopic1(models.StateTopicPublished), nil
+					case "2":
+						return dbTopic2(models.StateTopicPublished), nil
+					case "3":
+						return dbTopic3(models.StateTopicPublished), nil
+					case "4":
+						return dbTopic4(models.StateTopicPublished), nil
+					default:
+						return nil, apierrors.ErrTopicNotFound
+					}
+				},
+			}
+
+			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
+
+			// 1 has subtopics & points to 2 & 3
+			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 1", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/1/subtopics"), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retTopic := models.PublicSubtopics{}
+					err = json.Unmarshal(payload, &retTopic)
+					So(err, ShouldBeNil)
+					So(retTopic.TotalCount, ShouldEqual, 2)
+				})
+			})
+
+			// 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
+			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 2", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/2/subtopics"), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retTopic := models.PublicSubtopics{}
+					err = json.Unmarshal(payload, &retTopic)
+					So(err, ShouldBeNil)
+					So(retTopic.TotalCount, ShouldEqual, 1)
+				})
+			})
+
+			// 3 has subtopics, but the ID 5 in the list does not exist
+			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 3", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/3/subtopics"), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 500", func() {
+					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("internal error\n"))
+				})
+			})
+
+			// 4 has NO subtopics, so is an end node that has a content link
+			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 4", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/4/subtopics"), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("not found\n"))
+				})
+			})
+
+			Convey("Requesting an nonexistent topic ID results in a NotFound response", func() {
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent/subtopics", nil)
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
