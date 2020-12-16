@@ -259,17 +259,17 @@ func TestClose(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			err = svc.Close(context.Background())
-			//So(err, ShouldNotBeNil)
+			So(err, ShouldNotBeNil)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(failingserverMock.ShutdownCalls()), ShouldEqual, 1)
 		})
 
 		Convey("If service times out while shutting down, the Close operation fails with the expected error", func() {
-			cfg.GracefulShutdownTimeout = 1 * time.Millisecond
+			cfg.GracefulShutdownTimeout = 100 * time.Millisecond
 			timeoutServerMock := &mock.HTTPServerMock{
 				ListenAndServeFunc: func() error { return nil },
 				ShutdownFunc: func(ctx context.Context) error {
-					time.Sleep(2 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
 					return nil
 				},
 			}
