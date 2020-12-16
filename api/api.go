@@ -174,27 +174,21 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 		switch err {
 		//!!! fix this list for this service as the application develops to all features
 		case apierrors.ErrTopicNotFound,
-			apierrors.ErrVariantNotFound:
+			apierrors.ErrNotFound:
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrImageFilenameTooLong,
 			apierrors.ErrImageNoCollectionID,
 			apierrors.ErrTopicInvalidState,
-			apierrors.ErrImageDownloadTypeMismatch,
-			apierrors.ErrImageDownloadInvalidState,
-			apierrors.ErrImageIDMismatch,
-			apierrors.ErrVariantIDMismatch:
+			apierrors.ErrImageIDMismatch:
 			status = http.StatusBadRequest
 		case apierrors.ErrImageAlreadyPublished,
 			apierrors.ErrTopicAlreadyCompleted,
 			apierrors.ErrTopicStateTransitionNotAllowed,
 			apierrors.ErrImageBadInitialState,
 			apierrors.ErrImageNotImporting,
-			apierrors.ErrImageNotPublished,
-			apierrors.ErrVariantAlreadyExists,
-			apierrors.ErrVariantStateTransitionNotAllowed,
-			apierrors.ErrImageDownloadBadInitialState:
+			apierrors.ErrImageNotPublished:
 			status = http.StatusForbidden
 		default:
 			status = http.StatusInternalServerError

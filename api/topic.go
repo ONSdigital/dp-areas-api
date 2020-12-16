@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	dprequest "github.com/ONSdigital/dp-net/request"
+	"github.com/ONSdigital/dp-topic-api/apierrors"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/log.go/log"
@@ -28,9 +29,6 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		handleError(ctx, w, err, logdata)
 		return
 	}
-
-	// Ensure the sub document has the main document ID (!!! does this need doing for dp-topic-api ?)
-	topic.Current.ID = topic.ID
 
 	// User is not authenticated and hence has only access to current sub document
 	if err := WriteJSONBody(ctx, topic.Current, w, logdata); err != nil {
@@ -78,7 +76,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
-		//!!! do we want this to report 'subtopics not found' or is 'topic not found ok' ???
+		// no topic found to retrieve the subtopics from
 		handleError(ctx, w, err, logdata)
 		return
 	}
@@ -87,22 +85,27 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 
 	if len(topic.Current.SubtopicIds) > 0 {
 		for _, item := range topic.Current.SubtopicIds {
-			// get topic from mongoDB by item
+			// get sub topic from mongoDB by item
 			topic, err := api.dataStore.Backend.GetTopic(item)
 			if err != nil {
-				//!!! what sort of error should we have here if one of the ids for the subtopic list fails to read the doc ?
-				handleError(ctx, w, err, logdata)
-				return
+				logdata["missing subtopic for id"] = item
+				log.Event(ctx, err.Error(), log.ERROR /*log.Error(err),*/, logdata)
+				continue
 			}
-			// Ensure the sub document has the main document ID (!!! does this need doing for dp-topic-api ?)
-			topic.Current.ID = topic.ID
 			result.PublicItems = append(result.PublicItems, topic.Current)
 			result.TotalCount++
 		}
+		if result.TotalCount == 0 {
+			handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+			return
+		}
+	} else {
+		// no subtopics exist for the requested ID
+		handleError(ctx, w, apierrors.ErrNotFound, logdata)
+		return
 	}
-	// else, no subtopics exist (there should be, so do we do an error and/or an error log !!!) so a 'TotalCount' of zero is returned
 
-	// User is not authenticated and hence has only access to current sub document
+	// User is not authenticated and hence has only access to current sub document(s)
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
 	}
@@ -123,7 +126,7 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
-		//!!! do we want this to report 'subtopics not found' or is 'topic not found ok' ???
+		// no topic found to retrieve the subtopics from
 		handleError(ctx, w, err, logdata)
 		return
 	}
@@ -135,17 +138,24 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 			// get topic from mongoDB by item
 			topic, err := api.dataStore.Backend.GetTopic(item)
 			if err != nil {
-				//!!! what sort of error should we have here if one of the ids for the subtopic list fails to read the doc ?
-				handleError(ctx, w, err, logdata)
-				return
+				logdata["missing subtopic for id"] = item
+				log.Event(ctx, err.Error(), log.ERROR /*log.Error(err),*/, logdata)
+				continue
 			}
 			result.PrivateItems = append(result.PrivateItems, topic)
 			result.TotalCount++
 		}
+		if result.TotalCount == 0 {
+			handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+			return
+		}
+	} else {
+		// no subtopics exist for the requested ID
+		handleError(ctx, w, apierrors.ErrNotFound, logdata)
+		return
 	}
-	// else, no subtopics exist (there should be, so do we do an error and/or an error log !!!) so a 'TotalCount' of zero is returned
 
-	// User has valid authentication to get raw topic document
+	// User has valid authentication to get raw full topic document(s)
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
 	}

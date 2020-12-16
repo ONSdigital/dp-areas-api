@@ -22,9 +22,6 @@ db.topics.insertOne({
             },
             "subtopics": {
                  "href": "http://localhost:8080/topics/1/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/1/content",
             }
         },
         "subtopics_ids" : [
@@ -45,9 +42,6 @@ db.topics.insertOne({
             },
             "subtopics": { 
                 "href": "http://localhost:8080/topics/1/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/1/content",
             }
         },
         "subtopics_ids" : [
@@ -73,13 +67,11 @@ db.topics.insertOne({
             },
             "subtopics": {
                  "href": "http://localhost:8080/topics/2/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/2/content",
             }
         },
         "subtopics_ids" : [
-            "4"
+            "4",
+            "6"
         ]
     },
     "current" : {
@@ -95,13 +87,11 @@ db.topics.insertOne({
             },
             "subtopics": { 
                 "href": "http://localhost:8080/topics/2/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/2/content",
             }
         },
         "subtopics_ids" : [
-            "4"
+            "4",
+            "6"
         ]
     }
 })
@@ -122,11 +112,11 @@ db.topics.insertOne({
             },
             "subtopics": {
                 "href": "http://localhost:8080/topics/3/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/3/content",
             }
-        }
+        },
+        "subtopics_ids" : [
+            "5"
+        ]
     },
     "current" : {
         "_id" : "3",
@@ -141,11 +131,11 @@ db.topics.insertOne({
             },
             "subtopics": {
                 "href": "http://localhost:8080/topics/3/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/3/content",
             }
-        }
+        },
+        "subtopics_ids" : [
+            "5"
+        ]
     }
 })
 
