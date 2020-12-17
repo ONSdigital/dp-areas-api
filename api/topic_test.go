@@ -346,7 +346,7 @@ func dbTopicWithID4(state models.State) *models.TopicResponse {
 			},
 		},
 		Current: &models.Topic{
-			ID:    "1",
+			ID:    "4",
 			State: state.String(),
 			Links: &models.TopicLinks{
 				Content: &models.LinkObject{
@@ -395,7 +395,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected sub-documents is returned with status code 200", func() {
+				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -403,6 +403,8 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 2)
+					So(retTopic.PublicItems[0].ID, ShouldEqual, "2")
+					So(retTopic.PublicItems[1].ID, ShouldEqual, "3")
 				})
 			})
 
@@ -412,7 +414,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected sub-documents is returned with status code 200", func() {
+				Convey("Then the expected sub-document is returned with status code 200, and document with ID 4 is returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -420,6 +422,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 1)
+					So(retTopic.PublicItems[0].ID, ShouldEqual, "4")
 				})
 			})
 
@@ -429,7 +432,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected sub-documents is returned with status code 500", func() {
+				Convey("Then no sub-documents are returned and we get status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusInternalServerError)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -443,7 +446,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected sub-documents is returned with status code 404", func() {
+				Convey("Then no sub-documents are returned and we get status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
