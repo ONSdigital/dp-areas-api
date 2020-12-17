@@ -89,7 +89,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 			topic, err := api.dataStore.Backend.GetTopic(item)
 			if err != nil {
 				logdata["missing subtopic for id"] = item
-				log.Event(ctx, err.Error(), log.ERROR /*log.Error(err),*/, logdata)
+				log.Event(ctx, err.Error(), log.ERROR, logdata)
 				continue
 			}
 			result.PublicItems = append(result.PublicItems, topic.Current)
@@ -139,7 +139,7 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 			topic, err := api.dataStore.Backend.GetTopic(item)
 			if err != nil {
 				logdata["missing subtopic for id"] = item
-				log.Event(ctx, err.Error(), log.ERROR /*log.Error(err),*/, logdata)
+				log.Event(ctx, err.Error(), log.ERROR, logdata)
 				continue
 			}
 			result.PrivateItems = append(result.PrivateItems, topic)
