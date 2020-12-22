@@ -20,7 +20,6 @@ type MongoConfig struct {
 	BindAddr   string `envconfig:"MONGODB_BIND_ADDR"   json:"-"`
 	Collection string `envconfig:"MONGODB_COLLECTION"`
 	Database   string `envconfig:"MONGODB_DATABASE"`
-
 }
 
 var cfg *Config
@@ -39,9 +38,8 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		MongoConfig: MongoConfig{
 			BindAddr:   "localhost:27017",
-			Collection: "datasets",
-			Database:   "datasets",
-		
+			Collection: "areas",
+			Database:   "areas",
 		},
 	}
 

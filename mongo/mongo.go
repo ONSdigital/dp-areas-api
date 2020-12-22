@@ -12,9 +12,9 @@ import (
 
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
+	Session      *mgo.Session
 	Collection   string
 	Database     string
-	Session      *mgo.Session
 	URI          string
 	healthClient *dpMongoHealth.CheckMongoClient
 }

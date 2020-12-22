@@ -24,6 +24,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck: false,
 		Init:        initialiser,
+		MongoDB:     false,
 	}
 }
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-
 )
 
 //go:generate moq -out mock/initialiser.go -pkg mock . Initialiser

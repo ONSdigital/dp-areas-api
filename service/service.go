@@ -17,7 +17,7 @@ type Service struct {
 	Router      *mux.Router
 	API         *api.API
 	ServiceList *ExternalServiceList
-	mongoDB     MongoServer
+	MongoDB     MongoServer
 	HealthCheck HealthChecker
 }
 
@@ -73,7 +73,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		HealthCheck: hc,
 		ServiceList: serviceList,
 		Server:      s,
-		mongoDB:     mongoDB,
+		MongoDB:     mongoDB,
 	}, nil
 }
 
@@ -100,15 +100,16 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
-		// ADD CODE HERE: Close other dependencies, in the expected order
-
 		// close mongoDB
 		if svc.ServiceList.MongoDB {
-			if err := svc.mongoDB.Close(ctx); err != nil {
+			if err := svc.MongoDB.Close(ctx); err != nil {
 				log.Event(ctx, "error closing mongoDB", log.Error(err), log.ERROR)
 				hasShutdownError = true
 			}
 		}
+
+		// ADD CODE HERE: Close other dependencies, in the expected order
+
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
@@ -123,7 +124,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	// other error
 	if hasShutdownError {
 		err := errors.New("failed to shutdown gracefully")
-		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		log.Event(ctx, "failed to shutdown gracefully", log.ERROR, log.Error(err))
 		return err
 	}
 
@@ -134,6 +135,7 @@ func (svc *Service) Close(ctx context.Context) error {
 func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB MongoServer) (err error) {
 	hasErrors := false
 
+	// ADD CODE: add other health checks here
 	if err = hc.AddCheck("Mongo DB", mongoDB.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "error adding check for mongo db", log.ERROR, log.Error(err))
