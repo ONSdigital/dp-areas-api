@@ -81,31 +81,36 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
+	// User is not authenticated and hence has only access to current sub document(s)
 	var result models.PublicSubtopics
 
-	if len(topic.Current.SubtopicIds) > 0 {
-		for _, item := range topic.Current.SubtopicIds {
-			// get sub topic from mongoDB by item
-			topic, err := api.dataStore.Backend.GetTopic(item)
-			if err != nil {
-				logdata["missing subtopic for id"] = item
-				log.Event(ctx, err.Error(), log.ERROR, logdata)
-				continue
-			}
-			result.PublicItems = append(result.PublicItems, topic.Current)
-			result.TotalCount++
-		}
-		if result.TotalCount == 0 {
-			handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-			return
-		}
-	} else {
+	if topic.Current == nil {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+
+	if len(topic.Current.SubtopicIds) == 0 {
 		// no subtopics exist for the requested ID
 		handleError(ctx, w, apierrors.ErrNotFound, logdata)
 		return
 	}
 
-	// User is not authenticated and hence has only access to current sub document(s)
+	for _, subTopicID := range topic.Current.SubtopicIds {
+		// get sub topic from mongoDB by subTopicID
+		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
+		if err != nil {
+			logdata["missing subtopic for id"] = subTopicID
+			log.Event(ctx, err.Error(), log.ERROR, logdata)
+			continue
+		}
+		result.PublicItems = append(result.PublicItems, topic.Current)
+		result.TotalCount++
+	}
+	if result.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
 	}
@@ -131,31 +136,47 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
+	// User has valid authentication to get raw full topic document(s)
 	var result models.PrivateSubtopics
 
-	if len(topic.Current.SubtopicIds) > 0 {
-		for _, item := range topic.Current.SubtopicIds {
-			// get topic from mongoDB by item
-			topic, err := api.dataStore.Backend.GetTopic(item)
-			if err != nil {
-				logdata["missing subtopic for id"] = item
-				log.Event(ctx, err.Error(), log.ERROR, logdata)
-				continue
-			}
-			result.PrivateItems = append(result.PrivateItems, topic)
-			result.TotalCount++
-		}
-		if result.TotalCount == 0 {
-			handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-			return
-		}
-	} else {
+	if topic.Current == nil {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+
+	if topic.Next == nil {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+
+	if len(topic.Current.SubtopicIds) == 0 {
 		// no subtopics exist for the requested ID
 		handleError(ctx, w, apierrors.ErrNotFound, logdata)
 		return
 	}
 
-	// User has valid authentication to get raw full topic document(s)
+	if len(topic.Current.SubtopicIds) != len(topic.Next.SubtopicIds) {
+		// no subtopics exist for the requested ID
+		handleError(ctx, w, apierrors.ErrNotFound, logdata)
+		return
+	}
+
+	for _, subTopicID := range topic.Current.SubtopicIds {
+		// get topic from mongoDB by subTopicID
+		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
+		if err != nil {
+			logdata["missing subtopic for id"] = subTopicID
+			log.Event(ctx, err.Error(), log.ERROR, logdata)
+			continue
+		}
+		result.PrivateItems = append(result.PrivateItems, topic)
+		result.TotalCount++
+	}
+	if result.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
 	}

@@ -178,17 +178,10 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,
 			apierrors.ErrUnableToParseJSON,
-			apierrors.ErrImageFilenameTooLong,
-			apierrors.ErrImageNoCollectionID,
-			apierrors.ErrTopicInvalidState,
-			apierrors.ErrImageIDMismatch:
+			apierrors.ErrTopicInvalidState:
 			status = http.StatusBadRequest
-		case apierrors.ErrImageAlreadyPublished,
-			apierrors.ErrTopicAlreadyCompleted,
-			apierrors.ErrTopicStateTransitionNotAllowed,
-			apierrors.ErrImageBadInitialState,
-			apierrors.ErrImageNotImporting,
-			apierrors.ErrImageNotPublished:
+		case apierrors.ErrTopicAlreadyCompleted,
+			apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden
 		default:
 			status = http.StatusInternalServerError

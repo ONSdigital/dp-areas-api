@@ -39,22 +39,22 @@ type TopicLinks struct {
 	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
 }
 
-// PublicSubtopics ... !!! sort rest of this comment
+// PublicSubtopics used for returning just the Current document(s)
 type PublicSubtopics struct {
 	Count       int      `bson:"count,omitempty"        json:"count"`
 	Offset      int      `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit       int      `bson:"limit,omitempty"        json:"limit"`
 	TotalCount  int      `bson:"total_count,omitempty"  json:"total_count"`
-	PublicItems []*Topic `bson:"items,omitempty"        json:"items"` //!!! is items a good name ?
+	PublicItems []*Topic `bson:"items,omitempty"        json:"items"`
 }
 
-// PrivateSubtopics ... !!! sort rest of this comment
+// PrivateSubtopics used for returning both Next and Current document(s)
 type PrivateSubtopics struct {
 	Count        int              `bson:"count,omitempty"        json:"count"`
 	Offset       int              `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit        int              `bson:"limit,omitempty"        json:"limit"`
 	TotalCount   int              `bson:"total_count,omitempty"  json:"total_count"`
-	PrivateItems []*TopicResponse `bson:"items,omitempty"        json:"items"` //!!! is items a good name ?
+	PrivateItems []*TopicResponse `bson:"items,omitempty"        json:"items"`
 }
 
 // Validate checks that a topic struct complies with the state constraints, if provided. !!! may want to add more in future

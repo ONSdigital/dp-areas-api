@@ -237,7 +237,8 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 //       are interlinked with one another by the SubtopicsIds
 
 // ================= - 1 has subtopics & points to 2 & 3
-func dbTopicWithID1(state models.State) *models.TopicResponse {
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic1(state models.State) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: "1",
 		Next: &models.Topic{
@@ -263,13 +264,9 @@ func dbTopicWithID1(state models.State) *models.TopicResponse {
 	}
 }
 
-// DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic1(state models.State) *models.TopicResponse {
-	return dbTopicWithID1(state)
-}
-
 // ================= - 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
-func dbTopicWithID2(state models.State) *models.TopicResponse {
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic2(state models.State) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: "2",
 		Next: &models.Topic{
@@ -295,13 +292,9 @@ func dbTopicWithID2(state models.State) *models.TopicResponse {
 	}
 }
 
-// DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic2(state models.State) *models.TopicResponse {
-	return dbTopicWithID2(state)
-}
-
 // ================= - 3 has subtopics, but the ID 5 in the list does not exist
-func dbTopicWithID3(state models.State) *models.TopicResponse {
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic3(state models.State) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: "3",
 		Next: &models.Topic{
@@ -327,13 +320,9 @@ func dbTopicWithID3(state models.State) *models.TopicResponse {
 	}
 }
 
-// DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic3(state models.State) *models.TopicResponse {
-	return dbTopicWithID3(state)
-}
-
 // ================= - 4 has NO subtopics, so is an end node that has a content link
-func dbTopicWithID4(state models.State) *models.TopicResponse {
+// DB model corresponding to a topic in the provided state, without any download variant
+func dbTopic4(state models.State) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: "4",
 		Next: &models.Topic{
@@ -355,11 +344,6 @@ func dbTopicWithID4(state models.State) *models.TopicResponse {
 			},
 		},
 	}
-}
-
-// DB model corresponding to a topic in the provided state, without any download variant
-func dbTopic4(state models.State) *models.TopicResponse {
-	return dbTopicWithID4(state)
 }
 
 func TestGetSubtopicsPublicHandler(t *testing.T) {
