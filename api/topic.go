@@ -139,29 +139,18 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 	// User has valid authentication to get raw full topic document(s)
 	var result models.PrivateSubtopics
 
-	if topic.Current == nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-		return
-	}
-
 	if topic.Next == nil {
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
 
-	if len(topic.Current.SubtopicIds) == 0 {
+	if len(topic.Next.SubtopicIds) == 0 {
 		// no subtopics exist for the requested ID
 		handleError(ctx, w, apierrors.ErrNotFound, logdata)
 		return
 	}
 
-	if len(topic.Current.SubtopicIds) != len(topic.Next.SubtopicIds) {
-		// no subtopics exist for the requested ID
-		handleError(ctx, w, apierrors.ErrNotFound, logdata)
-		return
-	}
-
-	for _, subTopicID := range topic.Current.SubtopicIds {
+	for _, subTopicID := range topic.Next.SubtopicIds {
 		// get topic from mongoDB by subTopicID
 		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
 		if err != nil {
