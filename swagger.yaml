@@ -11,7 +11,9 @@ basePath: "/v1"
 schemes:
   - http
 tags:
-  - name: "Topics"
+  - name: "Public"
+  - name: "Private user"
+  - name: "Private"
 parameters:
   id:
     name: id
@@ -23,7 +25,7 @@ paths:
   /topics/{id}:
     get:
       tags:
-        - "Topics"
+        - "Public"
       summary: "Get a topic by ID"
       description: "provides a high level description of the topic and relevant links"
       parameters:
@@ -34,9 +36,7 @@ paths:
         200:
           description: "Json object containing information about the topic"
           schema:
-            $ref: '#/definitions/TopicResponse'
-        401:
-          description: "Unauthorised to read Topic"
+            $ref: '#/definitions/Topic'
         404:
           description: "Topic not found"
         500:
@@ -44,7 +44,7 @@ paths:
   /topics/{id}/subtopics:
     get:
       tags:
-        - "Topics"
+        - "Public"
       summary: "Get a list of subtopics"
       description: "Get a list of all documents for ID contained in the stored list of subtopics"
       parameters:
@@ -57,7 +57,7 @@ paths:
           schema:
             $ref: '#/definitions/ListOfTopics'
         404:
-          description: "Subtopics not found"
+          description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
 responses:
@@ -87,8 +87,9 @@ definitions:
             $ref: '#/definitions/SubtopicsLink'
           content:
             $ref: '#/definitions/ContentLink'
+  # !!! Eleanor - should i now remove 'TopicResponse' ?
   TopicResponse:
-    description: "A model for the response body when reading a Topic"
+    description: "A model for the response body when reading a Topic in private"
     type: object
     properties:
       id:
@@ -119,7 +120,7 @@ definitions:
       items:
         type: array
         items:
-          $ref: '#/definitions/TopicResponse'
+          $ref: '#/definitions/Topic'
       count:
         $ref: '#/definitions/Count'
       total_count:

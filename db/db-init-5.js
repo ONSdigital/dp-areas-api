@@ -6,6 +6,7 @@ db = db.getSiblingDB('topics')
 
 db.topics.remove({})
 
+// 1 has subtopics & points to 2 & 3
 db.topics.insertOne({
     "id" : "1", 
     "next" : {
@@ -21,12 +22,9 @@ db.topics.insertOne({
             },
             "subtopics": {
                  "href": "http://localhost:8080/topics/1/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/1/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "2",
             "3"
         ]
@@ -44,18 +42,16 @@ db.topics.insertOne({
             },
             "subtopics": { 
                 "href": "http://localhost:8080/topics/1/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/1/content",
             }
         },
-        "subtopics" : [
+        "subtopics_ids" : [
             "2",
             "3"
         ]
     }
 })
 
+// 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
 db.topics.insertOne({
     "id" : "2", 
     "next" : {
@@ -71,13 +67,11 @@ db.topics.insertOne({
             },
             "subtopics": {
                  "href": "http://localhost:8080/topics/2/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/2/content",
             }
         },
-        "subtopics" : [
-            "4"
+        "subtopics_ids" : [
+            "4",
+            "6"
         ]
     },
     "current" : {
@@ -93,17 +87,16 @@ db.topics.insertOne({
             },
             "subtopics": { 
                 "href": "http://localhost:8080/topics/2/subtopics",
-            },
-            "content": {
-                "href": "http://localhost:8080/topics/2/content",
             }
         },
-        "subtopics" : [
-            "4"
+        "subtopics_ids" : [
+            "4",
+            "6"
         ]
     }
 })
 
+// 3 has subtopics, but the ID 5 in the list does not exist
 db.topics.insertOne({
     "id" : "3", 
     "next" : {
@@ -117,10 +110,13 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/3",
                 "id": "3"
             },
-            "content": {
-                "href": "http://localhost:8080/topics/3/content",
+            "subtopics": {
+                "href": "http://localhost:8080/topics/3/subtopics",
             }
-        }
+        },
+        "subtopics_ids" : [
+            "5"
+        ]
     },
     "current" : {
         "_id" : "3",
@@ -133,13 +129,17 @@ db.topics.insertOne({
                 "href": "http://localhost:8080/topics/3",
                 "id": "3"
             },
-            "content": {
-                "href": "http://localhost:8080/topics/3/content",
+            "subtopics": {
+                "href": "http://localhost:8080/topics/3/subtopics",
             }
-        }
+        },
+        "subtopics_ids" : [
+            "5"
+        ]
     }
 })
 
+// 4 has NO subtopics, so is an end node that has a content link
 db.topics.insertOne({
     "id" : "4", 
     "next" : {
