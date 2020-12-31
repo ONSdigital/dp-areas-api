@@ -39,7 +39,7 @@ var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.
 	return nil
 }
 
-var funcDoGetMongoDBErr = func(ctx context.Context, cfg *config.Config) (service.MongoServer, error) {
+var funcDoGetMongoDBErr = func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
 	return nil, errMongo
 }
 
@@ -63,7 +63,7 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		mongoMock := &serviceMock.MongoServerMock{
+		mongoMock := &serviceMock.AreaStoreMock{
 			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 			CloseFunc: func(ctx context.Context) error {
 				return nil
@@ -89,7 +89,7 @@ func TestRun(t *testing.T) {
 			return failingServerMock
 		}
 
-		funcDoGetMongoDBOk := func(ctx context.Context, cfg *config.Config) (service.MongoServer, error) {
+		funcDoGetMongoDBOk := func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
 			return mongoMock, nil
 		}
 
@@ -260,7 +260,7 @@ func TestClose(t *testing.T) {
 
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
-			mongoMock := &serviceMock.MongoServerMock{
+			mongoMock := &serviceMock.AreaStoreMock{
 				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 				CloseFunc: func(ctx context.Context) error {
 					return nil
@@ -272,7 +272,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.MongoServer, error) {
+				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
 					return mongoMock, nil
 				},
 			}
@@ -291,7 +291,7 @@ func TestClose(t *testing.T) {
 
 		Convey("If Mongo fails to Close and returns an error", func() {
 
-			mongoMockCloseErr := &serviceMock.MongoServerMock{
+			mongoMockCloseErr := &serviceMock.AreaStoreMock{
 				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 				CloseFunc: func(ctx context.Context) error {
 					return errors.New("Closing mongo timed out")
@@ -303,7 +303,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.MongoServer, error) {
+				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
 					return mongoMockCloseErr, nil
 				},
 			}
@@ -318,7 +318,7 @@ func TestClose(t *testing.T) {
 		})
 
 		Convey("If service times out while shutting down, the Close operation fails with the expected error", func() {
-			mongoMock := &serviceMock.MongoServerMock{
+			mongoMock := &serviceMock.AreaStoreMock{
 				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 				CloseFunc:   func(ctx context.Context) error { return nil },
 			}

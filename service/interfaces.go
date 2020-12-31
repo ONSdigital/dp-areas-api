@@ -11,13 +11,13 @@ import (
 //go:generate moq -out mock/initialiser.go -pkg mock . Initialiser
 //go:generate moq -out mock/server.go -pkg mock . HTTPServer
 //go:generate moq -out mock/healthCheck.go -pkg mock . HealthChecker
-//go:generate moq -out mock/mongo.go -pkg mock . MongoServer
+//go:generate moq -out mock/mongo.go -pkg mock . AreaStore
 
 // Initialiser defines the methods to initialise external services
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetMongoDB(ctx context.Context, cfg *config.Config) (MongoServer, error)
+	DoGetMongoDB(ctx context.Context, cfg *config.Config) (AreaStore, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server
@@ -34,8 +34,8 @@ type HealthChecker interface {
 	AddCheck(name string, checker healthcheck.Checker) (err error)
 }
 
-// MongoServer represents all the required methods from mongo DB
-type MongoServer interface {
+// AreaStore represents all the required methods from mongo DB
+type AreaStore interface {
 	Close(context.Context) error
 	Checker(context.Context, *healthcheck.CheckState) error
 }

@@ -38,7 +38,7 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 }
 
 // GetMongoDB creates a mongoDB client and sets the Mongo flag to true
-func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (MongoServer, error) {
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (AreaStore, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
 	if err != nil {
 		log.Event(ctx, "failed to create mongodb client", log.ERROR, log.Error(err))
@@ -66,13 +66,9 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 }
 
 // DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (MongoServer, error) {
-	mongodb := &mongo.Mongo{
-		Collection: cfg.MongoConfig.Collection,
-		Database:   cfg.MongoConfig.Database,
-		URI:        cfg.MongoConfig.BindAddr,
-	}
-	_, err := mongodb.Init()
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (AreaStore, error) {
+	mongodb := &mongo.Mongo{}
+	err := mongodb.Init(cfg.MongoConfig)
 	if err != nil {
 		log.Event(ctx, "failed to intialise mongo", log.ERROR, log.Error(err))
 		return nil, err

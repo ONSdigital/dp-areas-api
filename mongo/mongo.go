@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpmongo "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
@@ -13,27 +14,25 @@ import (
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
 	Session      *mgo.Session
-	Collection   string
-	Database     string
-	URI          string
 	healthClient *dpMongoHealth.CheckMongoClient
 }
 
-// Init creates a new mgo.Session with a strong consistency and a write mode of "majortiy".
-func (m *Mongo) Init() (session *mgo.Session, err error) {
-	if session != nil {
-		return nil, errors.New("session already exists")
+// Init creates a new mgo.Session with a strong consistency and a write mode of "majority".
+func (m *Mongo) Init(mongoConf config.MongoConfig) error {
+	if m.Session != nil {
+		return errors.New("session already exists")
 	}
 
-	if session, err = mgo.Dial(m.URI); err != nil {
-		return nil, err
+	var err error
+	if m.Session, err = mgo.Dial(mongoConf.BindAddr); err != nil {
+		return err
 	}
 
-	session.EnsureSafe(&mgo.Safe{WMode: "majority"})
-	session.SetMode(mgo.Strong, true)
+	m.Session.EnsureSafe(&mgo.Safe{WMode: "majority"})
+	m.Session.SetMode(mgo.Strong, true)
 
 	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
-	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.Collection)}
+	databaseCollectionBuilder[(dpMongoHealth.Database)(mongoConf.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(mongoConf.Collection)}
 
 	// Create client and healthclient from session AND collections
 	client := dpMongoHealth.NewClientWithCollections(m.Session, databaseCollectionBuilder)
@@ -43,7 +42,7 @@ func (m *Mongo) Init() (session *mgo.Session, err error) {
 		Healthcheck: client.Healthcheck,
 	}
 
-	return session, nil
+	return nil
 }
 
 // Close closes the mongo session and returns any error

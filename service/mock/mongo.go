@@ -10,16 +10,16 @@ import (
 	"sync"
 )
 
-// Ensure, that MongoServerMock does implement service.MongoServer.
+// Ensure, that AreaStoreMock does implement service.AreaStore.
 // If this is not the case, regenerate this file with moq.
-var _ service.MongoServer = &MongoServerMock{}
+var _ service.AreaStore = &AreaStoreMock{}
 
-// MongoServerMock is a mock implementation of service.MongoServer.
+// AreaStoreMock is a mock implementation of service.AreaStore.
 //
-//     func TestSomethingThatUsesMongoServer(t *testing.T) {
+//     func TestSomethingThatUsesAreaStore(t *testing.T) {
 //
-//         // make and configure a mocked service.MongoServer
-//         mockedMongoServer := &MongoServerMock{
+//         // make and configure a mocked service.AreaStore
+//         mockedAreaStore := &AreaStoreMock{
 //             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
 // 	               panic("mock out the Checker method")
 //             },
@@ -28,11 +28,11 @@ var _ service.MongoServer = &MongoServerMock{}
 //             },
 //         }
 //
-//         // use mockedMongoServer in code that requires service.MongoServer
+//         // use mockedAreaStore in code that requires service.AreaStore
 //         // and then make assertions.
 //
 //     }
-type MongoServerMock struct {
+type AreaStoreMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
 
@@ -59,9 +59,9 @@ type MongoServerMock struct {
 }
 
 // Checker calls CheckerFunc.
-func (mock *MongoServerMock) Checker(in1 context.Context, in2 *healthcheck.CheckState) error {
+func (mock *AreaStoreMock) Checker(in1 context.Context, in2 *healthcheck.CheckState) error {
 	if mock.CheckerFunc == nil {
-		panic("MongoServerMock.CheckerFunc: method is nil but MongoServer.Checker was just called")
+		panic("AreaStoreMock.CheckerFunc: method is nil but AreaStore.Checker was just called")
 	}
 	callInfo := struct {
 		In1 context.Context
@@ -78,8 +78,8 @@ func (mock *MongoServerMock) Checker(in1 context.Context, in2 *healthcheck.Check
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
-//     len(mockedMongoServer.CheckerCalls())
-func (mock *MongoServerMock) CheckerCalls() []struct {
+//     len(mockedAreaStore.CheckerCalls())
+func (mock *AreaStoreMock) CheckerCalls() []struct {
 	In1 context.Context
 	In2 *healthcheck.CheckState
 } {
@@ -94,9 +94,9 @@ func (mock *MongoServerMock) CheckerCalls() []struct {
 }
 
 // Close calls CloseFunc.
-func (mock *MongoServerMock) Close(in1 context.Context) error {
+func (mock *AreaStoreMock) Close(in1 context.Context) error {
 	if mock.CloseFunc == nil {
-		panic("MongoServerMock.CloseFunc: method is nil but MongoServer.Close was just called")
+		panic("AreaStoreMock.CloseFunc: method is nil but AreaStore.Close was just called")
 	}
 	callInfo := struct {
 		In1 context.Context
@@ -111,8 +111,8 @@ func (mock *MongoServerMock) Close(in1 context.Context) error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedMongoServer.CloseCalls())
-func (mock *MongoServerMock) CloseCalls() []struct {
+//     len(mockedAreaStore.CloseCalls())
+func (mock *AreaStoreMock) CloseCalls() []struct {
 	In1 context.Context
 } {
 	var calls []struct {
