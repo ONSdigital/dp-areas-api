@@ -15,8 +15,9 @@ type Service struct {
 	Config      *config.Config
 	Server      HTTPServer
 	Router      *mux.Router
-	Api         *api.API
+	API         *api.API
 	ServiceList *ExternalServiceList
+	MongoDB     AreaStore
 	HealthCheck HealthChecker
 }
 
@@ -34,6 +35,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// ADD CODE: Add other(s) to serviceList here
 
+	// Get MongoDB client
+	mongoDB, err := serviceList.GetMongoDB(ctx, cfg)
+	if err != nil {
+		log.Event(ctx, "failed to initialise mongo db client", log.FATAL, log.Error(err))
+		return nil, err
+	}
+
 	// Setup the API
 	a := api.Setup(ctx, r)
 
@@ -44,7 +52,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, mongoDB); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -61,10 +69,11 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	return &Service{
 		Config:      cfg,
 		Router:      r,
-		Api:         a,
+		API:         a,
 		HealthCheck: hc,
 		ServiceList: serviceList,
 		Server:      s,
+		MongoDB:     mongoDB,
 	}, nil
 }
 
@@ -91,7 +100,16 @@ func (svc *Service) Close(ctx context.Context) error {
 			hasShutdownError = true
 		}
 
+		// close mongoDB
+		if svc.ServiceList.MongoDB {
+			if err := svc.MongoDB.Close(ctx); err != nil {
+				log.Event(ctx, "error closing mongo db client", log.Error(err), log.ERROR)
+				hasShutdownError = true
+			}
+		}
+
 		// ADD CODE HERE: Close other dependencies, in the expected order
+
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
@@ -106,7 +124,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	// other error
 	if hasShutdownError {
 		err := errors.New("failed to shutdown gracefully")
-		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		log.Event(ctx, "failed to shutdown gracefully", log.ERROR, log.Error(err))
 		return err
 	}
 
@@ -114,10 +132,17 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context,
-	hc HealthChecker) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB AreaStore) (err error) {
+	hasErrors := false
 
-	// ADD CODE: add other health checks here, as per dp-upload-service
+	// ADD CODE: add other health checks here
+	if err = hc.AddCheck("Mongo DB", mongoDB.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "error adding check for mongo db client", log.ERROR, log.Error(err))
+	}
 
+	if hasErrors {
+		return errors.New("Error(s) registering checkers for healthcheck")
+	}
 	return nil
 }

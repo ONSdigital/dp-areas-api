@@ -1,9 +1,12 @@
 package service
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/mongo"
+	"github.com/ONSdigital/log.go/log"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -13,6 +16,7 @@ import (
 type ExternalServiceList struct {
 	HealthCheck bool
 	Init        Initialiser
+	MongoDB     bool
 }
 
 // NewServiceList creates a new service list with the provided initialiser
@@ -20,6 +24,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck: false,
 		Init:        initialiser,
+		MongoDB:     false,
 	}
 }
 
@@ -30,6 +35,17 @@ type Init struct{}
 func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := e.Init.DoGetHTTPServer(bindAddr, router)
 	return s
+}
+
+// GetMongoDB creates a mongoDB client and sets the Mongo flag to true
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (AreaStore, error) {
+	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
+	if err != nil {
+		log.Event(ctx, "failed to create mongodb client", log.ERROR, log.Error(err))
+		return nil, err
+	}
+	e.MongoDB = true
+	return mongoDB, nil
 }
 
 // GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
@@ -47,6 +63,17 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
 	return s
+}
+
+// DoGetMongoDB returns a MongoDB
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (AreaStore, error) {
+	mongodb := &mongo.Mongo{}
+	err := mongodb.Init(cfg.MongoConfig)
+	if err != nil {
+		log.Event(ctx, "failed to intialise mongo", log.ERROR, log.Error(err))
+		return nil, err
+	}
+	return mongodb, nil
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo
