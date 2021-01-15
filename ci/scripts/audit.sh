@@ -1,15 +1,7 @@
----
-platform: linux
+#!/bin/bash -eux
 
-image_resource:
-  type: docker-image
-  source:
-    repository: onsdigital/dp-concourse-tools-nancy
-    tag: latest
+export cwd=$(pwd)
 
-inputs:
-  - name: dp-areas-api
-    path: dp-areas-api
-
-run:
-  path: dp-areas-api/ci/scripts/audit.sh 
+pushd $cwd/dp-areas-api
+  make audit
+popd 
