@@ -2,14 +2,15 @@ package service_test
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-areas-api/api"
 	"net/http"
 	"testing"
 	"time"
 
+	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/service"
 	"github.com/ONSdigital/dp-areas-api/service/mock"
-
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
@@ -163,10 +164,10 @@ func TestGetMongoDB(t *testing.T) {
 
 	Convey("Given a service list that returns a mocked mongo areastore", t, func() {
 
-		mongoMock := &mock.AreaStoreMock{}
+		mongoMock := &apiMock.AreaStoreMock{}
 
 		newServiceMock := &mock.InitialiserMock{
-			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
+			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
 				return mongoMock, nil
 			},
 		}
@@ -184,7 +185,7 @@ func TestGetMongoDB(t *testing.T) {
 
 	Convey("Given a service list that returns nil for mongo areastore", t, func() {
 		newServiceMock := &mock.InitialiserMock{
-			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (service.AreaStore, error) {
+			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
 				return nil, errMongo
 			},
 		}
