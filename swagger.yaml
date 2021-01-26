@@ -11,7 +11,9 @@ basePath: "/v1"
 schemes:
   - http
 tags:
-  - name: "Topics"
+  - name: "Public"
+  - name: "Private user"
+  - name: "Private"
 parameters:
   id:
     name: id
@@ -23,7 +25,7 @@ paths:
   /topics/{id}:
     get:
       tags:
-        - "Topics"
+        - "Public"
       summary: "Get a topic by ID"
       description: "provides a high level description of the topic and relevant links"
       parameters:
@@ -35,6 +37,25 @@ paths:
           description: "Json object containing information about the topic"
           schema:
             $ref: '#/definitions/Topic'
+        404:
+          description: "Topic not found"
+        500:
+          $ref: '#/responses/InternalError'
+  /topics/{id}/subtopics:
+    get:
+      tags:
+        - "Public"
+      summary: "Get a list of subtopics"
+      description: "Get a list of all documents for ID contained in the stored list of subtopics"
+      parameters:
+        - $ref: '#/parameters/id'
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Json object containing an array of subtopics"
+          schema:
+            $ref: '#/definitions/ListOfTopics'
         404:
           description: "Topic not found"
         500:
@@ -66,6 +87,18 @@ definitions:
             $ref: '#/definitions/SubtopicsLink'
           content:
             $ref: '#/definitions/ContentLink'
+  # !!! Eleanor - should i now remove 'TopicResponse' ?
+  TopicResponse:
+    description: "A model for the response body when reading a Topic in private"
+    type: object
+    properties:
+      id:
+        description: "A unique id for the topic"
+        type: string
+      current:
+        $ref: '#/definitions/Topic'
+      next:
+        $ref: '#/definitions/Topic'
   SubtopicsLink:
     type: object
     description: "A link to the subtopics of this topic"
@@ -80,6 +113,22 @@ definitions:
       href:
         type: string
         description: "A URL to the content for this topic"
+  ListOfTopics:
+    type: object
+    description: "A list of Topics"
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Topic'
+      count:
+        $ref: '#/definitions/Count'
+      total_count:
+        $ref: '#/definitions/TotalCount'
+      limit:
+        $ref: '#/definitions/Limit'
+      offset:
+        $ref: '#/definitions/Offset'
   SelfHref:
     type: object
     properties:
@@ -89,3 +138,15 @@ definitions:
       href:
         type: string
         description: "The URL to the resource"
+  Count:
+    type: string
+    description: "The number of results returned in this response"
+  TotalCount:
+    type: string
+    description: "The total number of results available"
+  Limit:
+    type: string
+    description: "The limit applied to the number of results returned"
+  Offset:
+    type: string
+    description: "The offset applied to the number of results returned"

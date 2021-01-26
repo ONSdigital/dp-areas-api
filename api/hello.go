@@ -9,7 +9,7 @@ import (
 
 const helloMessage = "Hello, World!"
 
-type HelloResponse struct {
+type helloResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
@@ -18,7 +18,7 @@ func HelloHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		response := HelloResponse{
+		response := helloResponse{
 			Message: helloMessage,
 		}
 
