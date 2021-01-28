@@ -1,7 +1,5 @@
 package models
 
-//import "github.com/ONSdigital/dp-topic-api/apierrors"
-
 // ContentResponse represents an evolving content with the current content and the updated content.
 // This is for mongo storage / retrieval.
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
