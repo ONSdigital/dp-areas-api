@@ -39,7 +39,7 @@ type TopicLinks struct {
 	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
 }
 
-// PublicSubtopics used for returning just the Current document(s)
+// PublicSubtopics used for returning just the Current document(s) in REST API response
 type PublicSubtopics struct {
 	Count       int      `bson:"count,omitempty"        json:"count"`
 	Offset      int      `bson:"offset_index,omitempty" json:"offset_index"`
@@ -48,7 +48,7 @@ type PublicSubtopics struct {
 	PublicItems []*Topic `bson:"items,omitempty"        json:"items"`
 }
 
-// PrivateSubtopics used for returning both Next and Current document(s)
+// PrivateSubtopics used for returning both Next and Current document(s) in REST API response
 type PrivateSubtopics struct {
 	Count        int              `bson:"count,omitempty"        json:"count"`
 	Offset       int              `bson:"offset_index,omitempty" json:"offset_index"`
