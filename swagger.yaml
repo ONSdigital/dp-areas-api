@@ -148,7 +148,7 @@ definitions:
       href:
         type: string
         description: "A URL to the content for this topic"
-  ListOfContents:
+  ListOfContent:
     type: object
     description: "A list of Content items"
     properties:
