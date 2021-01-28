@@ -64,6 +64,7 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
 	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
+	api.get("/topics/{id}/content", api.getContentPublicHandler)
 
 }
 
@@ -86,6 +87,12 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		"/topics/{id}/subtopics",
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getSubtopicsPrivateHandler)),
+	)
+
+	api.get(
+		"/topics/{id}/content",
+		api.isAuthenticated(
+			api.isAuthorised(readPermission, api.getContentPrivateHandler)),
 	)
 }
 
