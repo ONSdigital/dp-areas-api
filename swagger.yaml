@@ -200,14 +200,14 @@ definitions:
         type: string
         description: "The id for the topic that this content is associated with"
   Count:
-    type: string
+    type: integer
     description: "The number of results returned in this response"
   TotalCount:
-    type: string
+    type: integer
     description: "The total number of results available"
   Limit:
-    type: string
+    type: integer
     description: "The limit applied to the number of results returned"
   Offset:
-    type: string
+    type: integer
     description: "The offset applied to the number of results returned"
