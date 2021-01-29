@@ -37,8 +37,8 @@ type TypeLinkObject struct {
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
 // the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
 type PrivateContentItem struct {
-	Next    *ContentItem `json:"next,omitempty"`
-	Current *ContentItem `json:"current,omitempty"`
+	Next    *ContentItem `json:"next,omitempty"`    // !!! this wont work, needs to 'PublicContent' ... discuss with Eleanor
+	Current *ContentItem `json:"current,omitempty"` // !!! this wont work, needs to 'PublicContent' ... discuss with Eleanor
 }
 
 // PublicContent used for returning just the Current document(s) in REST API response
@@ -47,7 +47,7 @@ type PublicContent struct {
 	Offset      int            `json:"offset_index"`
 	Limit       int            `json:"limit"`
 	TotalCount  int            `json:"total_count"`
-	PublicItems []*ContentItem `json:"items"`
+	PublicItems *[]ContentItem `json:"items"`
 }
 
 // PrivateContent used for returning both Next and Current document(s) in REST API response
@@ -56,7 +56,7 @@ type PrivateContent struct {
 	Offset       int                   `json:"offset_index"`
 	Limit        int                   `json:"limit"`
 	TotalCount   int                   `json:"total_count"`
-	PrivateItems []*PrivateContentItem `json:"items"`
+	PrivateItems *[]PrivateContentItem `json:"items"`
 }
 
 // ContentItem is an individual content item
@@ -64,7 +64,7 @@ type ContentItem struct {
 	Title string        `json:"title,omitempty"`
 	Type  string        `json:"type,omitempty"`
 	Links *ContentLinks `json:"links,omitempty"`
-	State *bool         `json:"state,omitempty"` //!!! Eleanor ... do we need something like this ?
+	State *string       `json:"state,omitempty"` //!!! Eleanor ... do we need something like this ?
 }
 
 // ContentLinks are content links
