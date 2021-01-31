@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func addPublicItem(contentList *models.PublicContent, typeName string, itemLink *[]models.TypeLinkObject, id string, state string) {
+func addPublicItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
 	var count int
 
 	if itemLink == nil {
@@ -55,13 +55,15 @@ func addPublicItem(contentList *models.PublicContent, typeName string, itemLink 
 				var cItem models.ContentItem
 				cItem.Title = item.Title
 				cItem.Type = typeName
-				//		*cItem.State = state  // true for published (but maybe only in private response ?) !!!, ask Eleanor
+				if privateResponse {
+					cItem.State = &state
+				}
 				cItem.Links = &cLinks
 
-				if contentList.PublicItems == nil {
-					contentList.PublicItems = &[]models.ContentItem{cItem}
+				if contentList.Items == nil {
+					contentList.Items = &[]models.ContentItem{cItem}
 				} else {
-					*contentList.PublicItems = append(*contentList.PublicItems, cItem)
+					*contentList.Items = append(*contentList.Items, cItem)
 				}
 
 				count++
@@ -78,7 +80,6 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
-	//!!! adjust rest of code from here for content
 	logdata := log.Data{
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"content_id": id,
@@ -94,25 +95,26 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// User is not authenticated and hence has only access to current sub document(s)
-	var result models.PublicContent
 
 	if content.Current == nil {
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
 
-	// Add spotlight first
-	addPublicItem(&result, "spotlight", content.Current.Spotlight, content.ID, content.Current.State)
-	// then Publications (alphabetically ordered)
-	addPublicItem(&result, "articles", content.Current.Articles, content.ID, content.Current.State)
-	addPublicItem(&result, "bulletins", content.Current.Bulletins, content.ID, content.Current.State)
-	addPublicItem(&result, "methodologies", content.Current.Methodologies, content.ID, content.Current.State)
-	addPublicItem(&result, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State)
-	// then Datasets (alphabetically ordered)
-	addPublicItem(&result, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State)
-	addPublicItem(&result, "timeseries", content.Current.Timeseries, content.ID, content.Current.State)
+	var currentResult models.ContentResponseAPI
 
-	if result.TotalCount == 0 {
+	// Add spotlight first
+	addPublicItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, false)
+	// then Publications (alphabetically ordered)
+	addPublicItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, false)
+	addPublicItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, false)
+	addPublicItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, false)
+	addPublicItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, false)
+	// then Datasets (alphabetically ordered)
+	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
+	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
+
+	if currentResult.TotalCount == 0 {
 		// no content exist for the requested ID
 		handleError(ctx, w, apierrors.ErrNotFound, logdata)
 		// !!! OR should this be, go over with Eleanor
@@ -120,7 +122,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -138,43 +140,72 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		"function":   "getContentPrivateHandler",
 	}
 
-	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(id)
+	// get content from mongoDB by id
+	content, err := api.dataStore.Backend.GetContent(id)
 	if err != nil {
-		// no topic found to retrieve the subtopics from
+		// no content found
 		handleError(ctx, w, err, logdata)
 		return
 	}
 
 	// User has valid authentication to get raw full topic document(s)
-	var result models.PrivateSubtopics
 
-	if topic.Next == nil {
+	if content.Current == nil {
+		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		return
+	}
+	if content.Next == nil {
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
 
-	if len(topic.Next.SubtopicIds) == 0 {
-		// no subtopics exist for the requested ID
+	var currentResult models.ContentResponseAPI
+
+	// Add spotlight first
+	addPublicItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, true)
+	// then Publications (alphabetically ordered)
+	addPublicItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, true)
+	addPublicItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, true)
+	addPublicItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, true)
+	addPublicItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, true)
+	// then Datasets (alphabetically ordered)
+	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
+	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
+
+	if currentResult.TotalCount == 0 {
+		// no content exist for the requested ID
 		handleError(ctx, w, apierrors.ErrNotFound, logdata)
+		// !!! OR should this be, go over with Eleanor
+		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
 
-	for _, subTopicID := range topic.Next.SubtopicIds {
-		// get topic from mongoDB by subTopicID
-		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
-		if err != nil {
-			logdata["missing subtopic for id"] = subTopicID
-			log.Event(ctx, err.Error(), log.ERROR, logdata)
-			continue
-		}
-		result.PrivateItems = append(result.PrivateItems, topic)
-		result.TotalCount++
-	}
-	if result.TotalCount == 0 {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
+	var nextResult models.ContentResponseAPI
+
+	// Add spotlight first
+	addPublicItem(&nextResult, "spotlight", content.Next.Spotlight, content.ID, content.Next.State, true)
+	// then Publications (alphabetically ordered)
+	addPublicItem(&nextResult, "articles", content.Next.Articles, content.ID, content.Next.State, true)
+	addPublicItem(&nextResult, "bulletins", content.Next.Bulletins, content.ID, content.Next.State, true)
+	addPublicItem(&nextResult, "methodologies", content.Next.Methodologies, content.ID, content.Next.State, true)
+	addPublicItem(&nextResult, "methodologyArticles", content.Next.MethodologyArticles, content.ID, content.Next.State, true)
+	// then Datasets (alphabetically ordered)
+	addPublicItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
+	addPublicItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
+
+	if nextResult.TotalCount == 0 {
+		// no content exist for the requested ID
+		handleError(ctx, w, apierrors.ErrNotFound, logdata)
+		// !!! OR should this be, go over with Eleanor
+		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
+
+	var result models.PrivateContentResponseAPI
+
+	result.Next = &nextResult
+	result.Current = &currentResult
 
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
 		return
