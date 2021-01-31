@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"sort"
 
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
@@ -18,32 +19,55 @@ func addPublicItem(contentList *models.PublicContent, typeName string, itemLink 
 		return
 	}
 
-	for _, item := range *itemLink {
-		var topicLink models.LinkObject
-		var selfLink models.LinkObject
+	nofItems := len(*itemLink)
+	if nofItems == 0 {
+		return
+	}
 
-		selfLink.HRef = item.HRef
-		topicLink.ID = id
-		topicLink.HRef = "/topic/" + id
+	// Create list of sorted href's from itemLink list
+	hrefs := make([]string, 0, nofItems)
+	for _, field := range *itemLink {
+		hrefs = append(hrefs, field.HRef)
+	}
+	sort.Strings(hrefs)
+	fmt.Printf("%+v\n", hrefs) //!!! trash, and trash below comment when test code exists to check sort works.
+	// NOTE 31.1.2021 : when accessing : localhost:25300/topics/businessinnovation/content
+	// check output in debug console against what is seen in postman, and then
+	// compare it to whats in content database (with robo3t) to confirm that the last two static_datasets items
+	// (that are not sorted in the database) appear sorted by href (!!! trash this comment when done)
 
-		var cLinks models.ContentLinks
-		cLinks.Self = &selfLink
-		cLinks.Topic = &topicLink
+	// Iterate through sorted hrefs and use each one to select item from
+	// itemLink in alphabetical order
+	for _, href := range hrefs {
+		for _, item := range *itemLink {
+			if href == item.HRef {
+				var topicLink models.LinkObject
+				var selfLink models.LinkObject
 
-		var cItem models.ContentItem
-		cItem.Title = item.Title
-		cItem.Type = typeName
-		//		*cItem.State = state  // true for published
-		cItem.Links = &cLinks
+				selfLink.HRef = item.HRef
+				topicLink.ID = id
+				topicLink.HRef = "/topic/" + id
 
-		if contentList.PublicItems == nil {
-			contentList.PublicItems = &[]models.ContentItem{cItem}
-		} else {
-			*contentList.PublicItems = append(*contentList.PublicItems, cItem)
+				var cLinks models.ContentLinks
+				cLinks.Self = &selfLink
+				cLinks.Topic = &topicLink
+
+				var cItem models.ContentItem
+				cItem.Title = item.Title
+				cItem.Type = typeName
+				//		*cItem.State = state  // true for published (but maybe only in private response ?) !!!, ask Eleanor
+				cItem.Links = &cLinks
+
+				if contentList.PublicItems == nil {
+					contentList.PublicItems = &[]models.ContentItem{cItem}
+				} else {
+					*contentList.PublicItems = append(*contentList.PublicItems, cItem)
+				}
+
+				count++
+				fmt.Printf("item: %+v\n", item) //!!! just for development / test of code, trash when finished with
+			}
 		}
-
-		count++
-		fmt.Printf("item: %+v\n", item)
 	}
 
 	return count
@@ -79,11 +103,12 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 
 	// Add spotlight first
 	result.TotalCount = addPublicItem(&result, "spotlight", content.Current.Spotlight, content.ID, content.Current.State)
-	// !!! add the following in the order as per doc's elsewhere
+	// then Publications (alphabetically ordered)
 	result.TotalCount += addPublicItem(&result, "articles", content.Current.Articles, content.ID, content.Current.State)
 	result.TotalCount += addPublicItem(&result, "bulletins", content.Current.Bulletins, content.ID, content.Current.State)
 	result.TotalCount += addPublicItem(&result, "methodologies", content.Current.Methodologies, content.ID, content.Current.State)
 	result.TotalCount += addPublicItem(&result, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State)
+	// then Datasets (alphabetically ordered)
 	result.TotalCount += addPublicItem(&result, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State)
 	result.TotalCount += addPublicItem(&result, "timeseries", content.Current.Timeseries, content.ID, content.Current.State)
 
