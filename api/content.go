@@ -12,8 +12,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func addPublicItem(contentList *models.PublicContent, typeName string, itemLink *[]models.TypeLinkObject, id string, state string) (count int) {
-	count = 0
+func addPublicItem(contentList *models.PublicContent, typeName string, itemLink *[]models.TypeLinkObject, id string, state string) {
+	var count int
 
 	if itemLink == nil {
 		return
@@ -70,7 +70,7 @@ func addPublicItem(contentList *models.PublicContent, typeName string, itemLink 
 		}
 	}
 
-	return count
+	contentList.TotalCount = contentList.TotalCount + count
 }
 
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
@@ -102,15 +102,15 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// Add spotlight first
-	result.TotalCount = addPublicItem(&result, "spotlight", content.Current.Spotlight, content.ID, content.Current.State)
+	addPublicItem(&result, "spotlight", content.Current.Spotlight, content.ID, content.Current.State)
 	// then Publications (alphabetically ordered)
-	result.TotalCount += addPublicItem(&result, "articles", content.Current.Articles, content.ID, content.Current.State)
-	result.TotalCount += addPublicItem(&result, "bulletins", content.Current.Bulletins, content.ID, content.Current.State)
-	result.TotalCount += addPublicItem(&result, "methodologies", content.Current.Methodologies, content.ID, content.Current.State)
-	result.TotalCount += addPublicItem(&result, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State)
+	addPublicItem(&result, "articles", content.Current.Articles, content.ID, content.Current.State)
+	addPublicItem(&result, "bulletins", content.Current.Bulletins, content.ID, content.Current.State)
+	addPublicItem(&result, "methodologies", content.Current.Methodologies, content.ID, content.Current.State)
+	addPublicItem(&result, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State)
 	// then Datasets (alphabetically ordered)
-	result.TotalCount += addPublicItem(&result, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State)
-	result.TotalCount += addPublicItem(&result, "timeseries", content.Current.Timeseries, content.ID, content.Current.State)
+	addPublicItem(&result, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State)
+	addPublicItem(&result, "timeseries", content.Current.Timeseries, content.ID, content.Current.State)
 
 	if result.TotalCount == 0 {
 		// no content exist for the requested ID
