@@ -55,7 +55,7 @@ type ContentItem struct {
 	Title string        `json:"title,omitempty"`
 	Type  string        `json:"type,omitempty"`
 	Links *ContentLinks `json:"links,omitempty"`
-	State *string       `json:"state,omitempty"` //!!! Eleanor ... do we need something like this ?
+	State *string       `json:"state,omitempty"`
 }
 
 // ContentLinks are content links
