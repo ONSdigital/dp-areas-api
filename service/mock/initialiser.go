@@ -5,13 +5,12 @@ package mock
 
 import (
 	"context"
-	"net/http"
-	"sync"
-
 	"github.com/ONSdigital/dp-api-clients-go/health"
-	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/service"
+	"github.com/ONSdigital/dp-topic-api/store"
+	"net/http"
+	"sync"
 )
 
 // Ensure, that InitialiserMock does implement service.Initialiser.
@@ -33,7 +32,7 @@ var _ service.Initialiser = &InitialiserMock{}
 //             DoGetHealthClientFunc: func(name string, url string) *health.Client {
 // 	               panic("mock out the DoGetHealthClient method")
 //             },
-//             DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+//             DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 // 	               panic("mock out the DoGetMongoDB method")
 //             },
 //         }
@@ -53,7 +52,7 @@ type InitialiserMock struct {
 	DoGetHealthClientFunc func(name string, url string) *health.Client
 
 	// DoGetMongoDBFunc mocks the DoGetMongoDB method.
-	DoGetMongoDBFunc func(ctx context.Context, cfg *config.Config) (api.MongoServer, error)
+	DoGetMongoDBFunc func(ctx context.Context, cfg *config.Config) (store.MongoDB, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -210,7 +209,7 @@ func (mock *InitialiserMock) DoGetHealthClientCalls() []struct {
 }
 
 // DoGetMongoDB calls DoGetMongoDBFunc.
-func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 	if mock.DoGetMongoDBFunc == nil {
 		panic("InitialiserMock.DoGetMongoDBFunc: method is nil but Initialiser.DoGetMongoDB was just called")
 	}

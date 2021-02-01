@@ -4,14 +4,9 @@
 package storetest
 
 import (
-	"sync"
-
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/dp-topic-api/store"
-)
-
-var (
-	lockStorerMockGetTopic sync.RWMutex
+	"sync"
 )
 
 // Ensure, that StorerMock does implement store.Storer.
@@ -24,7 +19,10 @@ var _ store.Storer = &StorerMock{}
 //
 //         // make and configure a mocked store.Storer
 //         mockedStorer := &StorerMock{
-//             GetTopicFunc: func(ID string) (*models.DatasetUpdate, error) {
+//             GetContentFunc: func(id string) (*models.ContentResponse, error) {
+// 	               panic("mock out the GetContent method")
+//             },
+//             GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
@@ -33,35 +31,75 @@ var _ store.Storer = &StorerMock{}
 //         // and then make assertions.
 //
 //     }
-
 type StorerMock struct {
+	// GetContentFunc mocks the GetContent method.
+	GetContentFunc func(id string) (*models.ContentResponse, error)
+
 	// GetTopicFunc mocks the GetTopic method.
-	GetTopicFunc func(ID string) (*models.TopicResponse, error)
+	GetTopicFunc func(id string) (*models.TopicResponse, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// GetContent holds details about calls to the GetContent method.
+		GetContent []struct {
+			// ID is the id argument value.
+			ID string
+		}
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
-			// ID is the ID argument value.
+			// ID is the id argument value.
 			ID string
 		}
 	}
+	lockGetContent sync.RWMutex
+	lockGetTopic   sync.RWMutex
+}
+
+// GetContent calls GetContentFunc.
+func (mock *StorerMock) GetContent(id string) (*models.ContentResponse, error) {
+	if mock.GetContentFunc == nil {
+		panic("StorerMock.GetContentFunc: method is nil but Storer.GetContent was just called")
+	}
+	callInfo := struct {
+		ID string
+	}{
+		ID: id,
+	}
+	mock.lockGetContent.Lock()
+	mock.calls.GetContent = append(mock.calls.GetContent, callInfo)
+	mock.lockGetContent.Unlock()
+	return mock.GetContentFunc(id)
+}
+
+// GetContentCalls gets all the calls that were made to GetContent.
+// Check the length with:
+//     len(mockedStorer.GetContentCalls())
+func (mock *StorerMock) GetContentCalls() []struct {
+	ID string
+} {
+	var calls []struct {
+		ID string
+	}
+	mock.lockGetContent.RLock()
+	calls = mock.calls.GetContent
+	mock.lockGetContent.RUnlock()
+	return calls
 }
 
 // GetTopic calls GetTopicFunc.
-func (mock *StorerMock) GetTopic(ID string) (*models.TopicResponse, error) {
+func (mock *StorerMock) GetTopic(id string) (*models.TopicResponse, error) {
 	if mock.GetTopicFunc == nil {
 		panic("StorerMock.GetTopicFunc: method is nil but Storer.GetTopic was just called")
 	}
 	callInfo := struct {
 		ID string
 	}{
-		ID: ID,
+		ID: id,
 	}
-	lockStorerMockGetTopic.Lock()
+	mock.lockGetTopic.Lock()
 	mock.calls.GetTopic = append(mock.calls.GetTopic, callInfo)
-	lockStorerMockGetTopic.Unlock()
-	return mock.GetTopicFunc(ID)
+	mock.lockGetTopic.Unlock()
+	return mock.GetTopicFunc(id)
 }
 
 // GetTopicCalls gets all the calls that were made to GetTopic.
@@ -73,8 +111,8 @@ func (mock *StorerMock) GetTopicCalls() []struct {
 	var calls []struct {
 		ID string
 	}
-	lockStorerMockGetTopic.RLock()
+	mock.lockGetTopic.RLock()
 	calls = mock.calls.GetTopic
-	lockStorerMockGetTopic.RUnlock()
+	mock.lockGetTopic.RUnlock()
 	return calls
 }

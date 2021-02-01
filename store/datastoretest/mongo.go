@@ -5,45 +5,49 @@ package storetest
 
 import (
 	"context"
-	"sync"
-
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/models"
+	"github.com/ONSdigital/dp-topic-api/store"
+	"sync"
 )
 
-var (
-	lockMongoDBMockChecker  sync.RWMutex
-	lockMongoDBMockClose    sync.RWMutex
-	lockMongoDBMockGetTopic sync.RWMutex
-)
+// Ensure, that MongoDBMock does implement store.MongoDB.
+// If this is not the case, regenerate this file with moq.
+var _ store.MongoDB = &MongoDBMock{}
 
 // MongoDBMock is a mock implementation of store.MongoDB.
 //
-//     func TestSomethingThatUsesMongoServer(t *testing.T) {
+//     func TestSomethingThatUsesMongoDB(t *testing.T) {
 //
 //         // make and configure a mocked store.MongoDB
-//         mockedMongoServer := &MongoDBMock{
-//             CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+//         mockedMongoDB := &MongoDBMock{
+//             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
 // 	               panic("mock out the Checker method")
 //             },
-//             CloseFunc: func(ctx context.Context) error {
+//             CloseFunc: func(in1 context.Context) error {
 // 	               panic("mock out the Close method")
+//             },
+//             GetContentFunc: func(id string) (*models.ContentResponse, error) {
+// 	               panic("mock out the GetContent method")
 //             },
 //             GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
 //         }
 //
-//         // use mockedMongoServer in code that requires store.MongoDB
+//         // use mockedMongoDB in code that requires store.MongoDB
 //         // and then make assertions.
 //
 //     }
 type MongoDBMock struct {
 	// CheckerFunc mocks the Checker method.
-	CheckerFunc func(ctx context.Context, state *healthcheck.CheckState) error
+	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
 
 	// CloseFunc mocks the Close method.
-	CloseFunc func(ctx context.Context) error
+	CloseFunc func(in1 context.Context) error
+
+	// GetContentFunc mocks the GetContent method.
+	GetContentFunc func(id string) (*models.ContentResponse, error)
 
 	// GetTopicFunc mocks the GetTopic method.
 	GetTopicFunc func(id string) (*models.TopicResponse, error)
@@ -52,15 +56,20 @@ type MongoDBMock struct {
 	calls struct {
 		// Checker holds details about calls to the Checker method.
 		Checker []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// State is the state argument value.
-			State *healthcheck.CheckState
+			// In1 is the in1 argument value.
+			In1 context.Context
+			// In2 is the in2 argument value.
+			In2 *healthcheck.CheckState
 		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
+			// In1 is the in1 argument value.
+			In1 context.Context
+		}
+		// GetContent holds details about calls to the GetContent method.
+		GetContent []struct {
+			// ID is the id argument value.
+			ID string
 		}
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
@@ -68,101 +77,136 @@ type MongoDBMock struct {
 			ID string
 		}
 	}
+	lockChecker    sync.RWMutex
+	lockClose      sync.RWMutex
+	lockGetContent sync.RWMutex
+	lockGetTopic   sync.RWMutex
 }
 
 // Checker calls CheckerFunc.
-func (mock *MongoDBMock) Checker(ctx context.Context, state *healthcheck.CheckState) error {
+func (mock *MongoDBMock) Checker(in1 context.Context, in2 *healthcheck.CheckState) error {
 	if mock.CheckerFunc == nil {
-		panic("MongoDBMock.CheckerFunc: method is nil but MongoServer.Checker was just called")
+		panic("MongoDBMock.CheckerFunc: method is nil but MongoDB.Checker was just called")
 	}
 	callInfo := struct {
-		Ctx   context.Context
-		State *healthcheck.CheckState
+		In1 context.Context
+		In2 *healthcheck.CheckState
 	}{
-		Ctx:   ctx,
-		State: state,
+		In1: in1,
+		In2: in2,
 	}
-	lockMongoDBMockChecker.Lock()
+	mock.lockChecker.Lock()
 	mock.calls.Checker = append(mock.calls.Checker, callInfo)
-	lockMongoDBMockChecker.Unlock()
-	return mock.CheckerFunc(ctx, state)
+	mock.lockChecker.Unlock()
+	return mock.CheckerFunc(in1, in2)
 }
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
-//     len(mockedMongoServer.CheckerCalls())
+//     len(mockedMongoDB.CheckerCalls())
 func (mock *MongoDBMock) CheckerCalls() []struct {
-	Ctx   context.Context
-	State *healthcheck.CheckState
+	In1 context.Context
+	In2 *healthcheck.CheckState
 } {
 	var calls []struct {
-		Ctx   context.Context
-		State *healthcheck.CheckState
+		In1 context.Context
+		In2 *healthcheck.CheckState
 	}
-	lockMongoDBMockChecker.RLock()
+	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
-	lockMongoDBMockChecker.RUnlock()
+	mock.lockChecker.RUnlock()
 	return calls
 }
 
 // Close calls CloseFunc.
-func (mock *MongoDBMock) Close(ctx context.Context) error {
+func (mock *MongoDBMock) Close(in1 context.Context) error {
 	if mock.CloseFunc == nil {
-		panic("MongoDBMock.CloseFunc: method is nil but MongoServer.Close was just called")
+		panic("MongoDBMock.CloseFunc: method is nil but MongoDB.Close was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
+		In1 context.Context
 	}{
-		Ctx: ctx,
+		In1: in1,
 	}
-	lockMongoDBMockClose.Lock()
+	mock.lockClose.Lock()
 	mock.calls.Close = append(mock.calls.Close, callInfo)
-	lockMongoDBMockClose.Unlock()
-	return mock.CloseFunc(ctx)
+	mock.lockClose.Unlock()
+	return mock.CloseFunc(in1)
 }
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedMongoServer.CloseCalls())
+//     len(mockedMongoDB.CloseCalls())
 func (mock *MongoDBMock) CloseCalls() []struct {
-	Ctx context.Context
+	In1 context.Context
 } {
 	var calls []struct {
-		Ctx context.Context
+		In1 context.Context
 	}
-	lockMongoDBMockClose.RLock()
+	mock.lockClose.RLock()
 	calls = mock.calls.Close
-	lockMongoDBMockClose.RUnlock()
+	mock.lockClose.RUnlock()
 	return calls
 }
 
-// GetTopic calls GetTopicFunc.
-func (mock *MongoDBMock) GetTopic(id string) (*models.TopicResponse, error) {
-	if mock.GetTopicFunc == nil {
-		panic("MongoDBMock.GetTopicFunc: method is nil but MongoServer.GetTopic was just called")
+// GetContent calls GetContentFunc.
+func (mock *MongoDBMock) GetContent(id string) (*models.ContentResponse, error) {
+	if mock.GetContentFunc == nil {
+		panic("MongoDBMock.GetContentFunc: method is nil but MongoDB.GetContent was just called")
 	}
 	callInfo := struct {
 		ID string
 	}{
 		ID: id,
 	}
-	lockMongoDBMockGetTopic.Lock()
+	mock.lockGetContent.Lock()
+	mock.calls.GetContent = append(mock.calls.GetContent, callInfo)
+	mock.lockGetContent.Unlock()
+	return mock.GetContentFunc(id)
+}
+
+// GetContentCalls gets all the calls that were made to GetContent.
+// Check the length with:
+//     len(mockedMongoDB.GetContentCalls())
+func (mock *MongoDBMock) GetContentCalls() []struct {
+	ID string
+} {
+	var calls []struct {
+		ID string
+	}
+	mock.lockGetContent.RLock()
+	calls = mock.calls.GetContent
+	mock.lockGetContent.RUnlock()
+	return calls
+}
+
+// GetTopic calls GetTopicFunc.
+func (mock *MongoDBMock) GetTopic(id string) (*models.TopicResponse, error) {
+	if mock.GetTopicFunc == nil {
+		panic("MongoDBMock.GetTopicFunc: method is nil but MongoDB.GetTopic was just called")
+	}
+	callInfo := struct {
+		ID string
+	}{
+		ID: id,
+	}
+	mock.lockGetTopic.Lock()
 	mock.calls.GetTopic = append(mock.calls.GetTopic, callInfo)
-	lockMongoDBMockGetTopic.Unlock()
+	mock.lockGetTopic.Unlock()
 	return mock.GetTopicFunc(id)
 }
 
 // GetTopicCalls gets all the calls that were made to GetTopic.
 // Check the length with:
-//     len(mockedMongoServer.GetTopicCalls())
+//     len(mockedMongoDB.GetTopicCalls())
 func (mock *MongoDBMock) GetTopicCalls() []struct {
 	ID string
 } {
 	var calls []struct {
 		ID string
 	}
-	lockMongoDBMockGetTopic.RLock()
+	mock.lockGetTopic.RLock()
 	calls = mock.calls.GetTopic
-	lockMongoDBMockGetTopic.RUnlock()
+	mock.lockGetTopic.RUnlock()
 	return calls
 }
