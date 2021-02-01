@@ -56,7 +56,7 @@ func addPublicItem(contentList *models.ContentResponseAPI, typeName string, item
 				cItem.Title = item.Title
 				cItem.Type = typeName
 				if privateResponse {
-					cItem.State = &state
+					cItem.State = state
 				}
 				cItem.Links = &cLinks
 
