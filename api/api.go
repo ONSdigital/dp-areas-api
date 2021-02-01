@@ -26,6 +26,11 @@ var (
 	deletePermission = auth.Permissions{Delete: true}
 )
 
+// AuthHandler provides authorisation checks on requests
+type AuthHandler interface {
+	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
+}
+
 //API provides a struct to wrap the api around
 type API struct {
 	Router                 *mux.Router
