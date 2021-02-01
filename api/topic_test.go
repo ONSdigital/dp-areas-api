@@ -387,8 +387,8 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 2)
-					So(retTopic.PublicItems[0].ID, ShouldEqual, "2")
-					So(retTopic.PublicItems[1].ID, ShouldEqual, "3")
+					So((*retTopic.PublicItems)[0].ID, ShouldEqual, "2")
+					So((*retTopic.PublicItems)[1].ID, ShouldEqual, "3")
 				})
 			})
 
@@ -406,7 +406,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 1)
-					So(retTopic.PublicItems[0].ID, ShouldEqual, "4")
+					So((*retTopic.PublicItems)[0].ID, ShouldEqual, "4")
 				})
 			})
 
@@ -490,8 +490,8 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 2)
-					So(retTopic.PrivateItems[0].Current.ID, ShouldEqual, "2")
-					So(retTopic.PrivateItems[1].Current.ID, ShouldEqual, "3")
+					So((*retTopic.PrivateItems)[0].Current.ID, ShouldEqual, "2")
+					So((*retTopic.PrivateItems)[1].Current.ID, ShouldEqual, "3")
 				})
 			})
 
@@ -510,7 +510,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 					err = json.Unmarshal(payload, &retTopic)
 					So(err, ShouldBeNil)
 					So(retTopic.TotalCount, ShouldEqual, 1)
-					So(retTopic.PrivateItems[0].Current.ID, ShouldEqual, "4")
+					So((*retTopic.PrivateItems)[0].Current.ID, ShouldEqual, "4")
 				})
 			})
 

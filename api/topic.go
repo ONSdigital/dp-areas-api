@@ -103,7 +103,13 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 			log.Event(ctx, err.Error(), log.ERROR, logdata)
 			continue
 		}
-		result.PublicItems = append(result.PublicItems, topic.Current)
+
+		if result.PublicItems == nil {
+			result.PublicItems = &[]models.Topic{*topic.Current}
+		} else {
+			*result.PublicItems = append(*result.PublicItems, *topic.Current)
+		}
+
 		result.TotalCount++
 	}
 	if result.TotalCount == 0 {
@@ -158,7 +164,13 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 			log.Event(ctx, err.Error(), log.ERROR, logdata)
 			continue
 		}
-		result.PrivateItems = append(result.PrivateItems, topic)
+
+		if result.PrivateItems == nil {
+			result.PrivateItems = &[]models.TopicResponse{*topic}
+		} else {
+			*result.PrivateItems = append(*result.PrivateItems, *topic)
+		}
+
 		result.TotalCount++
 	}
 	if result.TotalCount == 0 {
