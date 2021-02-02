@@ -186,6 +186,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 		switch err {
 		//!!! fix this list for this service as the application develops to all features
 		case apierrors.ErrTopicNotFound,
+			apierrors.ErrContentNotFound,
 			apierrors.ErrNotFound:
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,

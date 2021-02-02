@@ -101,7 +101,7 @@ func dbTopic(state models.State) *models.TopicResponse {
 	return dbTopicWithID(state, testTopicID1)
 }
 
-// API model corresponding to dbCreatedTopic
+// API model corresponding to TopicResponse
 func createdTopicAll() *models.TopicResponse {
 	return dbTopic(models.StateTopicCreated)
 }

@@ -91,7 +91,7 @@ func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
 	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, errs.ErrTopicNotFound
+			return nil, errs.ErrContentNotFound
 		}
 		return nil, err
 	}

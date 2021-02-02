@@ -121,6 +121,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
+	currentResult.Count = currentResult.TotalCount
 
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
 		return
@@ -148,7 +149,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	// User has valid authentication to get raw full topic document(s)
+	// User has valid authentication to get raw full content document(s)
 
 	if content.Current == nil {
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
@@ -179,6 +180,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
+	currentResult.Count = currentResult.TotalCount
 
 	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
 	var nextResult models.ContentResponseAPI
@@ -201,6 +203,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
+	nextResult.Count = nextResult.TotalCount
 
 	var result models.PrivateContentResponseAPI
 
