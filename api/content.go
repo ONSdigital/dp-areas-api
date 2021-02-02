@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"sort"
 
@@ -30,11 +29,6 @@ func addPublicItem(contentList *models.ContentResponseAPI, typeName string, item
 		hrefs = append(hrefs, field.HRef)
 	}
 	sort.Strings(hrefs)
-	fmt.Printf("%+v\n", hrefs) //!!! trash, and trash below comment when test code exists to check sort works.
-	// NOTE 31.1.2021 : when accessing : localhost:25300/topics/businessinnovation/content
-	// check output in debug console against what is seen in postman, and then
-	// compare it to whats in content database (with robo3t) to confirm that the last two static_datasets items
-	// (that are not sorted in the database) appear sorted by href (!!! trash this comment when done)
 
 	// Iterate through sorted hrefs and use each one to select item from
 	// itemLink in alphabetical order
@@ -67,7 +61,6 @@ func addPublicItem(contentList *models.ContentResponseAPI, typeName string, item
 				}
 
 				count++
-				fmt.Printf("item: %+v\n", item) //!!! just for development / test of code, trash when finished with
 			}
 		}
 	}
