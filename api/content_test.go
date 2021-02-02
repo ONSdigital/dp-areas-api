@@ -25,6 +25,7 @@ import (
 const ( // !!! remove not needed const's at some point / fix / rename, etc
 	ctestContentID1         = "ContentID1"
 	ctestContentID2         = "ContentID2"
+	ctestContentID3         = "ContentID3"
 	ctestContentCreatedID   = "ContentCreatedID"
 	ctestContentPublishedID = "ContentPublishedID"
 )
@@ -233,6 +234,36 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 
 // =======
 
+// Given this mongo collection document: (with no items)
+/*
+{
+    "id": "4",
+    "next": {
+        "state" : "in_progress"
+    },
+    "current" : {
+        "state" : "published"
+    }
+}
+*/
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \"in_progress\"}, \"current\" : {\"state\" : \"published\"} }"
+
+// then the Get Response in Public would return 404 error, as TotalCount = 0
+/*
+{
+    "offset": 0,
+    "count": 0,
+    "total_count": 0,
+    “limit”: 0
+    "items": [
+    ]
+}
+*/
+
+// =======
+
 func dbContentWithID(state models.State, id string) *models.ContentResponse {
 	var response models.ContentResponse
 
@@ -249,6 +280,12 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse2' so that it will unmarshal correctly !")
 			os.Exit(1)
 		}
+	case ctestContentID3:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse3), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse3' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -262,6 +299,10 @@ func dbContent(state models.State) *models.ContentResponse {
 
 func dbContent2(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID2)
+}
+
+func dbContent3(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID3)
 }
 
 // API model corresponding to ContentResponse
@@ -309,6 +350,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return dbContent(models.StateTopicPublished), nil
 					case ctestContentID2:
 						return dbContent2(models.StateTopicPublished), nil
+					case ctestContentID3:
+						return dbContent3(models.StateTopicPublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -341,7 +384,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
-			Convey("When an existing 'published' content (with no content) is requested with the valid Topic-Id context value", func() {
+			Convey("When an existing 'published' content (with no current) is requested with the valid Topic-Id context value", func() {
 				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID2), nil)
 
 				w := httptest.NewRecorder()
@@ -351,7 +394,15 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
-			//!!! create test where TotalCount = 0   and check code coverage in goland
+			Convey("When an existing 'published' content (with no items in current) is requested with the valid Topic-Id context value", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID3), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then no content is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+				})
+			})
 
 			Convey("Requesting an nonexistent content ID results in a NotFound response", func() {
 				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
