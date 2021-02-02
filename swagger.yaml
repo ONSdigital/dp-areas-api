@@ -122,18 +122,6 @@ definitions:
             $ref: '#/definitions/SubtopicsLink'
           content:
             $ref: '#/definitions/ContentLink'
-  # !!! Eleanor - should i now remove 'TopicResponse' ?
-  TopicResponse:
-    description: "A model for the response body when reading a Topic in private"
-    type: object
-    properties:
-      id:
-        description: "A unique id for the topic"
-        type: string
-      current:
-        $ref: '#/definitions/Topic'
-      next:
-        $ref: '#/definitions/Topic'
   SubtopicsLink:
     type: object
     description: "A link to the subtopics of this topic"
