@@ -24,6 +24,7 @@ import (
 // Constants for testing
 const ( // !!! remove not needed const's at some point / fix / rename, etc
 	ctestContentID1         = "ContentID1"
+	ctestContentID2         = "ContentID2"
 	ctestContentCreatedID   = "ContentCreatedID"
 	ctestContentPublishedID = "ContentPublishedID"
 )
@@ -117,7 +118,7 @@ var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\"
 /*
 {
     "offset": 0,
-    "count": 6, //!!! fix code to fill this value in !!!
+    "count": 6,
     "total_count": 6,
     “limit”: 0
     "items": [
@@ -203,13 +204,51 @@ var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\"
 }
 */
 
+// =======
+
+// Given this mongo collection document: (with 'current' missing)
+/*
+{
+    "id": "5",
+    "next": {
+        "spotlight": [
+            {
+                "Href": "/article/123",
+                "Title": "Some article"
+            },
+            {
+                "Href": "/dataset/12fasf3",
+                "Title": "An interesting dataset"
+            }
+        ],
+        "state" : "in_progress"
+    }
+}
+*/
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"in_progress\"} }"
+
+// then the Get Response in Public would return a 500 error, as content.Current = nil
+
+// =======
+
 func dbContentWithID(state models.State, id string) *models.ContentResponse {
 	var response models.ContentResponse
 
-	err := json.Unmarshal([]byte(mongoContentJSONResponse1), &response)
-	if err != nil {
-		fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json so that it will unmarshal correctly !")
-		os.Exit(1)
+	switch id {
+	case ctestContentID1:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse1), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse1' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
+	case ctestContentID2:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse2), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse2' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -219,6 +258,10 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 // DB model corresponding to content in the provided state, without any download variant
 func dbContent(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID1)
+}
+
+func dbContent2(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID2)
 }
 
 // API model corresponding to ContentResponse
@@ -264,6 +307,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StateTopicPublished), nil
+					case ctestContentID2:
+						return dbContent2(models.StateTopicPublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -296,7 +341,15 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
-			//!!! create test for content.Current = nil   and check code coverage in goland
+			Convey("When an existing 'published' content (with no content) is requested with the valid Topic-Id context value", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID2), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then no content is returned and status code 500", func() {
+					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+				})
+			})
 
 			//!!! create test where TotalCount = 0   and check code coverage in goland
 
