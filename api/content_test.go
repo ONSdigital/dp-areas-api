@@ -23,6 +23,7 @@ const (
 	ctestContentID2 = "ContentID2"
 	ctestContentID3 = "ContentID3"
 	ctestContentID4 = "ContentID4"
+	ctestContentID5 = "ContentID5"
 )
 
 const (
@@ -362,6 +363,17 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
+				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+					switch id {
+					case ctestContentID1,
+						ctestContentID2,
+						ctestContentID3,
+						ctestContentID5:
+						return dbTopic(models.StatePublished), nil
+					default:
+						return nil, apierrors.ErrTopicNotFound
+					}
+				},
 			}
 
 			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
@@ -421,8 +433,16 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
-			Convey("Requesting an nonexistent content ID results in a NotFound response", func() {
+			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
+			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
 				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+
+			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID5), nil)
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
@@ -452,6 +472,18 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return dbContent4(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
+					}
+				},
+				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+					switch id {
+					case ctestContentID1,
+						ctestContentID2,
+						ctestContentID3,
+						ctestContentID4,
+						ctestContentID5:
+						return dbTopic(models.StatePublished), nil
+					default:
+						return nil, apierrors.ErrTopicNotFound
 					}
 				},
 			}
@@ -543,8 +575,18 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				})
 			})
 
-			Convey("Requesting an nonexistent content ID results in a NotFound response", func() {
+			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
+			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
 				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent/content"), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+
+			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID5), nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
