@@ -250,7 +250,7 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
 var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \"in_progress\"}, \"current\" : {\"state\" : \"published\"} }"
 
-// then the Get Response in Public would return 404 error, as TotalCount = 0
+// then the Get Response in Public would this, where TotalCount = 0
 /*
 {
     "offset": 0,
@@ -399,8 +399,18 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then no content is returned with status code 404", func() {
-					So(w.Code, ShouldEqual, http.StatusNotFound)
+				Convey("Then no content is returned with status code 200 and no Items", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					So(retContent.Items, ShouldBeNil)
+					So(retContent.Count, ShouldEqual, 0)
+					So(retContent.Offset, ShouldEqual, 0)
+					So(retContent.Limit, ShouldEqual, 0)
+					So(retContent.TotalCount, ShouldEqual, 0)
 				})
 			})
 

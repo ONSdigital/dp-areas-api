@@ -107,14 +107,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
 	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
 
-	if currentResult.TotalCount == 0 {
-		// no content exist for the requested ID
-		handleError(ctx, w, apierrors.ErrNotFound, logdata)
-		// !!! OR should this be, go over with Eleanor
-		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-		return
-	}
-	currentResult.Count = currentResult.TotalCount
+	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
 		return
