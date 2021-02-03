@@ -1,9 +1,5 @@
 package api
 
-//!!! sort the code for this, rename / adjust for /topic/<id>/content
-
-// !!! make sure tests achieve full coverage of api/content.go
-
 import (
 	"encoding/json"
 	"fmt"
@@ -22,12 +18,11 @@ import (
 )
 
 // Constants for testing
-const ( // !!! remove not needed const's at some point / fix / rename, etc
-	ctestContentID1         = "ContentID1"
-	ctestContentID2         = "ContentID2"
-	ctestContentID3         = "ContentID3"
-	ctestContentCreatedID   = "ContentCreatedID"
-	ctestContentPublishedID = "ContentPublishedID"
+const (
+	ctestContentID1 = "ContentID1"
+	ctestContentID2 = "ContentID2"
+	ctestContentID3 = "ContentID3"
+	ctestContentID4 = "ContentID4"
 )
 
 const (
@@ -72,7 +67,7 @@ const (
                 "Title": "CPIH Time series"
             }
         ],
-        "state" : "in_progress"
+        "state" : "published"
     },
     "current" : {
         "spotlight": [
@@ -113,9 +108,10 @@ const (
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\"} ], \"articles\": [ {\"Href\": \"/article/12345\", \"Title\": \"Some article 2\"}, {\"Href\": \"/article/1234\", \"Title\": \"Some article 3\"} ], \"bulletins\": [ {\"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\"} ], \"timeseries\": [ {\"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"in_progress\" }, \"current\" : {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, { \"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"articles\": [ { \"Href\": \"/article/12345\", \"Title\": \"Some article 3\" }, { \"Href\": \"/article/1234\", \"Title\": \"Some article 2\" } ], \"bulletins\": [ { \"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\" } ], \"timeseries\": [ { \"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" } }"
+var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\"} ], \"articles\": [ {\"Href\": \"/article/12345\", \"Title\": \"Some article 2\"}, {\"Href\": \"/article/1234\", \"Title\": \"Some article 3\"} ], \"bulletins\": [ {\"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\"} ], \"timeseries\": [ {\"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" }, \"current\" : {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, { \"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"articles\": [ { \"Href\": \"/article/12345\", \"Title\": \"Some article 3\" }, { \"Href\": \"/article/1234\", \"Title\": \"Some article 2\" } ], \"bulletins\": [ { \"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\" } ], \"timeseries\": [ { \"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" } }"
 
 // then the Get Response in Public would look like (and note article is sorted by href):
+// (in Private mode, Next & Current contain the following)
 /*
 {
     "offset": 0,
@@ -222,15 +218,16 @@ var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\"
                 "Title": "An interesting dataset"
             }
         ],
-        "state" : "in_progress"
+        "state" : "published"
     }
 }
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"in_progress\"} }"
+var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
 
 // then the Get Response in Public would return a 500 error, as content.Current = nil
+// (Private also returns 500)
 
 // =======
 
@@ -239,7 +236,7 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 {
     "id": "4",
     "next": {
-        "state" : "in_progress"
+        "state" : "published"
     },
     "current" : {
         "state" : "published"
@@ -248,9 +245,10 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \"in_progress\"}, \"current\" : {\"state\" : \"published\"} }"
+var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \"published\"}, \"current\" : {\"state\" : \"published\"} }"
 
 // then the Get Response in Public would this, where TotalCount = 0
+// (in Private mode, Next & Current contain the following)
 /*
 {
     "offset": 0,
@@ -261,6 +259,33 @@ var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \
     ]
 }
 */
+
+// =======
+
+// Given this mongo collection document: (with 'next' missing)
+/*
+{
+    "id": "6",
+    "current": {
+        "spotlight": [
+            {
+                "Href": "/article/123",
+                "Title": "Some article"
+            },
+            {
+                "Href": "/dataset/12fasf3",
+                "Title": "An interesting dataset"
+            }
+        ],
+        "state" : "published"
+    }
+}
+*/
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse4 string = "{\"id\": \"5\", \"current\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
+
+// then the Get Response in Private would return a 500 error, as content.Next = nil
 
 // =======
 
@@ -286,6 +311,12 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse3' so that it will unmarshal correctly !")
 			os.Exit(1)
 		}
+	case ctestContentID4:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse4), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse4' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -305,34 +336,9 @@ func dbContent3(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID3)
 }
 
-// API model corresponding to ContentResponse
-func createdContentAll() *models.ContentResponse {
-	return dbContent(models.StateTopicCreated)
+func dbContent4(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID4)
 }
-
-/*func dbContentCurrentWithID(state models.State, id string) *models.Content {
-	var response models.ContentResponse
-
-	err := json.Unmarshal([]byte(mongoContentJSONResponse1), &response)
-	if err != nil {
-		fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json so that it will unmarshal correctly !")
-		os.Exit(1)
-	}
-	response.ID = id
-	response.Next.State = state.String()
-	response.Current.State = state.String()
-
-	return response.Current
-}
-
-// create just the 'current' sub-document
-func dbContentCurrent(state models.State) *models.Content {
-	return dbContentCurrentWithID(state, ctestContentID1)
-}
-
-func createdContentCurrent() *models.Content {
-	return dbContentCurrent(models.StateTopicPublished) //!!! this probably needs to be generic state that is same for Topic and Content
-}*/
 
 // TestGetContentPublicHandler - does what the function name says
 func TestGetContentPublicHandler(t *testing.T) {
@@ -406,6 +412,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
 					So(err, ShouldBeNil)
+
 					So(retContent.Items, ShouldBeNil)
 					So(retContent.Count, ShouldEqual, 0)
 					So(retContent.Offset, ShouldEqual, 0)
@@ -436,7 +443,13 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				GetContentFunc: func(id string) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
-						return dbContent(models.StateTopicCreated), nil
+						return dbContent(models.StateTopicPublished), nil
+					case ctestContentID2:
+						return dbContent2(models.StateTopicPublished), nil
+					case ctestContentID3:
+						return dbContent3(models.StateTopicPublished), nil
+					case ctestContentID4:
+						return dbContent4(models.StateTopicPublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -444,7 +457,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 			}
 			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
 
-			Convey("When an existing 'created' content is requested with the valid Topic-Id context value", func() {
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value", func() {
 				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID1), nil)
 				So(err, ShouldBeNil)
 
@@ -457,8 +470,76 @@ func TestGetContentPrivateHandler(t *testing.T) {
 					retContentResponse := models.PrivateContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContentResponse)
 					So(err, ShouldBeNil)
-					//!!! fix following
-					//		So(retContentResponse, ShouldResemble, *createdContentAll())
+
+					So(retContentResponse.Next.Items, ShouldNotBeNil)
+					So(retContentResponse.Next.Count, ShouldEqual, 6)
+					So(retContentResponse.Next.Offset, ShouldEqual, 0)
+					So(retContentResponse.Next.Limit, ShouldEqual, 0)
+					So(retContentResponse.Next.TotalCount, ShouldEqual, 6)
+					So(len(*retContentResponse.Next.Items), ShouldEqual, 6)
+					// check result is sorted by Href
+					So((*retContentResponse.Next.Items)[2].Links.Self.HRef, ShouldEqual, "/article/1234")
+					So((*retContentResponse.Next.Items)[3].Links.Self.HRef, ShouldEqual, "/article/12345")
+
+					So(retContentResponse.Current.Items, ShouldNotBeNil)
+					So(retContentResponse.Current.Count, ShouldEqual, 6)
+					So(retContentResponse.Current.Offset, ShouldEqual, 0)
+					So(retContentResponse.Current.Limit, ShouldEqual, 0)
+					So(retContentResponse.Current.TotalCount, ShouldEqual, 6)
+					So(len(*retContentResponse.Current.Items), ShouldEqual, 6)
+					// check result is sorted by Href
+					So((*retContentResponse.Current.Items)[2].Links.Self.HRef, ShouldEqual, "/article/1234")
+					So((*retContentResponse.Current.Items)[3].Links.Self.HRef, ShouldEqual, "/article/12345")
+				})
+			})
+
+			Convey("When an existing 'published' content (with no current) is requested with the valid Topic-Id context value", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID2), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then no content is returned and status code 500", func() {
+					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+				})
+			})
+
+			Convey("When an existing 'published' content (with no next) is requested with the valid Topic-Id context value", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID4), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then no content is returned and status code 500", func() {
+					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+				})
+			})
+
+			Convey("When an existing 'published' content (with no items in next and current) is requested with the valid Topic-Id context value", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID3), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then no content is returned with status code 200 and no Items", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContentResponse := models.PrivateContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContentResponse)
+					So(err, ShouldBeNil)
+
+					So(retContentResponse.Next.Items, ShouldBeNil)
+					So(retContentResponse.Next.Count, ShouldEqual, 0)
+					So(retContentResponse.Next.Offset, ShouldEqual, 0)
+					So(retContentResponse.Next.Limit, ShouldEqual, 0)
+					So(retContentResponse.Next.TotalCount, ShouldEqual, 0)
+
+					So(retContentResponse.Current.Items, ShouldBeNil)
+					So(retContentResponse.Current.Count, ShouldEqual, 0)
+					So(retContentResponse.Current.Offset, ShouldEqual, 0)
+					So(retContentResponse.Current.Limit, ShouldEqual, 0)
+					So(retContentResponse.Current.TotalCount, ShouldEqual, 0)
 				})
 			})
 

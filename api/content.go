@@ -120,7 +120,6 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
-	//!!! adjust rest of code from here for content
 	logdata := log.Data{
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"content_id": id,
@@ -159,13 +158,6 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
 	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
 
-	if currentResult.TotalCount == 0 {
-		// no content exist for the requested ID
-		handleError(ctx, w, apierrors.ErrNotFound, logdata)
-		// !!! OR should this be, go over with Eleanor
-		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-		return
-	}
 	currentResult.Count = currentResult.TotalCount
 
 	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
@@ -182,13 +174,6 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	addPublicItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
 	addPublicItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
 
-	if nextResult.TotalCount == 0 {
-		// no content exist for the requested ID
-		handleError(ctx, w, apierrors.ErrNotFound, logdata)
-		// !!! OR should this be, go over with Eleanor
-		// 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
-		return
-	}
 	nextResult.Count = nextResult.TotalCount
 
 	var result models.PrivateContentResponseAPI
