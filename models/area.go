@@ -4,10 +4,10 @@ import (
 	"time"
 )
 
-// AreaType defines possible dataset types
+// AreaType defines possible area types
 type AreaType int
 
-// possible dataset types
+// possible area types
 const (
 	Country AreaType = iota
 	Region
@@ -37,7 +37,7 @@ type Area struct {
 }
 
 type LinkedAreas struct {
-	ID   string `bson:"id,omitempty" 		 qjson:"id,omitempty"`
+	ID   string `bson:"id,omitempty"         json:"id,omitempty"`
 	Type string `bson:"type,omitempty"       json:"type,omitempty"`
 	Name string `bson:"name,omitempty"       json:"name,omitempty"`
 }

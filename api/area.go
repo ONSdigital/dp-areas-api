@@ -30,7 +30,7 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 	var b []byte
 	b, err = json.Marshal(area)
 	if err != nil {
-		log.Event(ctx, "getArea Handler: filed to marshal area resource into bytes", log.ERROR, log.Error(err), logdata)
+		log.Event(ctx, "getArea Handler: failed to marshal area resource into bytes", log.ERROR, log.Error(err), logdata)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

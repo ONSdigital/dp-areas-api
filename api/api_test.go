@@ -18,7 +18,6 @@ func TestSetup(t *testing.T) {
 		ctx := context.Background()
 
 		api := api.Setup(ctx, r, mongoMock)
-
 		Convey("When created the following routes should have been added", func() {
 			So(hasRoute(api.Router, "/areas/{id}", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/areas/{id}/versions/{version}", "GET"), ShouldBeTrue)
