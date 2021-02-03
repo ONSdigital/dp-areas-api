@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func addPublicItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
+func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
 	var count int
 
 	if itemLink == nil {
@@ -79,6 +79,13 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		"function":   "getContentPublicHandler",
 	}
 
+	// check topic from mongoDB by id
+	/*	_, err := api.dataStore.Backend.GetTopic(id) //!!! sort test code for this
+		if err != nil {
+			handleError(ctx, w, err, logdata)
+			return
+		}*/
+
 	// get content from mongoDB by id
 	content, err := api.dataStore.Backend.GetContent(id)
 	if err != nil {
@@ -97,15 +104,15 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	var currentResult models.ContentResponseAPI
 
 	// Add spotlight first
-	addPublicItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, false)
+	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, false)
 	// then Publications (alphabetically ordered)
-	addPublicItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, false)
-	addPublicItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, false)
-	addPublicItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, false)
-	addPublicItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, false)
+	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, false)
+	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, false)
+	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, false)
+	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, false)
 	// then Datasets (alphabetically ordered)
-	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
-	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
+	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
+	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
 
 	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
@@ -125,6 +132,13 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		"content_id": id,
 		"function":   "getContentPrivateHandler",
 	}
+
+	// check topic from mongoDB by id
+	/*	_, err := api.dataStore.Backend.GetTopic(id) //!!! sort test code for this
+		if err != nil {
+			handleError(ctx, w, err, logdata)
+			return
+		}*/
 
 	// get content from mongoDB by id
 	content, err := api.dataStore.Backend.GetContent(id)
@@ -148,15 +162,15 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	var currentResult models.ContentResponseAPI
 
 	// Add spotlight first
-	addPublicItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, true)
+	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, true)
 	// then Publications (alphabetically ordered)
-	addPublicItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, true)
-	addPublicItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, true)
-	addPublicItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, true)
-	addPublicItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, true)
+	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, true)
+	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, true)
+	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, true)
+	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, true)
 	// then Datasets (alphabetically ordered)
-	addPublicItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
-	addPublicItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
+	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
+	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
 
 	currentResult.Count = currentResult.TotalCount
 
@@ -164,15 +178,15 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	var nextResult models.ContentResponseAPI
 
 	// Add spotlight first
-	addPublicItem(&nextResult, "spotlight", content.Next.Spotlight, content.ID, content.Next.State, true)
+	addItem(&nextResult, "spotlight", content.Next.Spotlight, content.ID, content.Next.State, true)
 	// then Publications (alphabetically ordered)
-	addPublicItem(&nextResult, "articles", content.Next.Articles, content.ID, content.Next.State, true)
-	addPublicItem(&nextResult, "bulletins", content.Next.Bulletins, content.ID, content.Next.State, true)
-	addPublicItem(&nextResult, "methodologies", content.Next.Methodologies, content.ID, content.Next.State, true)
-	addPublicItem(&nextResult, "methodologyArticles", content.Next.MethodologyArticles, content.ID, content.Next.State, true)
+	addItem(&nextResult, "articles", content.Next.Articles, content.ID, content.Next.State, true)
+	addItem(&nextResult, "bulletins", content.Next.Bulletins, content.ID, content.Next.State, true)
+	addItem(&nextResult, "methodologies", content.Next.Methodologies, content.ID, content.Next.State, true)
+	addItem(&nextResult, "methodologyArticles", content.Next.MethodologyArticles, content.ID, content.Next.State, true)
 	// then Datasets (alphabetically ordered)
-	addPublicItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
-	addPublicItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
+	addItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
+	addItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
 
 	nextResult.Count = nextResult.TotalCount
 

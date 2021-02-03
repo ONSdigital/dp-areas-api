@@ -79,7 +79,7 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 	}
 
 	// if the topic is already completed, it cannot be updated
-	//	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
+	//	if existing.State == StateCompleted.String() { //!!! ultimately this might not be needed
 	//		return apierrors.ErrTopicAlreadyCompleted
 	//	}
 
@@ -91,7 +91,7 @@ func (t *Topic) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
 		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		currentState = StateTopicCreated // default value, if state is not present or invalid value
+		currentState = StateCreated // default value, if state is not present or invalid value
 		// !!! more comments needed here to state under what conditions the state may not be present or has an invalid value
 	}
 	targetState, err := ParseState(target)

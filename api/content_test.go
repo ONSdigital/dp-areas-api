@@ -353,11 +353,11 @@ func TestGetContentPublicHandler(t *testing.T) {
 				GetContentFunc: func(id string) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
-						return dbContent(models.StateTopicPublished), nil
+						return dbContent(models.StatePublished), nil
 					case ctestContentID2:
-						return dbContent2(models.StateTopicPublished), nil
+						return dbContent2(models.StatePublished), nil
 					case ctestContentID3:
-						return dbContent3(models.StateTopicPublished), nil
+						return dbContent3(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -443,13 +443,13 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				GetContentFunc: func(id string) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
-						return dbContent(models.StateTopicPublished), nil
+						return dbContent(models.StatePublished), nil
 					case ctestContentID2:
-						return dbContent2(models.StateTopicPublished), nil
+						return dbContent2(models.StatePublished), nil
 					case ctestContentID3:
-						return dbContent3(models.StateTopicPublished), nil
+						return dbContent3(models.StatePublished), nil
 					case ctestContentID4:
-						return dbContent4(models.StateTopicPublished), nil
+						return dbContent4(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}

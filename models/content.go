@@ -1,5 +1,7 @@
 package models
 
+import "github.com/ONSdigital/dp-topic-api/apierrors"
+
 // ContentResponse represents an evolving content with the current content and the updated content.
 // This is for mongo storage / retrieval.
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
@@ -65,3 +67,51 @@ type ContentLinks struct {
 }
 
 // !!! add code to validate state transitions as per topic.go
+//!!! fix the following, and sort test code elsewhere, as per topic
+
+// Validate checks that a content struct complies with the state constraints, if provided. !!! may want to add more in future
+func (t *Content) Validate() error {
+
+	if _, err := ParseState(t.State); err != nil {
+		return apierrors.ErrTopicInvalidState
+	}
+
+	// !!! add other checks, etc
+	return nil
+}
+
+// ValidateTransitionFrom checks that this content state can be validly transitioned from the existing state
+func (t *Content) ValidateTransitionFrom(existing *Content) error {
+
+	// check that state transition is allowed, only if state is provided
+	if t.State != "" {
+		if !existing.StateTransitionAllowed(t.State) {
+			return apierrors.ErrTopicStateTransitionNotAllowed
+		}
+	}
+
+	// if the topic is already completed, it cannot be updated
+	//	if existing.State == StateCompleted.String() { //!!! ultimately this might not be needed
+	//		return apierrors.ErrTopicAlreadyCompleted
+	//	}
+
+	return nil
+}
+
+// StateTransitionAllowed checks if the content can transition from its current state to the provided target state
+func (t *Content) StateTransitionAllowed(target string) bool {
+	currentState, err := ParseState(t.State)
+	if err != nil {
+		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		currentState = StateCreated // default value, if state is not present or invalid value
+		// !!! more comments needed here to state under what conditions the state may not be present or has an invalid value
+	}
+	targetState, err := ParseState(target)
+	if err != nil {
+		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// !!! to get to here is most likely a code programming error and a panic is probably best
+		//     because i believe all state changes are explicity program code specified ...
+		return false
+	}
+	return currentState.TransitionAllowed(targetState)
+}

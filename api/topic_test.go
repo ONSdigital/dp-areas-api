@@ -2,13 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/config"
@@ -22,35 +20,16 @@ import (
 )
 
 // Constants for testing
-const ( // !!! remove not needed const's at some point
-	testUserAuthToken      = "UserToken"
-	testTopicID1           = "topicTopicID1"
-	testTopicID2           = "topicTopicID2"
-	testTopicCreatedID     = "topicCreatedID"
-	testTopicUploadedID    = "topicUploadedID"
-	testTopicImportingID   = "topicImportingID"
-	testTopicPublishedID   = "topicPublishedID"
-	testCollectionID1      = "1234"
-	testVariantOriginal    = "original"
-	testVariantAlternative = "bw1024"
-	testUploadFilename     = "newimage.png"
-	testUploadPath         = "s3://images/" + testUploadFilename
-	longName               = "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"
-	testLockID             = "image-myID-123456789"
-	testDownloadType       = "originally uploaded file"
-	testPrivateHref        = "http://download.ons.gov.uk/images/imageImageID2/original/some-image-name"
-	testFilename           = "some-image-name"
+const (
+	testTopicID1 = "topicTopicID1"
 )
 
 const (
-	host              = "http://localhost:25300"
-	authToken         = "dataset"
-	healthTimeout     = 2 * time.Second
-	internalServerErr = "internal server error\n"
-	callerIdentity    = "someone@ons.gov.uk"
+	host      = "http://localhost:25300"
+	authToken = "dataset"
 )
 
-var errMongoDB = errors.New("MongoDB generic error")
+//var errMongoDB = errors.New("MongoDB generic error")
 
 func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 	return &models.TopicResponse{
@@ -103,7 +82,7 @@ func dbTopic(state models.State) *models.TopicResponse {
 
 // API model corresponding to TopicResponse
 func createdTopicAll() *models.TopicResponse {
-	return dbTopic(models.StateTopicCreated)
+	return dbTopic(models.StateCreated)
 }
 
 func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
@@ -134,7 +113,7 @@ func dbTopicCurrent(state models.State) *models.Topic {
 }
 
 func createdTopicCurrent() *models.Topic {
-	return dbTopicCurrent(models.StateTopicPublished)
+	return dbTopicCurrent(models.StatePublished)
 }
 
 func TestGetTopicPublicHandler(t *testing.T) {
@@ -149,7 +128,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
-						return dbTopic(models.StateTopicPublished), nil
+						return dbTopic(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -196,7 +175,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
-						return dbTopic(models.StateTopicCreated), nil
+						return dbTopic(models.StateCreated), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -358,13 +337,13 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case "1":
-						return dbTopic1(models.StateTopicPublished), nil
+						return dbTopic1(models.StatePublished), nil
 					case "2":
-						return dbTopic2(models.StateTopicPublished), nil
+						return dbTopic2(models.StatePublished), nil
 					case "3":
-						return dbTopic3(models.StateTopicPublished), nil
+						return dbTopic3(models.StatePublished), nil
 					case "4":
-						return dbTopic4(models.StateTopicPublished), nil
+						return dbTopic4(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -460,13 +439,13 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 					switch id {
 					case "1":
-						return dbTopic1(models.StateTopicPublished), nil
+						return dbTopic1(models.StatePublished), nil
 					case "2":
-						return dbTopic2(models.StateTopicPublished), nil
+						return dbTopic2(models.StatePublished), nil
 					case "3":
-						return dbTopic3(models.StateTopicPublished), nil
+						return dbTopic3(models.StatePublished), nil
 					case "4":
-						return dbTopic4(models.StateTopicPublished), nil
+						return dbTopic4(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -582,7 +561,7 @@ func BenchmarkGetTopicPrivateHandler(b *testing.B) {
 		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
-				return dbTopic(models.StateTopicCreated), nil
+				return dbTopic(models.StateCreated), nil
 			default:
 				return nil, apierrors.ErrTopicNotFound
 			}
@@ -636,7 +615,7 @@ func BenchmarkGetDatasetPrivate(b *testing.B) {
 		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
-				return dbTopic(models.StateTopicCreated), nil
+				return dbTopic(models.StateCreated), nil
 			default:
 				return nil, apierrors.ErrTopicNotFound
 			}
@@ -691,7 +670,7 @@ func BenchmarkGetTopicPublicHandler(b *testing.B) {
 		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
-				return dbTopic(models.StateTopicCreated), nil
+				return dbTopic(models.StateCreated), nil
 			default:
 				return nil, apierrors.ErrTopicNotFound
 			}
@@ -742,7 +721,7 @@ func BenchmarkGetDatasetPublic(b *testing.B) {
 		GetTopicFunc: func(id string) (*models.TopicResponse, error) {
 			switch id {
 			case testTopicID1:
-				return dbTopic(models.StateTopicCreated), nil
+				return dbTopic(models.StateCreated), nil
 			default:
 				return nil, apierrors.ErrTopicNotFound
 			}
