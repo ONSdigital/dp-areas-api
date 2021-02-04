@@ -80,7 +80,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// check topic from mongoDB by id
-	_, err := api.dataStore.Backend.GetTopic(id)
+	err := api.dataStore.Backend.CheckTopicExists(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -134,7 +134,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	// check topic from mongoDB by id
-	_, err := api.dataStore.Backend.GetTopic(id)
+	err := api.dataStore.Backend.CheckTopicExists(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return

@@ -21,6 +21,9 @@ var _ store.MongoDB = &MongoDBMock{}
 //
 //         // make and configure a mocked store.MongoDB
 //         mockedMongoDB := &MongoDBMock{
+//             CheckTopicExistsFunc: func(id string) error {
+// 	               panic("mock out the CheckTopicExists method")
+//             },
 //             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
 // 	               panic("mock out the Checker method")
 //             },
@@ -40,6 +43,9 @@ var _ store.MongoDB = &MongoDBMock{}
 //
 //     }
 type MongoDBMock struct {
+	// CheckTopicExistsFunc mocks the CheckTopicExists method.
+	CheckTopicExistsFunc func(id string) error
+
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
 
@@ -54,6 +60,11 @@ type MongoDBMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// CheckTopicExists holds details about calls to the CheckTopicExists method.
+		CheckTopicExists []struct {
+			// ID is the id argument value.
+			ID string
+		}
 		// Checker holds details about calls to the Checker method.
 		Checker []struct {
 			// In1 is the in1 argument value.
@@ -77,10 +88,42 @@ type MongoDBMock struct {
 			ID string
 		}
 	}
-	lockChecker    sync.RWMutex
-	lockClose      sync.RWMutex
-	lockGetContent sync.RWMutex
-	lockGetTopic   sync.RWMutex
+	lockCheckTopicExists sync.RWMutex
+	lockChecker          sync.RWMutex
+	lockClose            sync.RWMutex
+	lockGetContent       sync.RWMutex
+	lockGetTopic         sync.RWMutex
+}
+
+// CheckTopicExists calls CheckTopicExistsFunc.
+func (mock *MongoDBMock) CheckTopicExists(id string) error {
+	if mock.CheckTopicExistsFunc == nil {
+		panic("MongoDBMock.CheckTopicExistsFunc: method is nil but MongoDB.CheckTopicExists was just called")
+	}
+	callInfo := struct {
+		ID string
+	}{
+		ID: id,
+	}
+	mock.lockCheckTopicExists.Lock()
+	mock.calls.CheckTopicExists = append(mock.calls.CheckTopicExists, callInfo)
+	mock.lockCheckTopicExists.Unlock()
+	return mock.CheckTopicExistsFunc(id)
+}
+
+// CheckTopicExistsCalls gets all the calls that were made to CheckTopicExists.
+// Check the length with:
+//     len(mockedMongoDB.CheckTopicExistsCalls())
+func (mock *MongoDBMock) CheckTopicExistsCalls() []struct {
+	ID string
+} {
+	var calls []struct {
+		ID string
+	}
+	mock.lockCheckTopicExists.RLock()
+	calls = mock.calls.CheckTopicExists
+	mock.lockCheckTopicExists.RUnlock()
+	return calls
 }
 
 // Checker calls CheckerFunc.

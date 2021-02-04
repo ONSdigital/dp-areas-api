@@ -363,15 +363,15 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				CheckTopicExistsFunc: func(id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,
 						ctestContentID3,
 						ctestContentID5:
-						return dbTopic(models.StatePublished), nil
+						return nil
 					default:
-						return nil, apierrors.ErrTopicNotFound
+						return apierrors.ErrTopicNotFound
 					}
 				},
 			}
@@ -474,16 +474,16 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				CheckTopicExistsFunc: func(id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,
 						ctestContentID3,
 						ctestContentID4,
 						ctestContentID5:
-						return dbTopic(models.StatePublished), nil
+						return nil
 					default:
-						return nil, apierrors.ErrTopicNotFound
+						return apierrors.ErrTopicNotFound
 					}
 				},
 			}

@@ -81,6 +81,26 @@ func (m *Mongo) GetTopic(id string) (*models.TopicResponse, error) {
 	return &topic, nil
 }
 
+// CheckTopicExists checks that the topic exists
+func (m *Mongo) CheckTopicExists(id string) error {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	count, err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"id": id}).Count()
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return errs.ErrTopicNotFound
+		}
+		return err
+	}
+
+	if count == 0 {
+		return errs.ErrTopicNotFound
+	}
+
+	return nil
+}
+
 // GetContent retrieves a content document by its ID
 func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
 	s := m.Session.Copy()
