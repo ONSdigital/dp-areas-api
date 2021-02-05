@@ -257,7 +257,10 @@ func getContentTypeParameter(queryVars url.Values) int { //!!! add test coverage
 	// make query type lower case for following comparison to cope with wrong case of letter(s)
 	lowerVal := strings.ToLower(valArray[0])
 
-	set, ok := querySets[lowerVal]
+	// also remove leading and trailing whitespace as it casuses the check to fail
+	trimmedVal := strings.TrimSpace(lowerVal)
+
+	set, ok := querySets[trimmedVal]
 	if ok {
 		return set
 	}

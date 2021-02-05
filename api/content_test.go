@@ -235,7 +235,7 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 // Given this mongo collection document: (with no items)
 /*
 {
-    "id": "4",
+    "id": "6",
     "next": {
         "state" : "published"
     },
@@ -266,7 +266,7 @@ var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \
 // Given this mongo collection document: (with 'next' missing)
 /*
 {
-    "id": "6",
+    "id": "7",
     "current": {
         "spotlight": [
             {
@@ -596,3 +596,348 @@ func TestGetContentPrivateHandler(t *testing.T) {
 		})
 	})
 }
+
+// Given this mongo collection document that contains examples of all types and two of 'spotlight'
+/*
+{
+    "id": "7",
+    "next": {
+        "state": "published",
+        "spotlight": [
+            {
+                "href": "/h2",
+                "title": "Labour disputes"
+            },
+            {
+                "href": "/h1",
+                "title": "Labour disputes in the UK"
+            }
+        ],
+        "articles": [
+            {
+                "href": "/a1",
+                "title": "Labour disputes in the UK1"
+            }
+        ],
+        "bulletins": [
+            {
+                "href": "/b1",
+                "title": "Labour market overview, UK2"
+            }
+        ],
+        "methodologies": [
+            {
+                "href": "/m1",
+                "title": "** broken **"
+            }
+        ],
+        "methodology_articles": [
+            {
+                "href": "/ma1",
+                "title": "Labour Disputes Inquiry QMI"
+            }
+        ],
+        "static_datasets": [
+            {
+                "href": "/s1",
+                "title": "LABD01: Labour disputes"
+            }
+        ],
+        "timeseries": [
+            {
+                "href": "/t1",
+                "title": "Labour disputes;UK"
+            }
+        ]
+    },
+    "current": {
+        "state": "published",
+        "spotlight": [
+            {
+                "href": "/h2",
+                "title": "Labour disputes"
+            },
+            {
+                "href": "/h1",
+                "title": "Labour disputes in the UK"
+            }
+        ],
+        "articles": [
+            {
+                "href": "/a1",
+                "title": "Labour disputes in the UK1"
+            }
+        ],
+        "bulletins": [
+            {
+                "href": "/b1",
+                "title": "Labour market overview, UK2"
+            }
+        ],
+        "methodologies": [
+            {
+                "href": "/m1",
+                "title": "** broken **"
+            }
+        ],
+        "methodology_articles": [
+            {
+                "href": "/ma1",
+                "title": "Labour Disputes Inquiry QMI"
+            }
+        ],
+        "static_datasets": [
+            {
+                "href": "/s1",
+                "title": "LABD01: Labour disputes"
+            }
+        ],
+        "timeseries": [
+            {
+                "href": "/t1",
+                "title": "Labour disputes;UK"
+            }
+        ]
+    }
+}
+*/
+
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingconditions\",\"next\": {\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]},\"current\": {\"state\": \"published\",\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]}}"
+
+// then the Get Response in Public would look like (and note spotlight is sorted by href):
+// (in Private mode, Next & Current contain the following)
+
+/*
+{
+    "next": {
+        "count": 8,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 8,
+        "items": [
+            {
+                "title": "Labour disputes",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h2"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK1",
+                "type": "articles",
+                "links": {
+                    "self": {
+                        "href": "/a1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes in the UK2",
+                "type": "bulletins",
+                "links": {
+                    "self": {
+                        "href": "/b1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "** broken **",
+                "type": "methodologies",
+                "links": {
+                    "self": {
+                        "href": "/m1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour Disputes Inquiry QMI",
+                "type": "methodologyArticles",
+                "links": {
+                    "self": {
+                        "href": "/ma1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "LABD01: Labour disputes",
+                "type": "staticDatasets",
+                "links": {
+                    "self": {
+                        "href": "/s1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes;UK",
+                "type": "timeseries",
+                "links": {
+                    "self": {
+                        "href": "/t1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            }
+        ]
+    },
+    "current": {
+        "count": 8,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 8,
+        "items": [
+            {
+                "title": "Labour disputes",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h2"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK1",
+                "type": "articles",
+                "links": {
+                    "self": {
+                        "href": "/a1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes in the UK2",
+                "type": "bulletins",
+                "links": {
+                    "self": {
+                        "href": "/b1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "** broken **",
+                "type": "methodologies",
+                "links": {
+                    "self": {
+                        "href": "/m1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour Disputes Inquiry QMI",
+                "type": "methodologyArticles",
+                "links": {
+                    "self": {
+                        "href": "/ma1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "LABD01: Labour disputes",
+                "type": "staticDatasets",
+                "links": {
+                    "self": {
+                        "href": "/s1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes;UK",
+                "type": "timeseries",
+                "links": {
+                    "self": {
+                        "href": "/t1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            }
+        ]
+    }
+}
+*/
