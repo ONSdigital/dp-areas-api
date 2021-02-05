@@ -70,7 +70,6 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 	contentList.TotalCount = contentList.TotalCount + count
 }
 
-//!!! need test code to achieve code coverage of the following, etc
 func addItems(queryType int, currentResult *models.ContentResponseAPI, content *models.Content, id string, privateResponse bool) {
 
 	// Add spotlight first
@@ -114,11 +113,6 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 
 	// get type from query parameters, or default value
 	queryType := getContentTypeParameter(req.URL.Query())
-	/*	if err != nil {
-		logData["query_params"] = r.URL.RawQuery
-		handleDimensionsErr(ctx, w, "failed to obtain limit from request query paramters", err, logData)
-		return
-	}*/
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -165,11 +159,6 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 
 	// get type from query parameters, or default value
 	queryType := getContentTypeParameter(req.URL.Query())
-	/*	if err != nil {
-		logData["query_params"] = r.URL.RawQuery
-		handleDimensionsErr(ctx, w, "failed to obtain limit from request query paramters", err, logData)
-		return
-	}*/
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -247,7 +236,7 @@ var querySets map[string]int = map[string]int{
 }
 
 // getContentTypeParameter obtains a filter that defines a subset of possible types
-func getContentTypeParameter(queryVars url.Values) int { //!!! add test coverage for this
+func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
 		// no type specified, so return flags for all types
@@ -265,5 +254,5 @@ func getContentTypeParameter(queryVars url.Values) int { //!!! add test coverage
 		return set
 	}
 
-	return 0 // !!! may need to adjust this function to return an error if 'type' is miss spelt, and return error to user
+	return 0
 }

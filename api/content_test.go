@@ -24,6 +24,7 @@ const (
 	ctestContentID3 = "ContentID3"
 	ctestContentID4 = "ContentID4"
 	ctestContentID5 = "ContentID5"
+	ctestContentID7 = "ContentID7"
 )
 
 const (
@@ -318,6 +319,12 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse4' so that it will unmarshal correctly !")
 			os.Exit(1)
 		}
+	case ctestContentID7:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse7), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse7' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -341,6 +348,10 @@ func dbContent4(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID4)
 }
 
+func dbContent7(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID7)
+}
+
 // TestGetContentPublicHandler - does what the function name says
 func TestGetContentPublicHandler(t *testing.T) {
 
@@ -359,6 +370,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return dbContent2(models.StatePublished), nil
 					case ctestContentID3:
 						return dbContent3(models.StatePublished), nil
+					case ctestContentID7:
+						return dbContent7(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -368,7 +381,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 					case ctestContentID1,
 						ctestContentID2,
 						ctestContentID3,
-						ctestContentID5:
+						ctestContentID5,
+						ctestContentID7:
 						return nil
 					default:
 						return apierrors.ErrTopicNotFound
@@ -447,6 +461,181 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					So(retContent.Items, ShouldNotBeNil)
+					So(retContent.Count, ShouldEqual, 2)
+					So(retContent.Offset, ShouldEqual, 0)
+					So(retContent.Limit, ShouldEqual, 0)
+					So(retContent.TotalCount, ShouldEqual, 2)
+					So(len(*retContent.Items), ShouldEqual, 2)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/h1")
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/h2")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: articles", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=articles", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: bulletins", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=bulletins", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/b1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: methodologies", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=methodologies", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/m1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: methodologyarticles", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=methodologyarticles", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/ma1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: staticdatasets", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=staticdatasets", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query with wrong type: fred", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=fred", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected empty response is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+
+					So(retContent.Items, ShouldBeNil)
+					So(retContent.Count, ShouldEqual, 0)
+					So(retContent.Offset, ShouldEqual, 0)
+					So(retContent.Limit, ShouldEqual, 0)
+					So(retContent.TotalCount, ShouldEqual, 0)
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: publications", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=publications", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+
+					So(retContent.TotalCount, ShouldEqual, 4)
+
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/b1")
+					So((*retContent.Items)[2].Links.Self.HRef, ShouldEqual, "/m1")
+					So((*retContent.Items)[3].Links.Self.HRef, ShouldEqual, "/ma1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: datasets", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=datasets", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+
+					So(retContent.TotalCount, ShouldEqual, 2)
+
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/t1")
+				})
+			})
+
 		})
 	})
 }
@@ -470,6 +659,8 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return dbContent3(models.StatePublished), nil
 					case ctestContentID4:
 						return dbContent4(models.StatePublished), nil
+					case ctestContentID7:
+						return dbContent7(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -480,7 +671,8 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						ctestContentID2,
 						ctestContentID3,
 						ctestContentID4,
-						ctestContentID5:
+						ctestContentID5,
+						ctestContentID7:
 						return nil
 					default:
 						return apierrors.ErrTopicNotFound
@@ -598,6 +790,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 }
 
 // Given this mongo collection document that contains examples of all types and two of 'spotlight'
+// (this is used for query tests)
 /*
 {
     "id": "7",
@@ -708,7 +901,6 @@ var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingco
 
 // then the Get Response in Public would look like (and note spotlight is sorted by href):
 // (in Private mode, Next & Current contain the following)
-
 /*
 {
     "next": {
