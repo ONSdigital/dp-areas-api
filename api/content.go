@@ -235,7 +235,7 @@ var querySets map[string]int = map[string]int{
 	"datasets": queryStaticDatasets | queryTimeseries,
 }
 
-// getContentTypeParameter obtains a filter that defines a subset of possible types
+// getContentTypeParameter obtains a filter that defines a set of possible types
 func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
