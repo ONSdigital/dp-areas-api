@@ -2,7 +2,9 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 	"sort"
+	"strings"
 
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
@@ -68,6 +70,37 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 	contentList.TotalCount = contentList.TotalCount + count
 }
 
+//!!! need test code to achieve code coverage of the following, etc
+func addItems(queryType int, currentResult *models.ContentResponseAPI, content *models.Content, id string, privateResponse bool) {
+
+	// Add spotlight first
+	if (queryType & querySpotlight) != 0 {
+		addItem(currentResult, "spotlight", content.Spotlight, id, content.State, privateResponse)
+	}
+
+	// then Publications (alphabetically ordered)
+	if (queryType & queryAarticles) != 0 {
+		addItem(currentResult, "articles", content.Articles, id, content.State, false)
+	}
+	if (queryType & queryBulletins) != 0 {
+		addItem(currentResult, "bulletins", content.Bulletins, id, content.State, false)
+	}
+	if (queryType & queryMethodologies) != 0 {
+		addItem(currentResult, "methodologies", content.Methodologies, id, content.State, false)
+	}
+	if (queryType & queryMethodologyArticles) != 0 {
+		addItem(currentResult, "methodologyArticles", content.MethodologyArticles, id, content.State, false)
+	}
+
+	// then Datasets (alphabetically ordered)
+	if (queryType & queryStaticDatasets) != 0 {
+		addItem(currentResult, "staticDatasets", content.StaticDatasets, id, content.State, false)
+	}
+	if (queryType & queryTimeseries) != 0 {
+		addItem(currentResult, "timeseries", content.Timeseries, id, content.State, false)
+	}
+}
+
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
 func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
@@ -78,6 +111,14 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		"content_id": id,
 		"function":   "getContentPublicHandler",
 	}
+
+	// get type from query parameters, or default value
+	queryType := getContentTypeParameter(req.URL.Query())
+	/*	if err != nil {
+		logData["query_params"] = r.URL.RawQuery
+		handleDimensionsErr(ctx, w, "failed to obtain limit from request query paramters", err, logData)
+		return
+	}*/
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -102,18 +143,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	var currentResult models.ContentResponseAPI
-
-	// Add spotlight first
-	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, false)
-	// then Publications (alphabetically ordered)
-	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, false)
-	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, false)
-	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, false)
-	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, false)
-	// then Datasets (alphabetically ordered)
-	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
-	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
-
+	addItems(queryType, &currentResult, content.Current, content.ID, false)
 	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
@@ -132,6 +162,14 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		"content_id": id,
 		"function":   "getContentPrivateHandler",
 	}
+
+	// get type from query parameters, or default value
+	queryType := getContentTypeParameter(req.URL.Query())
+	/*	if err != nil {
+		logData["query_params"] = r.URL.RawQuery
+		handleDimensionsErr(ctx, w, "failed to obtain limit from request query paramters", err, logData)
+		return
+	}*/
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -160,38 +198,15 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	var currentResult models.ContentResponseAPI
-
-	// Add spotlight first
-	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, true)
-	// then Publications (alphabetically ordered)
-	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, true)
-	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, true)
-	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, true)
-	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, true)
-	// then Datasets (alphabetically ordered)
-	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
-	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
-
+	addItems(queryType, &currentResult, content.Current, content.ID, true)
 	currentResult.Count = currentResult.TotalCount
 
 	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
 	var nextResult models.ContentResponseAPI
-
-	// Add spotlight first
-	addItem(&nextResult, "spotlight", content.Next.Spotlight, content.ID, content.Next.State, true)
-	// then Publications (alphabetically ordered)
-	addItem(&nextResult, "articles", content.Next.Articles, content.ID, content.Next.State, true)
-	addItem(&nextResult, "bulletins", content.Next.Bulletins, content.ID, content.Next.State, true)
-	addItem(&nextResult, "methodologies", content.Next.Methodologies, content.ID, content.Next.State, true)
-	addItem(&nextResult, "methodologyArticles", content.Next.MethodologyArticles, content.ID, content.Next.State, true)
-	// then Datasets (alphabetically ordered)
-	addItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
-	addItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
-
+	addItems(queryType, &nextResult, content.Next, content.ID, true)
 	nextResult.Count = nextResult.TotalCount
 
 	var result models.PrivateContentResponseAPI
-
 	result.Next = &nextResult
 	result.Current = &currentResult
 
@@ -199,4 +214,53 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+}
+
+// Flag values for a query type:
+const (
+	querySpotlight int = 1 << iota // powers of 2, for bit flags
+
+	// Publications:
+	queryAarticles
+	queryBulletins
+	queryMethodologies
+	queryMethodologyArticles
+
+	// Datasets:
+	queryStaticDatasets
+	queryTimeseries
+)
+
+var querySets map[string]int = map[string]int{
+	// search keys are done as lower case to make searches work regardless of case
+	"spotlight":           querySpotlight,
+	"articles":            queryAarticles,
+	"bulletins":           queryBulletins,
+	"methodologies":       queryMethodologies,
+	"methodologyarticles": queryMethodologyArticles,
+	"staticdatasets":      queryStaticDatasets,
+	"timeseries":          queryTimeseries,
+
+	"publications": queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
+
+	"datasets": queryStaticDatasets | queryTimeseries,
+}
+
+// getContentTypeParameter obtains a filter that defines a subset of possible types
+func getContentTypeParameter(queryVars url.Values) int { //!!! add test coverage for this
+	valArray, found := queryVars["type"]
+	if !found {
+		// no type specified, so return flags for all types
+		return querySpotlight | queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles | queryStaticDatasets | queryTimeseries
+	}
+
+	// make query type lower case for following comparison to cope with wrong case of letter(s)
+	lowerVal := strings.ToLower(valArray[0])
+
+	set, ok := querySets[lowerVal]
+	if ok {
+		return set
+	}
+
+	return 0 // !!! may need to adjust this function to return an error if 'type' is miss spelt, and return error to user
 }
