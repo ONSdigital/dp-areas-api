@@ -70,7 +70,6 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
-
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation

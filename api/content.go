@@ -74,29 +74,29 @@ func addItems(queryType int, currentResult *models.ContentResponseAPI, content *
 
 	// Add spotlight first
 	if (queryType & querySpotlight) != 0 {
-		addItem(currentResult, "spotlight", content.Spotlight, id, content.State, privateResponse)
+		addItem(currentResult, spotlightStr, content.Spotlight, id, content.State, privateResponse)
 	}
 
 	// then Publications (alphabetically ordered)
 	if (queryType & queryAarticles) != 0 {
-		addItem(currentResult, "articles", content.Articles, id, content.State, false)
+		addItem(currentResult, articlesStr, content.Articles, id, content.State, false)
 	}
 	if (queryType & queryBulletins) != 0 {
-		addItem(currentResult, "bulletins", content.Bulletins, id, content.State, false)
+		addItem(currentResult, bulletinsStr, content.Bulletins, id, content.State, false)
 	}
 	if (queryType & queryMethodologies) != 0 {
-		addItem(currentResult, "methodologies", content.Methodologies, id, content.State, false)
+		addItem(currentResult, methodologiesStr, content.Methodologies, id, content.State, false)
 	}
 	if (queryType & queryMethodologyArticles) != 0 {
-		addItem(currentResult, "methodologyArticles", content.MethodologyArticles, id, content.State, false)
+		addItem(currentResult, methodologyarticlesStr, content.MethodologyArticles, id, content.State, false)
 	}
 
 	// then Datasets (alphabetically ordered)
 	if (queryType & queryStaticDatasets) != 0 {
-		addItem(currentResult, "staticDatasets", content.StaticDatasets, id, content.State, false)
+		addItem(currentResult, staticdatasetsStr, content.StaticDatasets, id, content.State, false)
 	}
 	if (queryType & queryTimeseries) != 0 {
-		addItem(currentResult, "timeseries", content.Timeseries, id, content.State, false)
+		addItem(currentResult, timeseriesStr, content.Timeseries, id, content.State, false)
 	}
 }
 
@@ -220,19 +220,31 @@ const (
 	queryTimeseries
 )
 
+const (
+	spotlightStr           = "spotlight"
+	articlesStr            = "articles"
+	bulletinsStr           = "bulletins"
+	methodologiesStr       = "methodologies"
+	methodologyarticlesStr = "methodologyarticles"
+	staticdatasetsStr      = "staticdatasets"
+	timeseriesStr          = "timeseries"
+	publicationsStr        = "publications"
+	datasetsStr            = "datasets"
+)
+
 var querySets map[string]int = map[string]int{
 	// search keys are done as lower case to make searches work regardless of case
-	"spotlight":           querySpotlight,
-	"articles":            queryAarticles,
-	"bulletins":           queryBulletins,
-	"methodologies":       queryMethodologies,
-	"methodologyarticles": queryMethodologyArticles,
-	"staticdatasets":      queryStaticDatasets,
-	"timeseries":          queryTimeseries,
+	spotlightStr:           querySpotlight,
+	articlesStr:            queryAarticles,
+	bulletinsStr:           queryBulletins,
+	methodologiesStr:       queryMethodologies,
+	methodologyarticlesStr: queryMethodologyArticles,
+	staticdatasetsStr:      queryStaticDatasets,
+	timeseriesStr:          queryTimeseries,
 
-	"publications": queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
+	publicationsStr: queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
 
-	"datasets": queryStaticDatasets | queryTimeseries,
+	datasetsStr: queryStaticDatasets | queryTimeseries,
 }
 
 // getContentTypeParameter obtains a filter that defines a set of possible types
