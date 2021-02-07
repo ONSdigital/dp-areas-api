@@ -467,7 +467,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected query type is returned with status code 200", func() {
+				Convey("Then the expected query type is returned with status code 200, and result is sorted", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -633,6 +633,23 @@ func TestGetContentPublicHandler(t *testing.T) {
 					// check result is sorted by unique Href
 					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
 					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/t1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: articles AND prefix and postfix spaces in query", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=%%20articles%%20", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
 				})
 			})
 
