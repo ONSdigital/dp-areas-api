@@ -487,7 +487,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 					So((*retContent.Items)[1].Links.Topic.HRef, ShouldEqual, "/topic/"+ctestContentID7)
 					So((*retContent.Items)[1].Links.Topic.ID, ShouldEqual, ctestContentID7)
 					So((*retContent.Items)[1].Title, ShouldEqual, "Labour disputes")
-					So((*retContent.Items)[1].Type, ShouldEqual, "spotlight")
+					So((*retContent.Items)[1].Type, ShouldEqual, spotlightStr)
 					So((*retContent.Items)[1].State, ShouldEqual, "published")
 				})
 			})
@@ -615,9 +615,13 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 					// check result is sorted by unique Href
 					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+					So((*retContent.Items)[0].Type, ShouldEqual, articlesStr)
 					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/b1")
+					So((*retContent.Items)[1].Type, ShouldEqual, bulletinsStr)
 					So((*retContent.Items)[2].Links.Self.HRef, ShouldEqual, "/m1")
+					So((*retContent.Items)[2].Type, ShouldEqual, methodologiesStr)
 					So((*retContent.Items)[3].Links.Self.HRef, ShouldEqual, "/ma1")
+					So((*retContent.Items)[3].Type, ShouldEqual, methodologyarticlesStr)
 				})
 			})
 
@@ -638,7 +642,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 					// check result is sorted by unique Href
 					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
+					So((*retContent.Items)[0].Type, ShouldEqual, staticdatasetsStr)
 					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/t1")
+					So((*retContent.Items)[1].Type, ShouldEqual, timeseriesStr)
 				})
 			})
 

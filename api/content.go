@@ -191,7 +191,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	addItems(queryType, &currentResult, content.Current, content.ID, true)
 	currentResult.Count = currentResult.TotalCount
 
-	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
+	// The 'Next' type items may have a different length to the current, so we do the above again, but for Next
 	var nextResult models.ContentResponseAPI
 	addItems(queryType, &nextResult, content.Next, content.ID, true)
 	nextResult.Count = nextResult.TotalCount
