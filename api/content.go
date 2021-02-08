@@ -55,6 +55,7 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 					cItem.State = state
 				}
 				cItem.Links = &cLinks
+				cItem.State = state
 
 				if contentList.Items == nil {
 					contentList.Items = &[]models.ContentItem{cItem}

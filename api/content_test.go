@@ -483,6 +483,12 @@ func TestGetContentPublicHandler(t *testing.T) {
 					// check result is sorted by unique Href
 					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/h1")
 					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/h2")
+					So((*retContent.Items)[1].Links.Self.ID, ShouldEqual, "")
+					So((*retContent.Items)[1].Links.Topic.HRef, ShouldEqual, "/topic/"+ctestContentID7)
+					So((*retContent.Items)[1].Links.Topic.ID, ShouldEqual, ctestContentID7)
+					So((*retContent.Items)[1].Title, ShouldEqual, "Labour disputes")
+					So((*retContent.Items)[1].Type, ShouldEqual, "spotlight")
+					So((*retContent.Items)[1].State, ShouldEqual, "published")
 				})
 			})
 
