@@ -43,13 +43,13 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 				topicLink.HRef = "/topic/" + id
 
 				var cLinks models.ContentLinks = models.ContentLinks{
-					Self: &selfLink,
+					Self:  &selfLink,
 					Topic: &topicLink}
 
 				//cLinks.Self = &selfLink
 				//cLinks.Topic = &topicLink
 
-				var cItem models.ContentItem = models.ContentItem{Title: item.Title, Type: }
+				var cItem models.ContentItem
 				cItem.Title = item.Title
 				cItem.Type = typeName
 				if privateResponse {
@@ -154,13 +154,13 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	// User has valid authentication to get raw full content document(s)
 
 	if content.Current == nil {
-		//TODO 
+		//TODO
 		/*
-		In the future: when the API becomes more than read-only
-		When a document is first created, it will only have 'next' until it is published, when it gets 'current' populated.
-		So current == nil is not an error.
-		
-		For now we return an error because we dont have publishing steps.
+			In the future: when the API becomes more than read-only
+			When a document is first created, it will only have 'next' until it is published, when it gets 'current' populated.
+			So current == nil is not an error.
+
+			For now we return an error because we dont have publishing steps.
 		*/
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
