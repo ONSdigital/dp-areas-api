@@ -119,7 +119,3 @@ func contentValidateTransitionsToCreated(content models.Content) {
 		So(content.StateTransitionAllowed("wrong"), ShouldBeFalse)
 	})
 }
-
-//!!! as the content functionality grows, add more tests to cover added state transitions.
-
-///!!! these transitions should equally apply to content, therefore make all topic stat & transition stuff generic for topic & content.
