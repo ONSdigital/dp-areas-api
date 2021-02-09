@@ -11,7 +11,7 @@ import (
 func TestContentValidation(t *testing.T) {
 	Convey("Given an empty content, it is successfully validated", t, func() {
 		content := models.Content{
-			State: models.StateCreated.String(), //!!! remove topic out of the enum name
+			State: models.StateCreated.String(),
 		}
 		err := content.Validate()
 		So(err, ShouldBeNil)

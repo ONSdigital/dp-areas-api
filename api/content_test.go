@@ -25,6 +25,7 @@ const (
 	ctestContentID4 = "ContentID4"
 	ctestContentID5 = "ContentID5"
 	ctestContentID7 = "ContentID7"
+	ctestContentID8 = "ContentID8"
 )
 
 const (
@@ -325,6 +326,12 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse7' so that it will unmarshal correctly !")
 			os.Exit(1)
 		}
+	case ctestContentID8:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse8), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse8' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -352,6 +359,10 @@ func dbContent7(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID7)
 }
 
+func dbContent8(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID8)
+}
+
 // TestGetContentPublicHandler - does what the function name says
 func TestGetContentPublicHandler(t *testing.T) {
 
@@ -372,6 +383,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return dbContent3(models.StatePublished), nil
 					case ctestContentID7:
 						return dbContent7(models.StatePublished), nil
+					case ctestContentID8:
+						return dbContent8(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -382,7 +395,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 						ctestContentID2,
 						ctestContentID3,
 						ctestContentID5,
-						ctestContentID7:
+						ctestContentID7,
+						ctestContentID8:
 						return nil
 					default:
 						return apierrors.ErrTopicNotFound
@@ -431,19 +445,8 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then no content is returned with status code 200 and no Items", func() {
-					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
-					So(err, ShouldBeNil)
-					retContent := models.ContentResponseAPI{}
-					err = json.Unmarshal(payload, &retContent)
-					So(err, ShouldBeNil)
-
-					So(retContent.Items, ShouldBeNil)
-					So(retContent.Count, ShouldEqual, 0)
-					So(retContent.Offset, ShouldEqual, 0)
-					So(retContent.Limit, ShouldEqual, 0)
-					So(retContent.TotalCount, ShouldEqual, 0)
+				Convey("Then no content is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
 				})
 			})
 
@@ -665,6 +668,14 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight AND page has not content", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID8), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+
 		})
 	})
 }
@@ -690,6 +701,8 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return dbContent4(models.StatePublished), nil
 					case ctestContentID7:
 						return dbContent7(models.StatePublished), nil
+					case ctestContentID8:
+						return dbContent8(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
@@ -701,7 +714,8 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						ctestContentID3,
 						ctestContentID4,
 						ctestContentID5,
-						ctestContentID7:
+						ctestContentID7,
+						ctestContentID8:
 						return nil
 					default:
 						return apierrors.ErrTopicNotFound
@@ -774,25 +788,8 @@ func TestGetContentPrivateHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then no content is returned with status code 200 and no Items", func() {
-					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
-					So(err, ShouldBeNil)
-					retContentResponse := models.PrivateContentResponseAPI{}
-					err = json.Unmarshal(payload, &retContentResponse)
-					So(err, ShouldBeNil)
-
-					So(retContentResponse.Next.Items, ShouldBeNil)
-					So(retContentResponse.Next.Count, ShouldEqual, 0)
-					So(retContentResponse.Next.Offset, ShouldEqual, 0)
-					So(retContentResponse.Next.Limit, ShouldEqual, 0)
-					So(retContentResponse.Next.TotalCount, ShouldEqual, 0)
-
-					So(retContentResponse.Current.Items, ShouldBeNil)
-					So(retContentResponse.Current.Count, ShouldEqual, 0)
-					So(retContentResponse.Current.Offset, ShouldEqual, 0)
-					So(retContentResponse.Current.Limit, ShouldEqual, 0)
-					So(retContentResponse.Current.TotalCount, ShouldEqual, 0)
+				Convey("Then no content is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
 				})
 			})
 
@@ -814,6 +811,16 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight AND page has not content for next and current", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID8), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+
 		})
 	})
 }
@@ -1158,6 +1165,49 @@ var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingco
                     }
                 }
             }
+        ]
+    }
+}
+*/
+
+// -=-=-
+
+// Given this mongo collection document that contains no content
+// (this is used for query tests)
+/*
+{
+    "id": "8",
+    "next": {
+        "state": "published"
+    },
+    "current": {
+        "state": "published"
+    }
+}
+*/
+
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse8 string = "{\"id\": \"8\", \"next\": { \"state\": \"published\" }, \"current\": { \"state\": \"published\" }}"
+
+// then the Get Response in Public would look like (and note spotlight is sorted by href):
+// (in Private mode, Next & Current contain the following)
+/*
+{
+    "next": {
+        "count": 0,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 0,
+        "items": [
+        ]
+    },
+    "current": {
+        "count": 0,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 0,
+        "items": [
         ]
     }
 }

@@ -141,6 +141,11 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	addItems(queryType, &currentResult, content.Current, content.ID, false)
 	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
+	if queryType != 0 && currentResult.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
+		return
+	}
+
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
 		return
 	}
@@ -195,6 +200,11 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	var nextResult models.ContentResponseAPI
 	addItems(queryType, &nextResult, content.Next, content.ID, true)
 	nextResult.Count = nextResult.TotalCount
+
+	if queryType != 0 && currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
+		return
+	}
 
 	var result models.PrivateContentResponseAPI
 	result.Next = &nextResult
