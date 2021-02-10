@@ -408,7 +408,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned and status code 500", func() {
-					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+					So(w.Code, ShouldEqual, http.StatusNotFound)
 				})
 			})
 
