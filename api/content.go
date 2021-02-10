@@ -12,8 +12,6 @@ import (
 )
 
 func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
-	var count int
-
 	if itemLink == nil {
 		return
 	}
@@ -23,52 +21,47 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 		return
 	}
 
+	title := make(map[string]string)
+
 	// Create list of sorted href's from itemLink list
-	hrefs := make([]string, 0, nofItems)
-	for _, field := range *itemLink {
-		hrefs = append(hrefs, field.HRef)
+	hrefs := make([]string, nofItems)
+	for i, field := range *itemLink {
+		hrefs[i] = field.HRef
+		title[field.HRef] = field.Title
 	}
 	sort.Strings(hrefs)
 
-	// Iterate through sorted hrefs and use each one to select item from
-	// itemLink in alphabetical order
+	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
 	for _, href := range hrefs {
-		for _, item := range *itemLink {
-			if href == item.HRef {
-				var topicLink models.LinkObject
-				var selfLink models.LinkObject
+		// build up data items into structure 'cItem'
+		var selfLink models.LinkObject = models.LinkObject{
+			HRef: href}
 
-				selfLink.HRef = item.HRef
-				topicLink.ID = id
-				topicLink.HRef = "/topic/" + id
+		var topicLink models.LinkObject = models.LinkObject{
+			ID:   id,
+			HRef: "/topic/" + id}
 
-				var cLinks models.ContentLinks = models.ContentLinks{
-					Self:  &selfLink,
-					Topic: &topicLink}
+		var cLinks models.ContentLinks = models.ContentLinks{
+			Self:  &selfLink,
+			Topic: &topicLink}
 
-				//cLinks.Self = &selfLink
-				//cLinks.Topic = &topicLink
+		var cItem models.ContentItem = models.ContentItem{
+			Title: title[href],
+			Type:  typeName,
+			Links: &cLinks}
 
-				var cItem models.ContentItem
-				cItem.Title = item.Title
-				cItem.Type = typeName
-				if privateResponse {
-					cItem.State = state
-				}
-				cItem.Links = &cLinks
+		if privateResponse {
+			cItem.State = state
+		}
 
-				if contentList.Items == nil {
-					contentList.Items = &[]models.ContentItem{cItem}
-				} else {
-					*contentList.Items = append(*contentList.Items, cItem)
-				}
-
-				count++
-			}
+		if contentList.Items == nil {
+			contentList.Items = &[]models.ContentItem{cItem}
+		} else {
+			*contentList.Items = append(*contentList.Items, cItem)
 		}
 	}
 
-	contentList.TotalCount = contentList.TotalCount + count
+	contentList.TotalCount = contentList.TotalCount + nofItems
 }
 
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
