@@ -242,7 +242,7 @@ definitions:
   Type:
         type: string
         description: "The type for an area"
-        enum: [country, region, unitary authorities, combined uthorities, metropolitan counties, counties, London boroughs,
+        enum: [country, region, unitary authorities, combined authorities, metropolitan counties, counties, London boroughs,
                metropolitan districts, non-metropolitan districts, electoral wards]
         example: "unitary authorities"
       
