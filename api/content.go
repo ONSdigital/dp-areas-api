@@ -35,38 +35,6 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 
 	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
 	for _, href := range hrefs {
-<<<<<<< HEAD
-		for _, item := range *itemLink {
-			if href == item.HRef {
-				var topicLink models.LinkObject
-				var selfLink models.LinkObject
-
-				selfLink.HRef = item.HRef
-				topicLink.ID = id
-				topicLink.HRef = "/topic/" + id
-
-				var cLinks models.ContentLinks
-				cLinks.Self = &selfLink
-				cLinks.Topic = &topicLink
-
-				var cItem models.ContentItem
-				cItem.Title = item.Title
-				cItem.Type = typeName
-				if privateResponse {
-					cItem.State = state
-				}
-				cItem.Links = &cLinks
-				cItem.State = state
-
-				if contentList.Items == nil {
-					contentList.Items = &[]models.ContentItem{cItem}
-				} else {
-					*contentList.Items = append(*contentList.Items, cItem)
-				}
-
-				count++
-			}
-=======
 		// build up data items into structure
 		var cItem models.ContentItem = models.ContentItem{
 			Title: title[href],
@@ -80,17 +48,13 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 					HRef: "/topic/" + id,
 				},
 			},
-		}
-
-		if privateResponse {
-			cItem.State = state
+			State: state,
 		}
 
 		if contentList.Items == nil {
 			contentList.Items = &[]models.ContentItem{cItem}
 		} else {
 			*contentList.Items = append(*contentList.Items, cItem)
->>>>>>> content-api
 		}
 	}
 

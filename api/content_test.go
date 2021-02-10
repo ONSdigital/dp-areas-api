@@ -675,7 +675,6 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
-
 		})
 	})
 }
