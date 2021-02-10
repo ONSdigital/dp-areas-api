@@ -13,15 +13,21 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-type returnedData struct {
-	head    map[string][]string
-	results map[string][]*countryData
+type AreaStruct struct {
+	Results BindingsStruct `bson:"results,omitempty"    json:"results,omitempty"`
 }
-type countryData struct {
-	areaname []map[string]string
-	areacode []map[string]string
-	code     []map[string]string
-	name     []map[string]string
+type BindingsStruct struct {
+	Bindings []BindingsData `bson:"bindings,omitempty"    json:"bindings,omitempty"`
+}
+type BindingsData struct {
+	AreaName *GenStruct `bson:"areaname,omitempty"    json:"areaname,omitempty"`
+	AreaCode *GenStruct `bson:"areacode,omitempty"    json:"areacode,omitempty"`
+	Code     *GenStruct `bson:"code,omitempty"    json:"code,omitempty"`
+	Name     *GenStruct `bson:"name,omitempty"    json:"name,omitempty"`
+}
+type GenStruct struct {
+	Type  string `bson:"type,omitempty"    json:"type,omitempty"`
+	Value string `bson:"value,omitempty"    json:"value,omitempty"`
 }
 
 func main() {
@@ -76,7 +82,7 @@ func main() {
 	fmt.Printf("%s\n", data)
 
 	//var returnedEnglandData map[string]interface{}
-	var returnedEnglandData returnedData
+	var returnedEnglandData AreaStruct
 	ctx := context.Background()
 
 	if err := json.Unmarshal(data, &returnedEnglandData); err != nil {
