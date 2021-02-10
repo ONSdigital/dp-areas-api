@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
+func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string) {
 	if itemLink == nil {
 		return
 	}
@@ -61,34 +61,39 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 	contentList.TotalCount = contentList.TotalCount + nofItems
 }
 
-func addItems(queryType int, currentResult *models.ContentResponseAPI, content *models.Content, id string, privateResponse bool) {
+func getItems(queryType int, content *models.Content, id string) models.ContentResponseAPI {
+	var result models.ContentResponseAPI
 
 	// Add spotlight first
 	if (queryType & querySpotlight) != 0 {
-		addItem(currentResult, spotlightStr, content.Spotlight, id, content.State, privateResponse)
+		addItem(&result, spotlightStr, content.Spotlight, id, content.State)
 	}
 
 	// then Publications (alphabetically ordered)
 	if (queryType & queryAarticles) != 0 {
-		addItem(currentResult, articlesStr, content.Articles, id, content.State, false)
+		addItem(&result, articlesStr, content.Articles, id, content.State)
 	}
 	if (queryType & queryBulletins) != 0 {
-		addItem(currentResult, bulletinsStr, content.Bulletins, id, content.State, false)
+		addItem(&result, bulletinsStr, content.Bulletins, id, content.State)
 	}
 	if (queryType & queryMethodologies) != 0 {
-		addItem(currentResult, methodologiesStr, content.Methodologies, id, content.State, false)
+		addItem(&result, methodologiesStr, content.Methodologies, id, content.State)
 	}
 	if (queryType & queryMethodologyArticles) != 0 {
-		addItem(currentResult, methodologyarticlesStr, content.MethodologyArticles, id, content.State, false)
+		addItem(&result, methodologyarticlesStr, content.MethodologyArticles, id, content.State)
 	}
 
 	// then Datasets (alphabetically ordered)
 	if (queryType & queryStaticDatasets) != 0 {
-		addItem(currentResult, staticdatasetsStr, content.StaticDatasets, id, content.State, false)
+		addItem(&result, staticdatasetsStr, content.StaticDatasets, id, content.State)
 	}
 	if (queryType & queryTimeseries) != 0 {
-		addItem(currentResult, timeseriesStr, content.Timeseries, id, content.State, false)
+		addItem(&result, timeseriesStr, content.Timeseries, id, content.State)
 	}
+
+	result.Count = result.TotalCount
+
+	return result
 }
 
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
@@ -127,9 +132,8 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	var currentResult models.ContentResponseAPI
-	addItems(queryType, &currentResult, content.Current, content.ID, false)
-	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
+	currentResult := getItems(queryType, content.Current, content.ID)
+	// currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
 	if queryType != 0 && currentResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
@@ -190,14 +194,10 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	var currentResult models.ContentResponseAPI
-	addItems(queryType, &currentResult, content.Current, content.ID, true)
-	currentResult.Count = currentResult.TotalCount
+	currentResult := getItems(queryType, content.Current, content.ID)
 
 	// The 'Next' type items may have a different length to the current, so we do the above again, but for Next
-	var nextResult models.ContentResponseAPI
-	addItems(queryType, &nextResult, content.Next, content.ID, true)
-	nextResult.Count = nextResult.TotalCount
+	nextResult := getItems(queryType, content.Next, content.ID)
 
 	if queryType != 0 && currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
