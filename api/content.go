@@ -91,7 +91,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	// User is not authenticated and hence has only access to current sub document(s)
 
 	if content.Current == nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}
 
