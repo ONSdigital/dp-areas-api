@@ -10,11 +10,11 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/service"
 	"github.com/ONSdigital/dp-topic-api/service/mock"
 	serviceMock "github.com/ONSdigital/dp-topic-api/service/mock"
+	"github.com/ONSdigital/dp-topic-api/store"
 	storeMock "github.com/ONSdigital/dp-topic-api/store/datastoretest"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
@@ -33,7 +33,7 @@ var (
 	errHealthcheck = errors.New("healthCheck error")
 )
 
-var funcDoGetMongoDbErr = func(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+var funcDoGetMongoDbErr = func(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 	return nil, errMongoDB
 }
 
@@ -76,7 +76,7 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		funcDoGetMongoDbOk := func(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+		funcDoGetMongoDbOk := func(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 			return mongoDbMock, nil
 		}
 
@@ -290,7 +290,7 @@ func TestClose(t *testing.T) {
 
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
-				DoGetMongoDBFunc:    func(ctx context.Context, cfg *config.Config) (api.MongoServer, error) { return mongoDbMock, nil },
+				DoGetMongoDBFunc:    func(ctx context.Context, cfg *config.Config) (store.MongoDB, error) { return mongoDbMock, nil },
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
@@ -321,7 +321,7 @@ func TestClose(t *testing.T) {
 
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return failingserverMock },
-				DoGetMongoDBFunc:    func(ctx context.Context, cfg *config.Config) (api.MongoServer, error) { return mongoDbMock, nil },
+				DoGetMongoDBFunc:    func(ctx context.Context, cfg *config.Config) (store.MongoDB, error) { return mongoDbMock, nil },
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},

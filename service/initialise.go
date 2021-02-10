@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/mongo"
+	"github.com/ONSdigital/dp-topic-api/store"
 
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -37,7 +37,7 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 }
 
 // GetMongoDB creates a mongoDB client and sets the Mongo flag to true
-func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 }
 
 // DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.MongoServer, error) {
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 	mongodb := &mongo.Mongo{
 		TopicsCollection:  cfg.MongoConfig.TopicsCollection,
 		ContentCollection: cfg.MongoConfig.ContentCollection,

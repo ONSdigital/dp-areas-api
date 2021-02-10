@@ -1,5 +1,7 @@
 package models
 
+import "github.com/ONSdigital/dp-topic-api/apierrors"
+
 // ContentResponse represents an evolving content with the current content and the updated content.
 // This is for mongo storage / retrieval.
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
@@ -32,31 +34,22 @@ type TypeLinkObject struct {
 	Title string `bson:"title,omitempty"  json:"title,omitempty"`
 }
 
-// PrivateContentItem represents an evolving content with the current content and the updated content.
+// PrivateContentResponseAPI represents an evolving content with the current content and the updated content.
 // This is for the REST API response.
 // The 'Next' is what gets updated throughout the publishing journey, and then the 'publish' step copies
 // the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
-type PrivateContentItem struct {
-	Next    *ContentItem `json:"next,omitempty"`
-	Current *ContentItem `json:"current,omitempty"`
+type PrivateContentResponseAPI struct {
+	Next    *ContentResponseAPI `json:"next,omitempty"`
+	Current *ContentResponseAPI `json:"current,omitempty"`
 }
 
-// PublicContent used for returning just the Current document(s) in REST API response
-type PublicContent struct {
-	Count       int            `json:"count"`
-	Offset      int            `json:"offset_index"`
-	Limit       int            `json:"limit"`
-	TotalCount  int            `json:"total_count"`
-	PublicItems []*ContentItem `json:"items"`
-}
-
-// PrivateContent used for returning both Next and Current document(s) in REST API response
-type PrivateContent struct {
-	Count        int                   `json:"count"`
-	Offset       int                   `json:"offset_index"`
-	Limit        int                   `json:"limit"`
-	TotalCount   int                   `json:"total_count"`
-	PrivateItems []*PrivateContentItem `json:"items"`
+// ContentResponseAPI used for returning the Current OR Next & Current document(s) in REST API response
+type ContentResponseAPI struct {
+	Count      int            `json:"count"`
+	Offset     int            `json:"offset_index"`
+	Limit      int            `json:"limit"`
+	TotalCount int            `json:"total_count"`
+	Items      *[]ContentItem `json:"items"`
 }
 
 // ContentItem is an individual content item
@@ -64,7 +57,7 @@ type ContentItem struct {
 	Title string        `json:"title,omitempty"`
 	Type  string        `json:"type,omitempty"`
 	Links *ContentLinks `json:"links,omitempty"`
-	State *bool         `json:"state,omitempty"` //!!! Eleanor ... do we need something like this ?
+	State string        `json:"state,omitempty"`
 }
 
 // ContentLinks are content links
@@ -74,3 +67,48 @@ type ContentLinks struct {
 }
 
 // !!! add code to validate state transitions as per topic.go
+//!!! fix the following, and sort test code elsewhere, as per topic
+
+// Validate checks that a content struct complies with the state constraints, if provided. !!! may want to add more in future
+func (t *Content) Validate() error {
+
+	if _, err := ParseState(t.State); err != nil {
+		return apierrors.ErrTopicInvalidState
+	}
+
+	// !!! add other checks, etc
+	return nil
+}
+
+// ValidateTransitionFrom checks that this content state can be validly transitioned from the existing state
+func (t *Content) ValidateTransitionFrom(existing *Content) error {
+
+	// check that state transition is allowed, only if state is provided
+	if t.State != "" {
+		if !existing.StateTransitionAllowed(t.State) {
+			return apierrors.ErrTopicStateTransitionNotAllowed
+		}
+	}
+
+	// if the topic is already completed, it cannot be updated
+
+	return nil
+}
+
+// StateTransitionAllowed checks if the content can transition from its current state to the provided target state
+func (t *Content) StateTransitionAllowed(target string) bool {
+	currentState, err := ParseState(t.State)
+	if err != nil {
+		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		currentState = StateCreated // default value, if state is not present or invalid value
+		//TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
+	}
+	targetState, err := ParseState(target)
+	if err != nil {
+		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		//TODO to get to here is most likely a code programming error and a panic is probably best
+		//     because i believe all state changes are explicity program code specified ...
+		return false
+	}
+	return currentState.TransitionAllowed(targetState)
+}

@@ -80,3 +80,21 @@ func (m *Mongo) GetTopic(id string) (*models.TopicResponse, error) {
 
 	return &topic, nil
 }
+
+// GetContent retrieves a content document by its ID
+func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	var content models.ContentResponse
+
+	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, errs.ErrContentNotFound
+		}
+		return nil, err
+	}
+
+	return &content, nil
+}

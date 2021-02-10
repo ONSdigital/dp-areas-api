@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// getTopicPublicHandler is a handler that gets a topic by its id from MongoDB
+// getTopicPublicHandler is a handler that gets a topic by its id from MongoDB for Web
 func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
@@ -37,7 +37,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
-// getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB
+// getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
 func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
@@ -62,7 +62,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
-// getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB
+// getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB for Web
 func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
@@ -103,7 +103,13 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 			log.Event(ctx, err.Error(), log.ERROR, logdata)
 			continue
 		}
-		result.PublicItems = append(result.PublicItems, topic.Current)
+
+		if result.PublicItems == nil {
+			result.PublicItems = &[]models.Topic{*topic.Current}
+		} else {
+			*result.PublicItems = append(*result.PublicItems, *topic.Current)
+		}
+
 		result.TotalCount++
 	}
 	if result.TotalCount == 0 {
@@ -117,7 +123,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
-// getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB
+// getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
 func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
@@ -158,7 +164,13 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 			log.Event(ctx, err.Error(), log.ERROR, logdata)
 			continue
 		}
-		result.PrivateItems = append(result.PrivateItems, topic)
+
+		if result.PrivateItems == nil {
+			result.PrivateItems = &[]models.TopicResponse{*topic}
+		} else {
+			*result.PrivateItems = append(*result.PrivateItems, *topic)
+		}
+
 		result.TotalCount++
 	}
 	if result.TotalCount == 0 {

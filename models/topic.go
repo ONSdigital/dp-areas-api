@@ -45,7 +45,7 @@ type PublicSubtopics struct {
 	Offset      int      `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit       int      `bson:"limit,omitempty"        json:"limit"`
 	TotalCount  int      `bson:"total_count,omitempty"  json:"total_count"`
-	PublicItems []*Topic `bson:"items,omitempty"        json:"items"`
+	PublicItems *[]Topic `bson:"items,omitempty"        json:"items"`
 }
 
 // PrivateSubtopics used for returning both Next and Current document(s) in REST API response
@@ -54,7 +54,7 @@ type PrivateSubtopics struct {
 	Offset       int              `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit        int              `bson:"limit,omitempty"        json:"limit"`
 	TotalCount   int              `bson:"total_count,omitempty"  json:"total_count"`
-	PrivateItems []*TopicResponse `bson:"items,omitempty"        json:"items"`
+	PrivateItems *[]TopicResponse `bson:"items,omitempty"        json:"items"`
 }
 
 // Validate checks that a topic struct complies with the state constraints, if provided. !!! may want to add more in future
@@ -79,9 +79,6 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 	}
 
 	// if the topic is already completed, it cannot be updated
-	//	if existing.State == StateTopicCompleted.String() { //!!! ultimately this might not be needed
-	//		return apierrors.ErrTopicAlreadyCompleted
-	//	}
 
 	return nil
 }
@@ -90,14 +87,14 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 func (t *Topic) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
-		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		currentState = StateTopicCreated // default value, if state is not present or invalid value
-		// !!! more comments needed here to state under what conditions the state may not be present or has an invalid value
+		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		currentState = StateCreated // default value, if state is not present or invalid value
+		//TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
 	}
 	targetState, err := ParseState(target)
 	if err != nil {
-		//!!! once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		// !!! to get to here is most likely a code programming error and a panic is probably best
+		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		//TODO to get to here is most likely a code programming error and a panic is probably best
 		//     because i believe all state changes are explicity program code specified ...
 		return false
 	}
