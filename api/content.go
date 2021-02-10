@@ -14,8 +14,6 @@ import (
 )
 
 func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
-	var count int
-
 	if itemLink == nil {
 		return
 	}
@@ -25,16 +23,19 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 		return
 	}
 
+	title := make(map[string]string)
+
 	// Create list of sorted href's from itemLink list
-	hrefs := make([]string, 0, nofItems)
-	for _, field := range *itemLink {
-		hrefs = append(hrefs, field.HRef)
+	hrefs := make([]string, nofItems)
+	for i, field := range *itemLink {
+		hrefs[i] = field.HRef
+		title[field.HRef] = field.Title
 	}
 	sort.Strings(hrefs)
 
-	// Iterate through sorted hrefs and use each one to select item from
-	// itemLink in alphabetical order
+	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
 	for _, href := range hrefs {
+<<<<<<< HEAD
 		for _, item := range *itemLink {
 			if href == item.HRef {
 				var topicLink models.LinkObject
@@ -65,10 +66,35 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 
 				count++
 			}
+=======
+		// build up data items into structure
+		var cItem models.ContentItem = models.ContentItem{
+			Title: title[href],
+			Type:  typeName,
+			Links: &models.ContentLinks{
+				Self: &models.LinkObject{
+					HRef: href,
+				},
+				Topic: &models.LinkObject{
+					ID:   id,
+					HRef: "/topic/" + id,
+				},
+			},
+		}
+
+		if privateResponse {
+			cItem.State = state
+		}
+
+		if contentList.Items == nil {
+			contentList.Items = &[]models.ContentItem{cItem}
+		} else {
+			*contentList.Items = append(*contentList.Items, cItem)
+>>>>>>> content-api
 		}
 	}
 
-	contentList.TotalCount = contentList.TotalCount + count
+	contentList.TotalCount = contentList.TotalCount + nofItems
 }
 
 func addItems(queryType int, currentResult *models.ContentResponseAPI, content *models.Content, id string, privateResponse bool) {
@@ -133,7 +159,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	// User is not authenticated and hence has only access to current sub document(s)
 
 	if content.Current == nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}
 
@@ -184,6 +210,14 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	// User has valid authentication to get raw full content document(s)
 
 	if content.Current == nil {
+		//TODO
+		/*
+			In the future: when the API becomes more than read-only
+			When a document is first created, it will only have 'next' until it is published, when it gets 'current' populated.
+			So current == nil is not an error.
+
+			For now we return an error because we dont have publishing steps.
+		*/
 		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
 		return
 	}
