@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"net/url"
-	"sort"
 	"strings"
 
 	dprequest "github.com/ONSdigital/dp-net/request"
@@ -13,82 +12,34 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string) {
-	if itemLink == nil {
-		return
-	}
-
-	nofItems := len(*itemLink)
-	if nofItems == 0 {
-		return
-	}
-
-	title := make(map[string]string)
-
-	// Create list of sorted href's from itemLink list
-	hrefs := make([]string, nofItems)
-	for i, field := range *itemLink {
-		hrefs[i] = field.HRef
-		title[field.HRef] = field.Title
-	}
-	sort.Strings(hrefs)
-
-	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
-	for _, href := range hrefs {
-		// build up data items into structure
-		var cItem models.ContentItem = models.ContentItem{
-			Title: title[href],
-			Type:  typeName,
-			Links: &models.ContentLinks{
-				Self: &models.LinkObject{
-					HRef: href,
-				},
-				Topic: &models.LinkObject{
-					ID:   id,
-					HRef: "/topic/" + id,
-				},
-			},
-			State: state,
-		}
-
-		if contentList.Items == nil {
-			contentList.Items = &[]models.ContentItem{cItem}
-		} else {
-			*contentList.Items = append(*contentList.Items, cItem)
-		}
-	}
-
-	contentList.TotalCount = contentList.TotalCount + nofItems
-}
-
 func getRequiredItems(queryType int, content *models.Content, id string) models.ContentResponseAPI {
 	var result models.ContentResponseAPI
 
 	// Add spotlight first
 	if (queryType & querySpotlight) != 0 {
-		addItem(&result, spotlightStr, content.Spotlight, id, content.State)
+		result.AddItem(spotlightStr, content.Spotlight, id, content.State)
 	}
 
 	// then Publications (alphabetically ordered)
 	if (queryType & queryAarticles) != 0 {
-		addItem(&result, articlesStr, content.Articles, id, content.State)
+		result.AddItem(articlesStr, content.Articles, id, content.State)
 	}
 	if (queryType & queryBulletins) != 0 {
-		addItem(&result, bulletinsStr, content.Bulletins, id, content.State)
+		result.AddItem(bulletinsStr, content.Bulletins, id, content.State)
 	}
 	if (queryType & queryMethodologies) != 0 {
-		addItem(&result, methodologiesStr, content.Methodologies, id, content.State)
+		result.AddItem(methodologiesStr, content.Methodologies, id, content.State)
 	}
 	if (queryType & queryMethodologyArticles) != 0 {
-		addItem(&result, methodologyarticlesStr, content.MethodologyArticles, id, content.State)
+		result.AddItem(methodologyarticlesStr, content.MethodologyArticles, id, content.State)
 	}
 
 	// then Datasets (alphabetically ordered)
 	if (queryType & queryStaticDatasets) != 0 {
-		addItem(&result, staticdatasetsStr, content.StaticDatasets, id, content.State)
+		result.AddItem(staticdatasetsStr, content.StaticDatasets, id, content.State)
 	}
 	if (queryType & queryTimeseries) != 0 {
-		addItem(&result, timeseriesStr, content.Timeseries, id, content.State)
+		result.AddItem(timeseriesStr, content.Timeseries, id, content.State)
 	}
 
 	result.Count = result.TotalCount

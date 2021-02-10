@@ -1,6 +1,10 @@
 package models
 
-import "github.com/ONSdigital/dp-topic-api/apierrors"
+import (
+	"sort"
+
+	"github.com/ONSdigital/dp-topic-api/apierrors"
+)
 
 // ContentResponse represents an evolving content with the current content and the updated content.
 // This is for mongo storage / retrieval.
@@ -111,4 +115,53 @@ func (t *Content) StateTransitionAllowed(target string) bool {
 		return false
 	}
 	return currentState.TransitionAllowed(targetState)
+}
+
+// AddItem2 returns list of links sorted by HRef
+func (contentList *ContentResponseAPI) AddItem(typeName string, itemLink *[]TypeLinkObject, id string, state string) {
+	if itemLink == nil {
+		return
+	}
+
+	nofItems := len(*itemLink)
+	if nofItems == 0 {
+		return
+	}
+
+	title := make(map[string]string)
+
+	// Create list of sorted href's from itemLink list
+	hrefs := make([]string, nofItems)
+	for i, field := range *itemLink {
+		hrefs[i] = field.HRef
+		title[field.HRef] = field.Title
+	}
+	sort.Strings(hrefs)
+
+	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
+	for _, href := range hrefs {
+		// build up data items into structure
+		var cItem ContentItem = ContentItem{
+			Title: title[href],
+			Type:  typeName,
+			Links: &ContentLinks{
+				Self: &LinkObject{
+					HRef: href,
+				},
+				Topic: &LinkObject{
+					ID:   id,
+					HRef: "/topic/" + id,
+				},
+			},
+			State: state,
+		}
+
+		if contentList.Items == nil {
+			contentList.Items = &[]ContentItem{cItem}
+		} else {
+			*contentList.Items = append(*contentList.Items, cItem)
+		}
+	}
+
+	contentList.TotalCount = contentList.TotalCount + nofItems
 }
