@@ -61,7 +61,7 @@ func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *
 	contentList.TotalCount = contentList.TotalCount + nofItems
 }
 
-func getItems(queryType int, content *models.Content, id string) models.ContentResponseAPI {
+func getRequiredItems(queryType int, content *models.Content, id string) models.ContentResponseAPI {
 	var result models.ContentResponseAPI
 
 	// Add spotlight first
@@ -132,7 +132,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	currentResult := getItems(queryType, content.Current, content.ID)
+	currentResult := getRequiredItems(queryType, content.Current, content.ID)
 	// currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
 	if queryType != 0 && currentResult.TotalCount == 0 {
@@ -194,10 +194,10 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	currentResult := getItems(queryType, content.Current, content.ID)
+	currentResult := getRequiredItems(queryType, content.Current, content.ID)
 
 	// The 'Next' type items may have a different length to the current, so we do the above again, but for Next
-	nextResult := getItems(queryType, content.Next, content.ID)
+	nextResult := getRequiredItems(queryType, content.Next, content.ID)
 
 	if queryType != 0 && currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
