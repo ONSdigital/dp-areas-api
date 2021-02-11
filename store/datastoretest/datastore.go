@@ -19,6 +19,9 @@ var _ store.Storer = &StorerMock{}
 //
 //         // make and configure a mocked store.Storer
 //         mockedStorer := &StorerMock{
+//             CheckTopicExistsFunc: func(id string) error {
+// 	               panic("mock out the CheckTopicExists method")
+//             },
 //             GetContentFunc: func(id string) (*models.ContentResponse, error) {
 // 	               panic("mock out the GetContent method")
 //             },
@@ -32,6 +35,9 @@ var _ store.Storer = &StorerMock{}
 //
 //     }
 type StorerMock struct {
+	// CheckTopicExistsFunc mocks the CheckTopicExists method.
+	CheckTopicExistsFunc func(id string) error
+
 	// GetContentFunc mocks the GetContent method.
 	GetContentFunc func(id string) (*models.ContentResponse, error)
 
@@ -40,6 +46,11 @@ type StorerMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// CheckTopicExists holds details about calls to the CheckTopicExists method.
+		CheckTopicExists []struct {
+			// ID is the id argument value.
+			ID string
+		}
 		// GetContent holds details about calls to the GetContent method.
 		GetContent []struct {
 			// ID is the id argument value.
@@ -51,8 +62,40 @@ type StorerMock struct {
 			ID string
 		}
 	}
-	lockGetContent sync.RWMutex
-	lockGetTopic   sync.RWMutex
+	lockCheckTopicExists sync.RWMutex
+	lockGetContent       sync.RWMutex
+	lockGetTopic         sync.RWMutex
+}
+
+// CheckTopicExists calls CheckTopicExistsFunc.
+func (mock *StorerMock) CheckTopicExists(id string) error {
+	if mock.CheckTopicExistsFunc == nil {
+		panic("StorerMock.CheckTopicExistsFunc: method is nil but Storer.CheckTopicExists was just called")
+	}
+	callInfo := struct {
+		ID string
+	}{
+		ID: id,
+	}
+	mock.lockCheckTopicExists.Lock()
+	mock.calls.CheckTopicExists = append(mock.calls.CheckTopicExists, callInfo)
+	mock.lockCheckTopicExists.Unlock()
+	return mock.CheckTopicExistsFunc(id)
+}
+
+// CheckTopicExistsCalls gets all the calls that were made to CheckTopicExists.
+// Check the length with:
+//     len(mockedStorer.CheckTopicExistsCalls())
+func (mock *StorerMock) CheckTopicExistsCalls() []struct {
+	ID string
+} {
+	var calls []struct {
+		ID string
+	}
+	mock.lockCheckTopicExists.RLock()
+	calls = mock.calls.CheckTopicExists
+	mock.lockCheckTopicExists.RUnlock()
+	return calls
 }
 
 // GetContent calls GetContentFunc.

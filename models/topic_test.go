@@ -21,7 +21,6 @@ func TestTopicValidation(t *testing.T) {
 		topic := models.Topic{}
 		err := topic.Validate()
 		So(err, ShouldResemble, apierrors.ErrTopicInvalidState)
-
 	})
 
 	Convey("Given an topic with a state that does not correspond to any expected state, it fails to validate with the expected error", t, func() {

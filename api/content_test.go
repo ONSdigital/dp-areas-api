@@ -24,6 +24,8 @@ const (
 	ctestContentID3 = "ContentID3"
 	ctestContentID4 = "ContentID4"
 	ctestContentID5 = "ContentID5"
+	ctestContentID7 = "ContentID7"
+	ctestContentID8 = "ContentID8"
 )
 
 const (
@@ -235,7 +237,7 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 // Given this mongo collection document: (with no items)
 /*
 {
-    "id": "4",
+    "id": "6",
     "next": {
         "state" : "published"
     },
@@ -266,7 +268,7 @@ var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \
 // Given this mongo collection document: (with 'next' missing)
 /*
 {
-    "id": "6",
+    "id": "7",
     "current": {
         "spotlight": [
             {
@@ -318,6 +320,18 @@ func dbContentWithID(state models.State, id string) *models.ContentResponse {
 			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse4' so that it will unmarshal correctly !")
 			os.Exit(1)
 		}
+	case ctestContentID7:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse7), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse7' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
+	case ctestContentID8:
+		err := json.Unmarshal([]byte(mongoContentJSONResponse8), &response)
+		if err != nil {
+			fmt.Printf("Oops coding error in 'dbContentWithID', FIX the json 'mongoContentJSONResponse8' so that it will unmarshal correctly !")
+			os.Exit(1)
+		}
 	}
 	response.ID = id
 
@@ -341,6 +355,14 @@ func dbContent4(state models.State) *models.ContentResponse {
 	return dbContentWithID(state, ctestContentID4)
 }
 
+func dbContent7(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID7)
+}
+
+func dbContent8(state models.State) *models.ContentResponse {
+	return dbContentWithID(state, ctestContentID8)
+}
+
 // TestGetContentPublicHandler - does what the function name says
 func TestGetContentPublicHandler(t *testing.T) {
 
@@ -359,19 +381,25 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return dbContent2(models.StatePublished), nil
 					case ctestContentID3:
 						return dbContent3(models.StatePublished), nil
+					case ctestContentID7:
+						return dbContent7(models.StatePublished), nil
+					case ctestContentID8:
+						return dbContent8(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				CheckTopicExistsFunc: func(id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,
 						ctestContentID3,
-						ctestContentID5:
-						return dbTopic(models.StatePublished), nil
+						ctestContentID5,
+						ctestContentID7,
+						ctestContentID8:
+						return nil
 					default:
-						return nil, apierrors.ErrTopicNotFound
+						return apierrors.ErrTopicNotFound
 					}
 				},
 			}
@@ -409,6 +437,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned and status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 
@@ -417,7 +448,156 @@ func TestGetContentPublicHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then no content is returned with status code 200 and no Items", func() {
+				Convey("Then no content is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("content not found\n"))
+				})
+			})
+
+			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
+			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("topic not found\n"))
+			})
+
+			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID5), nil)
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200, and result is sorted", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					So(retContent.Items, ShouldNotBeNil)
+					So(retContent.Count, ShouldEqual, 2)
+					So(retContent.Offset, ShouldEqual, 0)
+					So(retContent.Limit, ShouldEqual, 0)
+					So(retContent.TotalCount, ShouldEqual, 2)
+					So(len(*retContent.Items), ShouldEqual, 2)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/h1")
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/h2")
+					So((*retContent.Items)[1].Links.Self.ID, ShouldEqual, "")
+					So((*retContent.Items)[1].Links.Topic.HRef, ShouldEqual, "/topic/"+ctestContentID7)
+					So((*retContent.Items)[1].Links.Topic.ID, ShouldEqual, ctestContentID7)
+					So((*retContent.Items)[1].Title, ShouldEqual, "Labour disputes")
+					So((*retContent.Items)[1].Type, ShouldEqual, spotlightStr)
+					So((*retContent.Items)[1].State, ShouldEqual, "published")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: articles", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=articles", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: bulletins", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=bulletins", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/b1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: methodologies", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=methodologies", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/m1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: methodologyarticles", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=methodologyarticles", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/ma1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: staticdatasets", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=staticdatasets", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query with wrong type: fred", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=fred", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected empty response is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
@@ -433,19 +613,82 @@ func TestGetContentPublicHandler(t *testing.T) {
 				})
 			})
 
-			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
-			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
-				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: publications", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=publications", ctestContentID7), nil)
+
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				So(w.Code, ShouldEqual, http.StatusNotFound)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+
+					So(retContent.TotalCount, ShouldEqual, 4)
+
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+					So((*retContent.Items)[0].Type, ShouldEqual, articlesStr)
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/b1")
+					So((*retContent.Items)[1].Type, ShouldEqual, bulletinsStr)
+					So((*retContent.Items)[2].Links.Self.HRef, ShouldEqual, "/m1")
+					So((*retContent.Items)[2].Type, ShouldEqual, methodologiesStr)
+					So((*retContent.Items)[3].Links.Self.HRef, ShouldEqual, "/ma1")
+					So((*retContent.Items)[3].Type, ShouldEqual, methodologyarticlesStr)
+				})
 			})
 
-			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content", ctestContentID5), nil)
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: datasets", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=datasets", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+
+					So(retContent.TotalCount, ShouldEqual, 2)
+
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/s1")
+					So((*retContent.Items)[0].Type, ShouldEqual, staticdatasetsStr)
+					So((*retContent.Items)[1].Links.Self.HRef, ShouldEqual, "/t1")
+					So((*retContent.Items)[1].Type, ShouldEqual, timeseriesStr)
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: articles AND prefix and postfix spaces in query", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=%%20articles%%20", ctestContentID7), nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected query type is returned with status code 200", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					retContent := models.ContentResponseAPI{}
+					err = json.Unmarshal(payload, &retContent)
+					So(err, ShouldBeNil)
+					// check result is sorted by unique Href
+					So((*retContent.Items)[0].Links.Self.HRef, ShouldEqual, "/a1")
+				})
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight AND page has not content", func() {
+				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID8), nil)
+
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
 		})
 	})
@@ -470,20 +713,26 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return dbContent3(models.StatePublished), nil
 					case ctestContentID4:
 						return dbContent4(models.StatePublished), nil
+					case ctestContentID7:
+						return dbContent7(models.StatePublished), nil
+					case ctestContentID8:
+						return dbContent8(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				CheckTopicExistsFunc: func(id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,
 						ctestContentID3,
 						ctestContentID4,
-						ctestContentID5:
-						return dbTopic(models.StatePublished), nil
+						ctestContentID5,
+						ctestContentID7,
+						ctestContentID8:
+						return nil
 					default:
-						return nil, apierrors.ErrTopicNotFound
+						return apierrors.ErrTopicNotFound
 					}
 				},
 			}
@@ -553,25 +802,11 @@ func TestGetContentPrivateHandler(t *testing.T) {
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then no content is returned with status code 200 and no Items", func() {
-					So(w.Code, ShouldEqual, http.StatusOK)
+				Convey("Then no content is returned with status code 404", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					retContentResponse := models.PrivateContentResponseAPI{}
-					err = json.Unmarshal(payload, &retContentResponse)
-					So(err, ShouldBeNil)
-
-					So(retContentResponse.Next.Items, ShouldBeNil)
-					So(retContentResponse.Next.Count, ShouldEqual, 0)
-					So(retContentResponse.Next.Offset, ShouldEqual, 0)
-					So(retContentResponse.Next.Limit, ShouldEqual, 0)
-					So(retContentResponse.Next.TotalCount, ShouldEqual, 0)
-
-					So(retContentResponse.Current.Items, ShouldBeNil)
-					So(retContentResponse.Current.Count, ShouldEqual, 0)
-					So(retContentResponse.Current.Offset, ShouldEqual, 0)
-					So(retContentResponse.Current.Limit, ShouldEqual, 0)
-					So(retContentResponse.Current.TotalCount, ShouldEqual, 0)
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 
@@ -583,6 +818,9 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("topic not found\n"))
 			})
 
 			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
@@ -592,7 +830,410 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
+			})
+
+			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight AND page has not content for next and current", func() {
+				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s/content?type=spotlight", ctestContentID8), nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
 		})
 	})
 }
+
+// Given this mongo collection document that contains examples of all types and two of 'spotlight'
+// (this is used for query tests)
+/*
+{
+    "id": "7",
+    "next": {
+        "state": "published",
+        "spotlight": [
+            {
+                "href": "/h2",
+                "title": "Labour disputes"
+            },
+            {
+                "href": "/h1",
+                "title": "Labour disputes in the UK"
+            }
+        ],
+        "articles": [
+            {
+                "href": "/a1",
+                "title": "Labour disputes in the UK1"
+            }
+        ],
+        "bulletins": [
+            {
+                "href": "/b1",
+                "title": "Labour market overview, UK2"
+            }
+        ],
+        "methodologies": [
+            {
+                "href": "/m1",
+                "title": "** broken **"
+            }
+        ],
+        "methodology_articles": [
+            {
+                "href": "/ma1",
+                "title": "Labour Disputes Inquiry QMI"
+            }
+        ],
+        "static_datasets": [
+            {
+                "href": "/s1",
+                "title": "LABD01: Labour disputes"
+            }
+        ],
+        "timeseries": [
+            {
+                "href": "/t1",
+                "title": "Labour disputes;UK"
+            }
+        ]
+    },
+    "current": {
+        "state": "published",
+        "spotlight": [
+            {
+                "href": "/h2",
+                "title": "Labour disputes"
+            },
+            {
+                "href": "/h1",
+                "title": "Labour disputes in the UK"
+            }
+        ],
+        "articles": [
+            {
+                "href": "/a1",
+                "title": "Labour disputes in the UK1"
+            }
+        ],
+        "bulletins": [
+            {
+                "href": "/b1",
+                "title": "Labour market overview, UK2"
+            }
+        ],
+        "methodologies": [
+            {
+                "href": "/m1",
+                "title": "** broken **"
+            }
+        ],
+        "methodology_articles": [
+            {
+                "href": "/ma1",
+                "title": "Labour Disputes Inquiry QMI"
+            }
+        ],
+        "static_datasets": [
+            {
+                "href": "/s1",
+                "title": "LABD01: Labour disputes"
+            }
+        ],
+        "timeseries": [
+            {
+                "href": "/t1",
+                "title": "Labour disputes;UK"
+            }
+        ]
+    }
+}
+*/
+
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingconditions\",\"next\": {\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]},\"current\": {\"state\": \"published\",\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]}}"
+
+// then the Get Response in Public would look like (and note spotlight is sorted by href):
+// (in Private mode, Next & Current contain the following)
+/*
+{
+    "next": {
+        "count": 8,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 8,
+        "items": [
+            {
+                "title": "Labour disputes",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h2"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK1",
+                "type": "articles",
+                "links": {
+                    "self": {
+                        "href": "/a1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes in the UK2",
+                "type": "bulletins",
+                "links": {
+                    "self": {
+                        "href": "/b1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "** broken **",
+                "type": "methodologies",
+                "links": {
+                    "self": {
+                        "href": "/m1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour Disputes Inquiry QMI",
+                "type": "methodologyArticles",
+                "links": {
+                    "self": {
+                        "href": "/ma1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "LABD01: Labour disputes",
+                "type": "staticDatasets",
+                "links": {
+                    "self": {
+                        "href": "/s1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes;UK",
+                "type": "timeseries",
+                "links": {
+                    "self": {
+                        "href": "/t1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            }
+        ]
+    },
+    "current": {
+        "count": 8,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 8,
+        "items": [
+            {
+                "title": "Labour disputes",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK",
+                "type": "spotlight",
+                "links": {
+                    "self": {
+                        "href": "/h2"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                },
+                "state": "published"
+            },
+            {
+                "title": "Labour disputes in the UK1",
+                "type": "articles",
+                "links": {
+                    "self": {
+                        "href": "/a1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes in the UK2",
+                "type": "bulletins",
+                "links": {
+                    "self": {
+                        "href": "/b1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "** broken **",
+                "type": "methodologies",
+                "links": {
+                    "self": {
+                        "href": "/m1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour Disputes Inquiry QMI",
+                "type": "methodologyArticles",
+                "links": {
+                    "self": {
+                        "href": "/ma1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "LABD01: Labour disputes",
+                "type": "staticDatasets",
+                "links": {
+                    "self": {
+                        "href": "/s1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            },
+            {
+                "title": "Labour disputes;UK",
+                "type": "timeseries",
+                "links": {
+                    "self": {
+                        "href": "/t1"
+                    },
+                    "topic": {
+						"href": "/topic/7",
+						"id": "7"
+                    }
+                }
+            }
+        ]
+    }
+}
+*/
+
+// -=-=-
+
+// Given this mongo collection document that contains no content
+// (this is used for query tests)
+/*
+{
+    "id": "8",
+    "next": {
+        "state": "published"
+    },
+    "current": {
+        "state": "published"
+    }
+}
+*/
+
+// NOTE: the above has to be on one line ...
+// NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
+var mongoContentJSONResponse8 string = "{\"id\": \"8\", \"next\": { \"state\": \"published\" }, \"current\": { \"state\": \"published\" }}"
+
+// then the Get Response in Public would look like (and note spotlight is sorted by href):
+// (in Private mode, Next & Current contain the following)
+/*
+{
+    "next": {
+        "count": 0,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 0,
+        "items": [
+        ]
+    },
+    "current": {
+        "count": 0,
+        "offset_index": 0,
+        "limit": 0,
+        "total_count": 0,
+        "items": [
+        ]
+    }
+}
+*/

@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"sort"
 
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
@@ -10,57 +9,6 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
-
-func addItem(contentList *models.ContentResponseAPI, typeName string, itemLink *[]models.TypeLinkObject, id string, state string, privateResponse bool) {
-	if itemLink == nil {
-		return
-	}
-
-	nofItems := len(*itemLink)
-	if nofItems == 0 {
-		return
-	}
-
-	title := make(map[string]string)
-
-	// Create list of sorted href's from itemLink list
-	hrefs := make([]string, nofItems)
-	for i, field := range *itemLink {
-		hrefs[i] = field.HRef
-		title[field.HRef] = field.Title
-	}
-	sort.Strings(hrefs)
-
-	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
-	for _, href := range hrefs {
-		// build up data items into structure
-		var cItem models.ContentItem = models.ContentItem{
-			Title: title[href],
-			Type:  typeName,
-			Links: &models.ContentLinks{
-				Self: &models.LinkObject{
-					HRef: href,
-				},
-				Topic: &models.LinkObject{
-					ID:   id,
-					HRef: "/topic/" + id,
-				},
-			},
-		}
-
-		if privateResponse {
-			cItem.State = state
-		}
-
-		if contentList.Items == nil {
-			contentList.Items = &[]models.ContentItem{cItem}
-		} else {
-			*contentList.Items = append(*contentList.Items, cItem)
-		}
-	}
-
-	contentList.TotalCount = contentList.TotalCount + nofItems
-}
 
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
 func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request) {
@@ -73,8 +21,11 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		"function":   "getContentPublicHandler",
 	}
 
+	// get type from query parameters, or default value
+	queryType := getContentTypeParameter(req.URL.Query())
+
 	// check topic from mongoDB by id
-	_, err := api.dataStore.Backend.GetTopic(id)
+	err := api.dataStore.Backend.CheckTopicExists(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -95,22 +46,15 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	var currentResult models.ContentResponseAPI
+	currentResult := getRequiredItems(queryType, content.Current, content.ID)
 
-	// Add spotlight first
-	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, false)
-	// then Publications (alphabetically ordered)
-	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, false)
-	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, false)
-	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, false)
-	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, false)
-	// then Datasets (alphabetically ordered)
-	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, false)
-	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, false)
-
-	currentResult.Count = currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
+	if queryType != 0 && currentResult.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
+		return
+	}
 
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -127,8 +71,11 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		"function":   "getContentPrivateHandler",
 	}
 
+	// get type from query parameters, or default value
+	queryType := getContentTypeParameter(req.URL.Query())
+
 	// check topic from mongoDB by id
-	_, err := api.dataStore.Backend.GetTopic(id)
+	err := api.dataStore.Backend.CheckTopicExists(id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -161,43 +108,22 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	var currentResult models.ContentResponseAPI
+	currentResult := getRequiredItems(queryType, content.Current, content.ID)
 
-	// Add spotlight first
-	addItem(&currentResult, "spotlight", content.Current.Spotlight, content.ID, content.Current.State, true)
-	// then Publications (alphabetically ordered)
-	addItem(&currentResult, "articles", content.Current.Articles, content.ID, content.Current.State, true)
-	addItem(&currentResult, "bulletins", content.Current.Bulletins, content.ID, content.Current.State, true)
-	addItem(&currentResult, "methodologies", content.Current.Methodologies, content.ID, content.Current.State, true)
-	addItem(&currentResult, "methodologyArticles", content.Current.MethodologyArticles, content.ID, content.Current.State, true)
-	// then Datasets (alphabetically ordered)
-	addItem(&currentResult, "staticDatasets", content.Current.StaticDatasets, content.ID, content.Current.State, true)
-	addItem(&currentResult, "timeseries", content.Current.Timeseries, content.ID, content.Current.State, true)
+	// The 'Next' type items may have a different length to the current, so we do the above again, but for Next
+	nextResult := getRequiredItems(queryType, content.Next, content.ID)
 
-	currentResult.Count = currentResult.TotalCount
-
-	// The 'Next' list may be a different length to the current, so we do the above again, but for Next
-	var nextResult models.ContentResponseAPI
-
-	// Add spotlight first
-	addItem(&nextResult, "spotlight", content.Next.Spotlight, content.ID, content.Next.State, true)
-	// then Publications (alphabetically ordered)
-	addItem(&nextResult, "articles", content.Next.Articles, content.ID, content.Next.State, true)
-	addItem(&nextResult, "bulletins", content.Next.Bulletins, content.ID, content.Next.State, true)
-	addItem(&nextResult, "methodologies", content.Next.Methodologies, content.ID, content.Next.State, true)
-	addItem(&nextResult, "methodologyArticles", content.Next.MethodologyArticles, content.ID, content.Next.State, true)
-	// then Datasets (alphabetically ordered)
-	addItem(&nextResult, "staticDatasets", content.Next.StaticDatasets, content.ID, content.Next.State, true)
-	addItem(&nextResult, "timeseries", content.Next.Timeseries, content.ID, content.Next.State, true)
-
-	nextResult.Count = nextResult.TotalCount
+	if queryType != 0 && currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
+		return
+	}
 
 	var result models.PrivateContentResponseAPI
-
-	result.Next = &nextResult
-	result.Current = &currentResult
+	result.Next = nextResult
+	result.Current = currentResult
 
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
