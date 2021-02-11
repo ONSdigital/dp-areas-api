@@ -17,7 +17,7 @@ const (
 	querySpotlight int = 1 << iota // powers of 2, for bit flags
 
 	// Publications:
-	queryAarticles
+	queryArticles
 	queryBulletins
 	queryMethodologies
 	queryMethodologyArticles
@@ -42,14 +42,14 @@ const (
 var querySets map[string]int = map[string]int{
 	// search keys are done as lower case to make searches work regardless of case
 	spotlightStr:           querySpotlight,
-	articlesStr:            queryAarticles,
+	articlesStr:            queryArticles,
 	bulletinsStr:           queryBulletins,
 	methodologiesStr:       queryMethodologies,
 	methodologyarticlesStr: queryMethodologyArticles,
 	staticdatasetsStr:      queryStaticDatasets,
 	timeseriesStr:          queryTimeseries,
 
-	publicationsStr: queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
+	publicationsStr: queryArticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
 
 	datasetsStr: queryStaticDatasets | queryTimeseries,
 }
@@ -59,7 +59,7 @@ func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
 		// no type specified, so return flags for all types
-		return querySpotlight | queryAarticles | queryBulletins | queryMethodologies | queryMethodologyArticles | queryStaticDatasets | queryTimeseries
+		return querySpotlight | queryArticles | queryBulletins | queryMethodologies | queryMethodologyArticles | queryStaticDatasets | queryTimeseries
 	}
 
 	// make query type lower case for following comparison to cope with wrong case of letter(s)
@@ -85,7 +85,7 @@ func getRequiredItems(queryType int, content *models.Content, id string) *models
 	}
 
 	// then Publications (alphabetically ordered)
-	if (queryType & queryAarticles) != 0 {
+	if (queryType & queryArticles) != 0 {
 		result.AppendLinkInfo(articlesStr, content.Articles, id, content.State)
 	}
 	if (queryType & queryBulletins) != 0 {
@@ -148,7 +148,6 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	currentResult := getRequiredItems(queryType, content.Current, content.ID)
-	// currentResult.TotalCount // This may be '0' which is the case for some existing ONS pages (like: bankruptcyinsolvency as of 3.feb.2021)
 
 	if queryType != 0 && currentResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
