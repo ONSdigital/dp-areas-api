@@ -399,7 +399,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					So(payload, ShouldResemble, []byte("not found\n"))
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 

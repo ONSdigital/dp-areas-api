@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ONSdigital/dp-topic-api/apierrors"
@@ -117,5 +118,101 @@ func contentValidateTransitionsToCreated(content models.Content) {
 	})
 	Convey("Then a transition to an invalid state is not allowed", func() {
 		So(content.StateTransitionAllowed("wrong"), ShouldBeFalse)
+	})
+}
+
+func TestAppendLinkInfo(t *testing.T) {
+	Convey("Given a nil ptr for Links in published state", t, func() {
+		var result models.ContentResponseAPI
+
+		result.AppendLinkInfo("spotlight", nil, "9", "published")
+		fmt.Printf("%+v", result)
+		Convey("Then the expected result of zero items", func() {
+			So(result.Count, ShouldEqual, 0)
+			So(result.Offset, ShouldEqual, 0)
+			So(result.Limit, ShouldEqual, 0)
+			So(result.TotalCount, ShouldEqual, 0)
+
+			So(result.Items, ShouldBeNil)
+		})
+	})
+
+	Convey("Given an empty list of article Links in published state", t, func() {
+		var result models.ContentResponseAPI
+		var articleObjects []models.TypeLinkObject = []models.TypeLinkObject{}
+
+		result.AppendLinkInfo("spotlight", &articleObjects, "9", "published")
+		fmt.Printf("%+v", result)
+		Convey("Then the expected result is of zero items", func() {
+			So(result.Count, ShouldEqual, 0)
+			So(result.Offset, ShouldEqual, 0)
+			So(result.Limit, ShouldEqual, 0)
+			So(result.TotalCount, ShouldEqual, 0)
+
+			So(result.Items, ShouldBeNil)
+		})
+	})
+
+	Convey("Given a list containing one spotlight Link in published state", t, func() {
+		var result models.ContentResponseAPI
+		var spotlightObjects []models.TypeLinkObject = []models.TypeLinkObject{
+			{
+				HRef:  "/a 1st",
+				Title: "first",
+			},
+		}
+
+		result.AppendLinkInfo("spotlight", &spotlightObjects, "9", "published")
+		fmt.Printf("%+v", result)
+		Convey("Then the expected result contains one Item", func() {
+			So(result.Count, ShouldEqual, 0)
+			So(result.Offset, ShouldEqual, 0)
+			So(result.Limit, ShouldEqual, 0)
+			So(result.TotalCount, ShouldEqual, 1)
+
+			So((*result.Items)[0].Title, ShouldEqual, "first")
+			So((*result.Items)[0].Type, ShouldEqual, "spotlight")
+			So((*result.Items)[0].State, ShouldEqual, "published")
+			So((*result.Items)[0].Links.Self.HRef, ShouldEqual, "/a 1st")
+			So((*result.Items)[0].Links.Topic.HRef, ShouldEqual, "/topic/9")
+			So((*result.Items)[0].Links.Topic.ID, ShouldEqual, "9")
+		})
+	})
+
+	Convey("Given a list containing two spotlight Links in published state arranged by Href in non alphabetical order ", t, func() {
+		var result models.ContentResponseAPI
+		var spotlightObjects []models.TypeLinkObject = []models.TypeLinkObject{
+			{
+				HRef:  "/b 2nd",
+				Title: "second",
+			},
+			{
+				HRef:  "/a 1st",
+				Title: "first",
+			},
+		}
+
+		result.AppendLinkInfo("spotlight", &spotlightObjects, "9", "published")
+		fmt.Printf("%+v", result)
+		Convey("Then the expected result is sorted by Href", func() {
+			So(result.Count, ShouldEqual, 0)
+			So(result.Offset, ShouldEqual, 0)
+			So(result.Limit, ShouldEqual, 0)
+			So(result.TotalCount, ShouldEqual, 2)
+
+			So((*result.Items)[0].Title, ShouldEqual, "first")
+			So((*result.Items)[0].Type, ShouldEqual, "spotlight")
+			So((*result.Items)[0].State, ShouldEqual, "published")
+			So((*result.Items)[0].Links.Self.HRef, ShouldEqual, "/a 1st")
+			So((*result.Items)[0].Links.Topic.HRef, ShouldEqual, "/topic/9")
+			So((*result.Items)[0].Links.Topic.ID, ShouldEqual, "9")
+
+			So((*result.Items)[1].Title, ShouldEqual, "second")
+			So((*result.Items)[1].Type, ShouldEqual, "spotlight")
+			So((*result.Items)[1].State, ShouldEqual, "published")
+			So((*result.Items)[1].Links.Self.HRef, ShouldEqual, "/b 2nd")
+			So((*result.Items)[1].Links.Topic.HRef, ShouldEqual, "/topic/9")
+			So((*result.Items)[1].Links.Topic.ID, ShouldEqual, "9")
+		})
 	})
 }
