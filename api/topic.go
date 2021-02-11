@@ -32,6 +32,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 
 	// User is not authenticated and hence has only access to current sub document
 	if err := WriteJSONBody(ctx, topic.Current, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -57,6 +58,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 
 	// User has valid authentication to get raw topic document
 	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -85,7 +87,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	var result models.PublicSubtopics
 
 	if topic.Current == nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}
 
@@ -113,11 +115,12 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 		result.TotalCount++
 	}
 	if result.TotalCount == 0 {
-		handleError(ctx, w, apierrors.ErrInternalServer, logdata)
+		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}
 
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -179,6 +182,7 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 	}
 
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata

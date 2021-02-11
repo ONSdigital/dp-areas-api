@@ -183,7 +183,6 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	var status int
 	if err != nil {
 		switch err {
-		//!!! fix this list for this service as the application develops to all features
 		case apierrors.ErrTopicNotFound,
 			apierrors.ErrContentNotFound,
 			apierrors.ErrNotFound:
@@ -192,8 +191,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrTopicInvalidState:
 			status = http.StatusBadRequest
-		case apierrors.ErrTopicAlreadyCompleted,
-			apierrors.ErrTopicStateTransitionNotAllowed:
+		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden
 		default:
 			status = http.StatusInternalServerError

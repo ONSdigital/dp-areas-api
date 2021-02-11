@@ -396,10 +396,10 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no sub-documents are returned and we get status code 500", func() {
-					So(w.Code, ShouldEqual, http.StatusInternalServerError)
+					So(w.Code, ShouldEqual, http.StatusNotFound)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					So(payload, ShouldResemble, []byte("internal error\n"))
+					So(payload, ShouldResemble, []byte("not found\n"))
 				})
 			})
 

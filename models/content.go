@@ -117,8 +117,8 @@ func (t *Content) StateTransitionAllowed(target string) bool {
 	return currentState.TransitionAllowed(targetState)
 }
 
-// AddItem2 returns list of links sorted by HRef
-func (contentList *ContentResponseAPI) AddItem(typeName string, itemLink *[]TypeLinkObject, id string, state string) {
+// AppendLinkInfo appends to list more links sorted by HRef
+func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink *[]TypeLinkObject, id string, state string) {
 	if itemLink == nil {
 		return
 	}

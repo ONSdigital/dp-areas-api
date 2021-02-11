@@ -12,39 +12,39 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func getRequiredItems(queryType int, content *models.Content, id string) models.ContentResponseAPI {
+func getRequiredItems(queryType int, content *models.Content, id string) *models.ContentResponseAPI {
 	var result models.ContentResponseAPI
 
 	// Add spotlight first
 	if (queryType & querySpotlight) != 0 {
-		result.AddItem(spotlightStr, content.Spotlight, id, content.State)
+		result.AppendLinkInfo(spotlightStr, content.Spotlight, id, content.State)
 	}
 
 	// then Publications (alphabetically ordered)
 	if (queryType & queryAarticles) != 0 {
-		result.AddItem(articlesStr, content.Articles, id, content.State)
+		result.AppendLinkInfo(articlesStr, content.Articles, id, content.State)
 	}
 	if (queryType & queryBulletins) != 0 {
-		result.AddItem(bulletinsStr, content.Bulletins, id, content.State)
+		result.AppendLinkInfo(bulletinsStr, content.Bulletins, id, content.State)
 	}
 	if (queryType & queryMethodologies) != 0 {
-		result.AddItem(methodologiesStr, content.Methodologies, id, content.State)
+		result.AppendLinkInfo(methodologiesStr, content.Methodologies, id, content.State)
 	}
 	if (queryType & queryMethodologyArticles) != 0 {
-		result.AddItem(methodologyarticlesStr, content.MethodologyArticles, id, content.State)
+		result.AppendLinkInfo(methodologyarticlesStr, content.MethodologyArticles, id, content.State)
 	}
 
 	// then Datasets (alphabetically ordered)
 	if (queryType & queryStaticDatasets) != 0 {
-		result.AddItem(staticdatasetsStr, content.StaticDatasets, id, content.State)
+		result.AppendLinkInfo(staticdatasetsStr, content.StaticDatasets, id, content.State)
 	}
 	if (queryType & queryTimeseries) != 0 {
-		result.AddItem(timeseriesStr, content.Timeseries, id, content.State)
+		result.AppendLinkInfo(timeseriesStr, content.Timeseries, id, content.State)
 	}
 
 	result.Count = result.TotalCount
 
-	return result
+	return &result
 }
 
 // getContentPublicHandler is a handler that gets content by its id from MongoDB for Web
@@ -92,6 +92,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	if err := WriteJSONBody(ctx, currentResult, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
@@ -156,10 +157,11 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	var result models.PrivateContentResponseAPI
-	result.Next = &nextResult
-	result.Current = &currentResult
+	result.Next = nextResult
+	result.Current = currentResult
 
 	if err := WriteJSONBody(ctx, result, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata

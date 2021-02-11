@@ -437,6 +437,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned and status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 
@@ -447,6 +450,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned with status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 
@@ -456,6 +462,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("topic not found\n"))
 			})
 
 			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
@@ -463,6 +472,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
 
 			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight", func() {
@@ -674,6 +686,9 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
 		})
 	})
@@ -789,6 +804,9 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned with status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
 			})
 
@@ -800,6 +818,9 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("topic not found\n"))
 			})
 
 			Convey("Requesting an nonexistent content ID results in a NotFound response (content read fails)", func() {
@@ -809,6 +830,9 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
 
 			Convey("When an existing 'published' content is requested with the valid Topic-Id context value for a query type: spotlight AND page has not content for next and current", func() {
@@ -818,8 +842,10 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
-
 		})
 	})
 }
