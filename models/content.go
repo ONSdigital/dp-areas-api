@@ -103,14 +103,14 @@ func (t *Content) ValidateTransitionFrom(existing *Content) error {
 func (t *Content) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
 		currentState = StateCreated // default value, if state is not present or invalid value
-		//TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
+		// TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
 	}
 	targetState, err := ParseState(target)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		//TODO to get to here is most likely a code programming error and a panic is probably best
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO to get to here is most likely a code programming error and a panic is probably best
 		//     because i believe all state changes are explicity program code specified ...
 		return false
 	}
@@ -163,5 +163,5 @@ func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink 
 		}
 	}
 
-	contentList.TotalCount = contentList.TotalCount + nofItems
+	contentList.TotalCount += nofItems
 }

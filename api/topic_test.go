@@ -24,13 +24,6 @@ const (
 	testTopicID1 = "topicTopicID1"
 )
 
-const (
-	host      = "http://localhost:25300"
-	authToken = "dataset"
-)
-
-//var errMongoDB = errors.New("MongoDB generic error")
-
 func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 	return &models.TopicResponse{
 		ID: id,
@@ -43,7 +36,7 @@ func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 			Links: &models.TopicLinks{
 				Self: &models.LinkObject{
 					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
-					ID:   fmt.Sprintf("%s", id),
+					ID:   id,
 				},
 				Subtopics: &models.LinkObject{
 					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
@@ -62,7 +55,7 @@ func dbTopicWithID(state models.State, id string) *models.TopicResponse {
 			Links: &models.TopicLinks{
 				Self: &models.LinkObject{
 					HRef: fmt.Sprintf("http://example.com/topics/%s", id),
-					ID:   fmt.Sprintf("%s", id),
+					ID:   id,
 				},
 				Subtopics: &models.LinkObject{
 					HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
@@ -95,7 +88,7 @@ func dbTopicCurrentWithID(state models.State, id string) *models.Topic {
 		Links: &models.TopicLinks{
 			Self: &models.LinkObject{
 				HRef: fmt.Sprintf("http://example.com/topics/%s", id),
-				ID:   fmt.Sprintf("%s", id),
+				ID:   id,
 			},
 			Subtopics: &models.LinkObject{
 				HRef: fmt.Sprintf("http://example.com/topics/%s/subtopics", id),
@@ -201,7 +194,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 			})
 
 			Convey("Requesting an nonexistent topic ID results in a NotFound response", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/inexistent", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
@@ -354,7 +347,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 			// 1 has subtopics & points to 2 & 3
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 1", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/1/subtopics"), nil)
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/1/subtopics", nil)
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
@@ -373,7 +366,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 			// 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 2", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/2/subtopics"), nil)
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/2/subtopics", nil)
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
@@ -391,7 +384,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 			// 3 has subtopics, but the ID 5 in the list does not exist
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 3", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/3/subtopics"), nil)
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/3/subtopics", nil)
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
@@ -405,7 +398,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 
 			// 4 has NO subtopics, so is an end node that has a content link
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 4", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/4/subtopics"), nil)
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/4/subtopics", nil)
 
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
@@ -456,7 +449,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 
 			// 1 has subtopics & points to 2 & 3
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 1", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/1/subtopics"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/1/subtopics", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
@@ -476,7 +469,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 
 			// 2 has subtopics & points to 4, 6 (but ID 6 does not exist)
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 2", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/2/subtopics"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/2/subtopics", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
@@ -495,7 +488,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 
 			// 3 has subtopics, but the ID 5 in the list does not exist
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 3", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/3/subtopics"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/3/subtopics", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
@@ -510,7 +503,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 
 			// 4 has NO subtopics, so is an end node that has a content link
 			Convey("When an existing 'published' subtopic is requested with the valid Topic-Id value 4", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/4/subtopics"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/4/subtopics", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()
@@ -524,7 +517,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 			})
 
 			Convey("Requesting an nonexistent topic ID results in a NotFound response", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent/subtopics"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/inexistent/subtopics", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()

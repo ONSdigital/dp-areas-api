@@ -21,7 +21,7 @@ import (
 // check that DatsetAPIStore satifies the the store.Storer interface
 var _ store.Storer = (*DatsetAPIStore)(nil)
 
-//DatsetAPIStore is a wrapper which embeds (Neo4j) Mongo structs which between them satisfy the store.Storer interface.
+// DatsetAPIStore is a wrapper which embeds (Neo4j) Mongo structs which between them satisfy the store.Storer interface.
 type DatsetAPIStore struct {
 	store.MongoDB
 	//	store.GraphDB

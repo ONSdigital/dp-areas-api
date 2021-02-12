@@ -31,7 +31,7 @@ type AuthHandler interface {
 	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
 
-//API provides a struct to wrap the api around
+// API provides a struct to wrap the api around
 type API struct {
 	Router                 *mux.Router
 	dataStore              store.DataStore
@@ -39,7 +39,7 @@ type API struct {
 	enablePrivateEndpoints bool
 }
 
-//Setup function sets up the api and returns an api
+// Setup function sets up the api and returns an api
 func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStore store.DataStore, permissions AuthHandler) *API {
 	api := &API{
 		Router:                 router,
@@ -70,6 +70,7 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
+	api.get("/topics", api.getTopicsListPublicHandler)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
