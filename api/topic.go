@@ -207,6 +207,8 @@ func (api *API) getTopicsListPublicHandler(w http.ResponseWriter, req *http.Requ
 		"function":   "getTopicsListPublicHandler",
 	}
 
+	// The mongo document with id: `topic_root` contains the list of sobtopics,
+	// so we directly return that list
 	api.getSubtopicsPublicByID(ctx, id, logdata, w)
 }
 
@@ -220,6 +222,8 @@ func (api *API) getTopicsListPrivateHandler(w http.ResponseWriter, req *http.Req
 		"function":   "getTopicsListPrivateHandler",
 	}
 
+	// The mongo document with id: `topic_root` contains the list of sobtopics,
+	// so we directly return that list
 	api.getSubtopicsPrivateByID(ctx, id, logdata, w)
 }
 
