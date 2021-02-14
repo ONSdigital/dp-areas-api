@@ -17,6 +17,12 @@ var (
 		apierrors.ErrAreaNotFound:    true,
 		apierrors.ErrVersionNotFound: true,
 	}
+
+	// errors that should return a 400 status
+	badRequest = map[error]bool{
+		apierrors.ErrInvalidQueryParameter:    true,
+		apierrors.ErrQueryParamLimitExceedMax: true,
+	}
 )
 
 func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +57,7 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if getVersionErr != nil {
-		handleVersionAPIErr(ctx, getVersionErr, w, logData)
+		handleAPIErr(ctx, getVersionErr, w, logData)
 		return
 	}
 
@@ -59,14 +65,17 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write(b)
 	if err != nil {
 		log.Event(ctx, "failed writing bytes to response", log.ERROR, log.Error(err), logData)
-		handleVersionAPIErr(ctx, err, w, logData)
+		handleAPIErr(ctx, err, w, logData)
 	}
 	log.Event(ctx, "getVersion endpoint: request successful", log.INFO, logData)
 }
 
-func handleVersionAPIErr(ctx context.Context, err error, w http.ResponseWriter, data log.Data) {
+func handleAPIErr(ctx context.Context, err error, w http.ResponseWriter, data log.Data) {
 	var status int
 	switch {
+
+	case badRequest[err]:
+		status = http.StatusBadRequest
 	case notFound[err]:
 		status = http.StatusNotFound
 	default:

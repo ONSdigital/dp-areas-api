@@ -41,3 +41,12 @@ type LinkedAreas struct {
 	Type string `bson:"type,omitempty"       json:"type,omitempty"`
 	Name string `bson:"name,omitempty"       json:"name,omitempty"`
 }
+
+// AreasResults represents a structure for a list of areas
+type AreasResults struct {
+	Items      *[]Area      `json:"items"`
+	Count      int         `json:"count"`
+	Offset     int         `json:"offset"`
+	Limit      int         `json:"limit"`
+	TotalCount int         `json:"total_count"`
+}

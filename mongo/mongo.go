@@ -124,3 +124,64 @@ func (m *Mongo) CheckAreaExists(id string) error {
 	}
 	return nil
 }
+
+
+// GetAreas retrieves all areas documents
+func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	var q *mgo.Query
+
+	q = s.DB(m.Database).C("areas").Find(nil)
+
+	totalCount, err := q.Count()
+	if err != nil {
+		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
+		if err == mgo.ErrNotFound {
+			return &models.AreasResults{
+				Items:      &[]models.Area{},
+				Count:      0,
+				TotalCount: 0,
+				Offset:     offset,
+				Limit:      limit,
+			}, nil
+		}
+		return nil, err
+	}
+
+	values := []models.Area{}
+
+	if limit > 0 {
+	iter := q.Skip(offset).Limit(limit).Iter()
+
+	defer func() {
+		err := iter.Close()
+		if err != nil {
+			log.Event(ctx, "error closing iterator", log.ERROR, log.Error(err))
+		}
+	}()
+
+		if err := iter.All(&values); err != nil {
+			if err == mgo.ErrNotFound {
+				return &models.AreasResults{
+					Items:      &values,
+					Count:      0,
+					TotalCount: totalCount,
+					Offset:     offset,
+					Limit:      limit,
+				}, nil
+			}
+			return nil, err
+		}
+	}
+
+	return &models.AreasResults{
+		Items:      &values,
+		Count:      len(values),
+		TotalCount: totalCount,
+		Offset:     offset,
+		Limit:      limit,
+	}, nil
+}
+

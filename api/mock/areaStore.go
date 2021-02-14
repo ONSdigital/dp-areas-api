@@ -33,6 +33,9 @@ var _ api.AreaStore = &AreaStoreMock{}
 //             GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
 // 	               panic("mock out the GetArea method")
 //             },
+//             GetAreasFunc: func(ctx context.Context, offset int, limit int) (*models.AreasResults, error) {
+// 	               panic("mock out the GetAreas method")
+//             },
 //             GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
 // 	               panic("mock out the GetVersion method")
 //             },
@@ -54,6 +57,9 @@ type AreaStoreMock struct {
 
 	// GetAreaFunc mocks the GetArea method.
 	GetAreaFunc func(ctx context.Context, id string) (*models.Area, error)
+
+	// GetAreasFunc mocks the GetAreas method.
+	GetAreasFunc func(ctx context.Context, offset int, limit int) (*models.AreasResults, error)
 
 	// GetVersionFunc mocks the GetVersion method.
 	GetVersionFunc func(id string, versionID int) (*models.Area, error)
@@ -84,6 +90,15 @@ type AreaStoreMock struct {
 			// ID is the id argument value.
 			ID string
 		}
+		// GetAreas holds details about calls to the GetAreas method.
+		GetAreas []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Offset is the offset argument value.
+			Offset int
+			// Limit is the limit argument value.
+			Limit int
+		}
 		// GetVersion holds details about calls to the GetVersion method.
 		GetVersion []struct {
 			// ID is the id argument value.
@@ -96,6 +111,7 @@ type AreaStoreMock struct {
 	lockChecker         sync.RWMutex
 	lockClose           sync.RWMutex
 	lockGetArea         sync.RWMutex
+	lockGetAreas        sync.RWMutex
 	lockGetVersion      sync.RWMutex
 }
 
@@ -228,6 +244,45 @@ func (mock *AreaStoreMock) GetAreaCalls() []struct {
 	mock.lockGetArea.RLock()
 	calls = mock.calls.GetArea
 	mock.lockGetArea.RUnlock()
+	return calls
+}
+
+// GetAreas calls GetAreasFunc.
+func (mock *AreaStoreMock) GetAreas(ctx context.Context, offset int, limit int) (*models.AreasResults, error) {
+	if mock.GetAreasFunc == nil {
+		panic("AreaStoreMock.GetAreasFunc: method is nil but AreaStore.GetAreas was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		Offset int
+		Limit  int
+	}{
+		Ctx:    ctx,
+		Offset: offset,
+		Limit:  limit,
+	}
+	mock.lockGetAreas.Lock()
+	mock.calls.GetAreas = append(mock.calls.GetAreas, callInfo)
+	mock.lockGetAreas.Unlock()
+	return mock.GetAreasFunc(ctx, offset, limit)
+}
+
+// GetAreasCalls gets all the calls that were made to GetAreas.
+// Check the length with:
+//     len(mockedAreaStore.GetAreasCalls())
+func (mock *AreaStoreMock) GetAreasCalls() []struct {
+	Ctx    context.Context
+	Offset int
+	Limit  int
+} {
+	var calls []struct {
+		Ctx    context.Context
+		Offset int
+		Limit  int
+	}
+	mock.lockGetAreas.RLock()
+	calls = mock.calls.GetAreas
+	mock.lockGetAreas.RUnlock()
 	return calls
 }
 
