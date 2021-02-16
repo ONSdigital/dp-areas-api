@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-topic-api/apierrors"
-	brokenrecorder "github.com/ONSdigital/dp-topic-api/broken"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/mocks"
 	"github.com/ONSdigital/dp-topic-api/models"
@@ -152,19 +151,6 @@ func TestGetTopicPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-			})
-
-			Convey("When an existing 'published' topic is requested with the valid Topic-Id context value and write broken", func() {
-				request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/%s", testTopicID1), nil)
-
-				w := brokenrecorder.NewRecorder()
-				topicAPI.Router.ServeHTTP(w, request)
-				Convey("Then the expected sub-document topic is NOT returned with status code 500", func() {
-					So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					payload, err := ioutil.ReadAll(w.Body)
-					So(err, ShouldBeNil)
-					So(string(payload), ShouldContainSubstring, "This is the broken write")
-				})
 			})
 		})
 	})
