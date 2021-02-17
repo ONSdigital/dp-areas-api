@@ -57,14 +57,14 @@ type PrivateSubtopics struct {
 	PrivateItems *[]TopicResponse `bson:"items,omitempty"        json:"items"`
 }
 
-// Validate checks that a topic struct complies with the state constraints, if provided. !!! may want to add more in future
+// Validate checks that a topic struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Topic) Validate() error {
 
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
 
-	// !!! add other checks, etc
+	// TODO add other checks, etc
 	return nil
 }
 

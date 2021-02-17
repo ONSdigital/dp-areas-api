@@ -70,17 +70,14 @@ type ContentLinks struct {
 	Topic *LinkObject `json:"topic,omitempty"`
 }
 
-// !!! add code to validate state transitions as per topic.go
-//!!! fix the following, and sort test code elsewhere, as per topic
-
-// Validate checks that a content struct complies with the state constraints, if provided. !!! may want to add more in future
+// Validate checks that a content struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Content) Validate() error {
 
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
 
-	// !!! add other checks, etc
+	// TODO add other checks, etc ?
 	return nil
 }
 

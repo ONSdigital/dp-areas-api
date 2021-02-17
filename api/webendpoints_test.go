@@ -31,7 +31,7 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 	}
 
 	publishSubnetEndpoints := map[testEndpoint]int{
-		//!!! the following commented out block is for reference usage some time later and will eventually be removed
+		// TODO the following commented out block is for reference usage some time later and will eventually be removed
 		// Dataset Endpoints
 		/*{Method: "POST", URL: "http://localhost:22000/datasets/1234"}:                            http.StatusMethodNotAllowed,
 		{Method: "PUT", URL: "http://localhost:22000/datasets/1234/editions/1234/versions/2123"}: http.StatusMethodNotAllowed,*/
@@ -77,7 +77,7 @@ func TestSetup(t *testing.T) {
 
 			Convey("When created the following routes should have been added", func() {
 				So(api, ShouldNotBeNil)
-				So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue) //!!! remove at some point
+				So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue) // !!! remove at some point
 				So(hasRoute(api.Router, "/topics/{id}", "GET"), ShouldBeTrue)
 			})
 		})
