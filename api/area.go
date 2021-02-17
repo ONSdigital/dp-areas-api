@@ -61,17 +61,6 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 
 	var err error
 
-	if offsetParameter != "" {
-		logData["offset"] = offsetParameter
-		offset, err = utils.ValidatePositiveInt(offsetParameter)
-		if err != nil {
-			log.Event(ctx, "invalid query parameter: offset", log.ERROR, log.Error(err), logData)
-			err = errs.ErrInvalidQueryParameter
-			handleAPIErr(ctx, err, w, nil)
-			return
-		}
-	}
-
 	if limitParameter != "" {
 		logData["limit"] = limitParameter
 		limit, err = utils.ValidatePositiveInt(limitParameter)
@@ -89,6 +78,17 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 		log.Event(ctx, "limit is greater than the maximum allowed", log.ERROR, logData)
 		handleAPIErr(ctx, err, w, nil)
 		return
+	}
+
+	if offsetParameter != "" {
+		logData["offset"] = offsetParameter
+		offset, err = utils.ValidatePositiveInt(offsetParameter)
+		if err != nil {
+			log.Event(ctx, "invalid query parameter: offset", log.ERROR, log.Error(err), logData)
+			err = errs.ErrInvalidQueryParameter
+			handleAPIErr(ctx, err, w, nil)
+			return
+		}
 	}
 
 	b, err := func() ([]byte, error) {
