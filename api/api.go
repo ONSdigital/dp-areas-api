@@ -60,7 +60,6 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 		api.enablePublicEndpoints(ctx)
 	}
 
-	router.HandleFunc("/hello", HelloHandler()).Methods("GET")
 	return api
 }
 
