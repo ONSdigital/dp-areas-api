@@ -156,7 +156,9 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 
 	// Write payload to body
 	if _, err := w.Write(payload); err != nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, data)
+		// a stack trace is added for Non User errors
+		data["response_status"] = http.StatusInternalServerError
+		log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
 		return err
 	}
 	return nil
