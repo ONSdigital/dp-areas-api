@@ -30,7 +30,7 @@ parameters:
 
   offset:
     name: offset
-    description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The 
+    description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The
                   default value is 0"
     in: query
     type: integer
@@ -39,7 +39,7 @@ parameters:
 
   limit:
     name: limit
-    description: "The number of items requested. The default value is 20"
+    description: "The number of items requested. The default value is 20 and the maximum allowed is 1000."
     in: query
     type: integer
     required: false
@@ -158,7 +158,7 @@ paths:
           $ref: '#/responses/InternalError'
 
 definitions:
-  Version: 
+  Version:
     $ref: '#/definitions/Area'
   Area:
     type: object
@@ -168,8 +168,8 @@ definitions:
         type: array
         description: "An array of areas that are contained within the boundary of this area that are within the same geographical hierarchy"
         items:
-          $ref: '#/definitions/Linked_area' 
-        example: 
+          $ref: '#/definitions/Linked_area'
+        example:
           id: "W05001011"
           type: "electoral wards"
           name: "Cyncoed"
@@ -192,7 +192,7 @@ definitions:
           $ref: '#/definitions/Linked_area'
         description: "A list of areas that are within the same geographical hierarchy, at the same level (
                       but not necessarily of the same type) within that hierarchy and share a border with this area"
-        example: 
+        example:
           id: "W06000014"
           type: "unitary authorities"
           name: "Vale of Glamorgan"
@@ -201,7 +201,7 @@ definitions:
         items:
           $ref: '#/definitions/Linked_area'
         description: "A list of areas whose boundaries contain this area that are within the same geographical hierarchy"
-        example: 
+        example:
           id: "W92000004"
           type: "country"
           name: "wales"
@@ -210,7 +210,7 @@ definitions:
         items:
           $ref: '#/definitions/Linked_area'
         description: "Has links to areas"
-        example: 
+        example:
           id: "W05000872"
           type: "electoral wards"
           name: "Penylan"
@@ -230,7 +230,7 @@ definitions:
     type: object
     required: ["id"]
     properties:
-      id: 
+      id:
         $ref: '#/parameters/id'
       type:
         $ref: "#/definitions/Type"
@@ -245,7 +245,7 @@ definitions:
         enum: [country, region, unitary authorities, combined authorities, metropolitan counties, counties, London boroughs,
                metropolitan districts, non-metropolitan districts, electoral wards]
         example: "unitary authorities"
-      
+
   Versions:
     type: object
     properties:

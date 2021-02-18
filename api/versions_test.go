@@ -1,7 +1,6 @@
 package api_test
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -9,12 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/models"
 
-	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -22,7 +19,6 @@ func TestGetVersionReturnsOk(t *testing.T) {
 	Convey("Given a successful request to get version", t, func() {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/1", nil)
 		w := httptest.NewRecorder()
-		route := mux.NewRouter()
 		mockedAreaStore := &mock.AreaStoreMock{
 			CheckAreaExistsFunc: func(id string) error {
 				return nil
@@ -35,9 +31,8 @@ func TestGetVersionReturnsOk(t *testing.T) {
 				}, nil
 			},
 		}
-		var testContext = context.Background()
 		Convey("When the request is served", func() {
-			apiMock := api.Setup(testContext, route, mockedAreaStore)
+			apiMock := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an OK response 200 is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
@@ -48,7 +43,7 @@ func TestGetVersionReturnsOk(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(mockedAreaStore.CheckAreaExistsCalls(), ShouldHaveLength, 1)
 				So(mockedAreaStore.GetVersionCalls(), ShouldHaveLength, 1)
-				So(returnedArea, ShouldResemble, *dbArea(testAreaId))
+				So(returnedArea, ShouldResemble, *dbArea(testAreaId1,testAreaName1))
 			})
 		})
 	})
@@ -58,7 +53,6 @@ func TestGetVersionReturnsError(t *testing.T) {
 	Convey("Given a request for a version for an area that does not exist ", t, func() {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W0600001/versions/1", nil)
 		w := httptest.NewRecorder()
-		route := mux.NewRouter()
 		mockedAreaStore := &mock.AreaStoreMock{
 			CheckAreaExistsFunc: func(id string) error {
 				return apierrors.ErrAreaNotFound
@@ -67,9 +61,8 @@ func TestGetVersionReturnsError(t *testing.T) {
 				return nil, nil
 			},
 		}
-		var testContext = context.Background()
 		Convey("When the request is served", func() {
-			apiMock := api.Setup(testContext, route, mockedAreaStore)
+			apiMock := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an error area not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
@@ -83,7 +76,6 @@ func TestGetVersionReturnsError(t *testing.T) {
 	Convey("Given aq request for a version that does not exist", t, func() {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/2", nil)
 		w := httptest.NewRecorder()
-		route := mux.NewRouter()
 		mockedAreaStore := &mock.AreaStoreMock{
 			CheckAreaExistsFunc: func(id string) error {
 				return nil
@@ -92,9 +84,8 @@ func TestGetVersionReturnsError(t *testing.T) {
 				return nil, apierrors.ErrVersionNotFound
 			},
 		}
-		var testContext = context.Background()
 		Convey("When the request is served", func() {
-			apiMock := api.Setup(testContext, route, mockedAreaStore)
+			apiMock := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an error version not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
@@ -108,7 +99,6 @@ func TestGetVersionReturnsError(t *testing.T) {
 	Convey("Given the api cannot connect to areastore return an internal server error", t, func() {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/1", nil)
 		w := httptest.NewRecorder()
-		route := mux.NewRouter()
 		mockedAreaStore := &mock.AreaStoreMock{
 			CheckAreaExistsFunc: func(id string) error {
 				return apierrors.ErrInternalServer
@@ -117,9 +107,8 @@ func TestGetVersionReturnsError(t *testing.T) {
 				return nil, nil
 			},
 		}
-		var testContext = context.Background()
 		Convey("When the request is served", func() {
-			apiMock := api.Setup(testContext, route, mockedAreaStore)
+			apiMock := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an internal server error is returned", func() {
 				assertInternalServerErr(w)

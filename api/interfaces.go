@@ -15,4 +15,5 @@ type AreaStore interface {
 	GetArea(ctx context.Context, id string) (*models.Area, error)
 	GetVersion(id string, versionID int) (*models.Area, error)
 	CheckAreaExists(id string) error
+	GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error)
 }

@@ -4,10 +4,11 @@ import (
 	"errors"
 )
 
-//A lit of error messages for Permissions API
+//A list of error messages for Areas API
 var (
-	//ErrAreaNotFound is an error when an Area cannot be found in mongoDB
-	ErrAreaNotFound      = errors.New("Area not found")
-	ErrVersionNotFound   = errors.New("Version not found")
-	ErrInternalServer    = errors.New("internal error")
+	ErrAreaNotFound             = errors.New("Area not found")
+	ErrVersionNotFound          = errors.New("Version not found")
+	ErrInternalServer           = errors.New("internal error")
+	ErrInvalidQueryParameter    = errors.New("invalid query parameter")
+	ErrQueryParamLimitExceedMax = errors.New("limit exceeds max value")
 )
