@@ -24,6 +24,11 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		"function":   "getTopicPublicHandler",
 	}
 
+	if id == "topic_root" {
+		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		return
+	}
+
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
@@ -126,6 +131,11 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"topic_id":   id,
 		"function":   "getSubtopicsPublicHandler",
+	}
+
+	if id == "topic_root" {
+		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		return
 	}
 
 	api.getSubtopicsPublicByID(ctx, id, logdata, w)

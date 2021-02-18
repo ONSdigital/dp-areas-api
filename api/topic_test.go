@@ -416,6 +416,21 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
+
+			// topic_root for test uses dbTopic1 which has subtopics & points to 2 & 3
+			Convey("When an existing 'published' /topics/topic_root/subtopics document is requested", func() {
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/topic_root/subtopics", nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected status code 404 is returned, because this is not avaible for public web mode", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("topic not found\n"))
+				})
+			})
+
 		})
 	})
 }
@@ -439,6 +454,8 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 						return dbTopic3(models.StatePublished), nil
 					case "4":
 						return dbTopic4(models.StatePublished), nil
+					case "topic_root":
+						return dbTopic1(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
 					}
@@ -524,6 +541,29 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
+
+			// topic_root for test uses dbTopic1 which has subtopics & points to 2 & 3
+			Convey("When an existing 'published' /topics/topic_root/subtopics document is requested", func() {
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/topic_root/subtopics", nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+
+					So(err, ShouldBeNil)
+					retTopic := models.PrivateSubtopics{}
+					err = json.Unmarshal(payload, &retTopic)
+					So(err, ShouldBeNil)
+					So(retTopic.TotalCount, ShouldEqual, 2)
+					So((*retTopic.PrivateItems)[0].Current.ID, ShouldEqual, "2")
+					So((*retTopic.PrivateItems)[1].Current.ID, ShouldEqual, "3")
+				})
+			})
+
 		})
 	})
 }
@@ -552,7 +592,7 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 
 			topicAPI := GetAPIWithMocks(cfg, mongoDBMock)
 
-			// topic_root for test uses 1 which has subtopics & points to 2 & 3
+			// topic_root for test uses dbTopic1 which has subtopics & points to 2 & 3
 			Convey("When an existing 'published' /topics list is requested", func() {
 				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics", nil)
 
@@ -568,6 +608,20 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 					So(retTopic.TotalCount, ShouldEqual, 2)
 					So((*retTopic.PublicItems)[0].ID, ShouldEqual, "2")
 					So((*retTopic.PublicItems)[1].ID, ShouldEqual, "3")
+				})
+			})
+
+			// topic_root for test uses dbTopic1 which has subtopics & points to 2 & 3
+			Convey("When an existing 'published' /topics/topic_root document is requested", func() {
+				request := httptest.NewRequest(http.MethodGet, "http://localhost:25300/topics/topic_root", nil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected status code 404 is returned, because this is not avaible for public web mode", func() {
+					So(w.Code, ShouldEqual, http.StatusNotFound)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+					So(payload, ShouldResemble, []byte("topic not found\n"))
 				})
 			})
 
@@ -620,6 +674,26 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 					So(retTopic.TotalCount, ShouldEqual, 2)
 					So((*retTopic.PrivateItems)[0].Current.ID, ShouldEqual, "2")
 					So((*retTopic.PrivateItems)[1].Current.ID, ShouldEqual, "3")
+				})
+			})
+
+			// topic_root for test uses dbTopic1 which has subtopics & points to 2 & 3
+			Convey("When an existing 'published' /topics/topic_root document is requested", func() {
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/topic_root", nil)
+				So(err, ShouldBeNil)
+
+				w := httptest.NewRecorder()
+				topicAPI.Router.ServeHTTP(w, request)
+				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
+					So(w.Code, ShouldEqual, http.StatusOK)
+					payload, err := ioutil.ReadAll(w.Body)
+					So(err, ShouldBeNil)
+
+					retTopic := models.TopicResponse{}
+					err = json.Unmarshal(payload, &retTopic)
+					So(err, ShouldBeNil)
+					So(retTopic.ID, ShouldEqual, "1")
+					So(retTopic.Next.ID, ShouldEqual, "1")
 				})
 			})
 
