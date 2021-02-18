@@ -33,7 +33,6 @@ type Area struct {
 	ParentAreas       []LinkedAreas `bson:"parent_areas,omitempty"        json:"parent_areas,omitempty"`
 	ChildAreas        []LinkedAreas `bson:"child_areas,omitempty"         json:"child_areas,omitempty"`
 	NeighbouringAreas []LinkedAreas `bson:"neighbouring_areas,omitempty"  json:"neighbouring_areas,omitempty"`
-	RelatedAreas      []LinkedAreas `bson:"related_areas,omitempty"       json:"related_areas,omitempty"`
 }
 
 type LinkedAreas struct {
