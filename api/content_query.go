@@ -106,3 +106,52 @@ func getRequiredItems(queryType int, content *models.Content, id string) *models
 
 	return &result
 }
+
+func RequiredSpotlight(queryType int) int {
+	if (queryType & querySpotlight) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredArticles(queryType int) int {
+	if (queryType & queryArticles) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredBulletins(queryType int) int {
+	if (queryType & queryBulletins) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredMethodologies(queryType int) int {
+	if (queryType & queryMethodologies) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredMethodologyArticles(queryType int) int {
+	if (queryType & queryMethodologyArticles) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredStaticDatasets(queryType int) int {
+	if (queryType & queryStaticDatasets) != 0 {
+		return 1
+	}
+	return 0
+}
+
+func RequiredTimeseries(queryType int) int {
+	if (queryType & queryTimeseries) != 0 {
+		return 1
+	}
+	return 0
+}

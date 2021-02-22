@@ -32,7 +32,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id)
+	content, err := api.dataStore.Backend.GetContent(id, queryType)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)
@@ -82,7 +82,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id)
+	content, err := api.dataStore.Backend.GetContent(id, queryType)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)

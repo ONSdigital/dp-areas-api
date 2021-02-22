@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongodb "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
+	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/globalsign/mgo"
@@ -102,31 +103,33 @@ func (m *Mongo) CheckTopicExists(id string) error {
 }
 
 // GetContent retrieves a content document by its ID
-func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
+func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
 	var content models.ContentResponse
 
 	contentSelect := bson.M{
+		"_id":                          0,
+		"ID":                           1,
 		"next.id":                      1,
 		"next.state":                   1,
-		"next.spotlight":               1,
-		"next.articles":                1,
-		"next.bulletins":               1,
-		"next.methodologies":           1,
-		"next.methodology_articles":    1,
-		"next.static_datasets":         1,
-		"next.timeseries":              1,
+		"next.spotlight":               api.RequiredSpotlight(queryType),
+		"next.articles":                api.RequiredArticles(queryType),
+		"next.bulletins":               api.RequiredBulletins(queryType),
+		"next.methodologies":           api.RequiredMethodologies(queryType),
+		"next.methodology_articles":    api.RequiredMethodologyArticles(queryType),
+		"next.static_datasets":         api.RequiredStaticDatasets(queryType),
+		"next.timeseries":              api.RequiredTimeseries(queryType),
 		"current.id":                   1,
 		"current.state":                1,
-		"current.spotlight":            1,
-		"current.articles":             1,
-		"current.bulletins":            1,
-		"current.methodologies":        1,
-		"current.methodology_articles": 1,
-		"current.static_datasets":      1,
-		"current.timeseries":           1,
+		"current.spotlight":            api.RequiredSpotlight(queryType),
+		"current.articles":             api.RequiredArticles(queryType),
+		"current.bulletins":            api.RequiredBulletins(queryType),
+		"current.methodologies":        api.RequiredMethodologies(queryType),
+		"current.methodology_articles": api.RequiredMethodologyArticles(queryType),
+		"current.static_datasets":      api.RequiredStaticDatasets(queryType),
+		"current.timeseries":           api.RequiredTimeseries(queryType),
 	}
 
 	//	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
