@@ -60,10 +60,45 @@ paths:
           description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
+  /topics/{id}/content:
+    get:
+      tags:
+        - "Public"
+      summary: "Get a list oc content"
+      description: "Get a list of different content types of all documents for ID"
+      parameters:
+        - $ref: '#/parameters/id'
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Json object containing an array(s) of content types"
+          schema:
+            $ref: '#/definitions/ListOfContent'
+        404:
+          description: "Content not found"
+        500:
+          $ref: '#/responses/InternalError'
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
 definitions:
+  Content:
+    type: object
+    properties:
+      title:
+        type: string
+        description: "ttitle of the information"
+      type:
+        type: string
+        description: "Name of the containing type"
+      links:
+        type: object
+        properties:
+          self:
+            $ref: '#/definitions/SelfHref'
+          topic:
+            $ref: '#/definitions/TopicLink'
   Topic:
     type: object
     properties:
@@ -87,18 +122,6 @@ definitions:
             $ref: '#/definitions/SubtopicsLink'
           content:
             $ref: '#/definitions/ContentLink'
-  # !!! Eleanor - should i now remove 'TopicResponse' ?
-  TopicResponse:
-    description: "A model for the response body when reading a Topic in private"
-    type: object
-    properties:
-      id:
-        description: "A unique id for the topic"
-        type: string
-      current:
-        $ref: '#/definitions/Topic'
-      next:
-        $ref: '#/definitions/Topic'
   SubtopicsLink:
     type: object
     description: "A link to the subtopics of this topic"
@@ -113,6 +136,22 @@ definitions:
       href:
         type: string
         description: "A URL to the content for this topic"
+  ListOfContent:
+    type: object
+    description: "A list of Content items"
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Content'
+      count:
+        $ref: '#/definitions/Count'
+      total_count:
+        $ref: '#/definitions/TotalCount'
+      limit:
+        $ref: '#/definitions/Limit'
+      offset:
+        $ref: '#/definitions/Offset'
   ListOfTopics:
     type: object
     description: "A list of Topics"
@@ -138,15 +177,25 @@ definitions:
       href:
         type: string
         description: "The URL to the resource"
+  TopicLink:
+    type: object
+    description: "A link to the topic for this content"
+    properties:
+      href:
+        type: string
+        description: "The URL to the topic"
+      id:
+        type: string
+        description: "The id for the topic that this content is associated with"
   Count:
-    type: string
+    type: integer
     description: "The number of results returned in this response"
   TotalCount:
-    type: string
+    type: integer
     description: "The total number of results available"
   Limit:
-    type: string
+    type: integer
     description: "The limit applied to the number of results returned"
   Offset:
-    type: string
+    type: integer
     description: "The offset applied to the number of results returned"

@@ -30,9 +30,9 @@ type State int
 // Possible values for a State of a topic. It can only be one of the following:
 const (
 	// these from dp-image-api :
-	StateTopicCreated State = iota // this is 'in_progress'
-	StateTopicPublished
-	StateTopicCompleted
+	StateCreated State = iota // this is 'in_progress'
+	StatePublished
+	StateCompleted
 )
 
 type stateTransition struct {
@@ -43,17 +43,17 @@ type stateTransition struct {
 
 var stateTransitionTable = []stateTransition{
 	{
-		state:            StateTopicCreated, // this is 'in_progress'
+		state:            StateCreated, // this is 'in_progress'
 		name:             "created",
-		validTransitions: []State{StateTopicCompleted}},
+		validTransitions: []State{StateCompleted}},
 	{
-		state:            StateTopicPublished,
+		state:            StatePublished,
 		name:             "published",
-		validTransitions: []State{StateTopicCreated}},
+		validTransitions: []State{StateCreated}},
 	{
-		state:            StateTopicCompleted,
+		state:            StateCompleted,
 		name:             "completed",
-		validTransitions: []State{StateTopicPublished}},
+		validTransitions: []State{StatePublished}},
 }
 
 // String returns the string representation of a state
@@ -83,7 +83,7 @@ func ParseState(stateStr string) (State, error) {
 func (s State) TransitionAllowed(next State) bool {
 	if (s >= 0) && (int(s) < len(stateTransitionTable)) {
 		// search for state in table
-		// (to allow for states in table not being in the same order as 'StateTopicCreated' iota list)
+		// (to allow for states in table not being in the same order as 'StateCreated' iota list)
 		for _, transition := range stateTransitionTable {
 			if s == transition.state {
 				// see if transition allowed

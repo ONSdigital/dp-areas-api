@@ -26,6 +26,11 @@ var (
 	deletePermission = auth.Permissions{Delete: true}
 )
 
+// AuthHandler provides authorisation checks on requests
+type AuthHandler interface {
+	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
+}
+
 //API provides a struct to wrap the api around
 type API struct {
 	Router                 *mux.Router
@@ -64,7 +69,7 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
 	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
-
+	api.get("/topics/{id}/content", api.getContentPublicHandler)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
@@ -86,6 +91,12 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		"/topics/{id}/subtopics",
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getSubtopicsPrivateHandler)),
+	)
+
+	api.get(
+		"/topics/{id}/content",
+		api.isAuthenticated(
+			api.isAuthorised(readPermission, api.getContentPrivateHandler)),
 	)
 }
 
@@ -172,16 +183,15 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	var status int
 	if err != nil {
 		switch err {
-		//!!! fix this list for this service as the application develops to all features
 		case apierrors.ErrTopicNotFound,
+			apierrors.ErrContentNotFound,
 			apierrors.ErrNotFound:
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrTopicInvalidState:
 			status = http.StatusBadRequest
-		case apierrors.ErrTopicAlreadyCompleted,
-			apierrors.ErrTopicStateTransitionNotAllowed:
+		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden
 		default:
 			status = http.StatusInternalServerError
