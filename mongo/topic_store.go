@@ -108,7 +108,29 @@ func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
 
 	var content models.ContentResponse
 
-	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
+	contentSelect := bson.M{
+		"next.id":                      1,
+		"next.state":                   1,
+		"next.spotlight":               1,
+		"next.articles":                1,
+		"next.bulletins":               1,
+		"next.methodologies":           1,
+		"next.methodology_articles":    1,
+		"next.static_datasets":         1,
+		"next.timeseries":              1,
+		"current.id":                   1,
+		"current.state":                1,
+		"current.spotlight":            1,
+		"current.articles":             1,
+		"current.bulletins":            1,
+		"current.methodologies":        1,
+		"current.methodology_articles": 1,
+		"current.static_datasets":      1,
+		"current.timeseries":           1,
+	}
+
+	//	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
+	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, errs.ErrContentNotFound
