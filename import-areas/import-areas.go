@@ -49,6 +49,42 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
+var queryCountryEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
+PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
+PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+SELECT DISTINCT ?areacode ?areaname ?code ?name
+WHERE {
+	VALUES ?types { statid:E92 }
+	?area statdef:code ?types ;
+		geodef:status "live" ;
+		geodef:officialname ?areaname ;
+		rdfs:label ?areacode .
+	?child pmdfoi:parent geoid:E92000001 ;
+		pmdfoi:code ?code ;
+		geodef:officialname ?name ;
+}`
+
+var queryCountryWales = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
+PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
+PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+SELECT DISTINCT ?areacode ?areaname ?code ?name
+WHERE {
+	VALUES ?types { statid:W92 }
+	?area statdef:code ?types ;
+		geodef:status "live" ;
+		geodef:officialname ?areaname ;
+		rdfs:label ?areacode .
+	?child pmdfoi:parent geoid:W92000004 ;
+		pmdfoi:code ?code ;
+	  	geodef:officialname ?name ;
+}`
+
 func lookupAreaType(code string) (string, error) {
 	prefix := code[:3]
 
@@ -59,14 +95,14 @@ func lookupAreaType(code string) (string, error) {
 	return value, nil
 }
 
-func buildCountryArea(as AreaStruct) (*models.Area, error) {
+func buildCountryArea(areaStruct AreaStruct) (*models.Area, error) {
 	ctx := context.Background()
 
 	area := &models.Area{}
-	for _, binding := range as.Results.Bindings {
+	for _, binding := range areaStruct.Results.Bindings {
 		area.ID = binding.AreaCode.Value
 		area.Name = binding.AreaName.Value
-		areaType, err := lookupAreaType((binding.AreaCode.Value))
+		areaType, err := lookupAreaType(binding.AreaCode.Value)
 		logData := log.Data{"AreaCode": binding.AreaCode.Value}
 		if err != nil {
 			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
@@ -138,24 +174,6 @@ func main() {
 	}
 	defer session.Close()
 
-	queryCountryEngland := `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-	PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
-	PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
-	PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
-	PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-	PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-	SELECT DISTINCT ?areacode ?areaname ?code ?name
-	WHERE {
-		VALUES ?types { statid:E92 }
-		?area statdef:code ?types ;
-			geodef:status "live" ;
-			geodef:officialname ?areaname ;
-			rdfs:label ?areacode .
-		?child pmdfoi:parent geoid:E92000001 ;
-			pmdfoi:code ?code ;
-			geodef:officialname ?name ;
-		}`
-
 	englandData, err := postCountryQuery(queryCountryEngland)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
@@ -167,24 +185,6 @@ func main() {
 		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
-
-	queryCountryWales := `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-	PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
-	PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
-	PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
-	PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-	PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-	SELECT DISTINCT ?areacode ?areaname ?code ?name
-	WHERE {
-		VALUES ?types { statid:W92 }
-		?area statdef:code ?types ;
-			geodef:status "live" ;
-			geodef:officialname ?areaname ;
-			rdfs:label ?areacode .
-		?child pmdfoi:parent geoid:W92000004 ;
-			pmdfoi:code ?code ;
-	  		geodef:officialname ?name ;
-	}`
 
 	walesData, err := postCountryQuery(queryCountryWales)
 	if err != nil {
