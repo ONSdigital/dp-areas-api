@@ -132,7 +132,6 @@ func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, e
 		"current.timeseries":           api.RequiredTimeseries(queryType),
 	}
 
-	//	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
 	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)
 	if err != nil {
 		if err == mgo.ErrNotFound {
