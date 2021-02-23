@@ -9,17 +9,17 @@ import (
 
 // Flag values for a query type:
 const (
-	querySpotlight int = 1 << iota // powers of 2, for bit flags
+	QuerySpotlight int = 1 << iota // powers of 2, for combining bit flags
 
 	// Publications:
-	queryArticles
-	queryBulletins
-	queryMethodologies
-	queryMethodologyArticles
+	QueryArticles
+	QueryBulletins
+	QueryMethodologies
+	QueryMethodologyArticles
 
 	// Datasets:
-	queryStaticDatasets
-	queryTimeseries
+	QueryStaticDatasets
+	QueryTimeseries
 )
 
 const (
@@ -36,17 +36,17 @@ const (
 
 var querySets map[string]int = map[string]int{
 	// search keys are done as lower case to make searches work regardless of case
-	spotlightStr:           querySpotlight,
-	articlesStr:            queryArticles,
-	bulletinsStr:           queryBulletins,
-	methodologiesStr:       queryMethodologies,
-	methodologyarticlesStr: queryMethodologyArticles,
-	staticdatasetsStr:      queryStaticDatasets,
-	timeseriesStr:          queryTimeseries,
+	spotlightStr:           QuerySpotlight,
+	articlesStr:            QueryArticles,
+	bulletinsStr:           QueryBulletins,
+	methodologiesStr:       QueryMethodologies,
+	methodologyarticlesStr: QueryMethodologyArticles,
+	staticdatasetsStr:      QueryStaticDatasets,
+	timeseriesStr:          QueryTimeseries,
 
-	publicationsStr: queryArticles | queryBulletins | queryMethodologies | queryMethodologyArticles,
+	publicationsStr: QueryArticles | QueryBulletins | QueryMethodologies | QueryMethodologyArticles,
 
-	datasetsStr: queryStaticDatasets | queryTimeseries,
+	datasetsStr: QueryStaticDatasets | QueryTimeseries,
 }
 
 // getContentTypeParameter obtains a filter that defines a set of possible types
@@ -54,7 +54,7 @@ func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
 		// no type specified, so return flags for all types
-		return querySpotlight | queryArticles | queryBulletins | queryMethodologies | queryMethodologyArticles | queryStaticDatasets | queryTimeseries
+		return QuerySpotlight | QueryArticles | QueryBulletins | QueryMethodologies | QueryMethodologyArticles | QueryStaticDatasets | QueryTimeseries
 	}
 
 	// make query type lower case for following comparison to cope with wrong case of letter(s)
@@ -76,82 +76,33 @@ func getRequiredItems(queryType int, content *models.Content, id string) *models
 	var result models.ContentResponseAPI
 
 	// Add spotlight first
-	if (queryType & querySpotlight) != 0 {
+	if (queryType & QuerySpotlight) != 0 {
 		result.AppendLinkInfo(spotlightStr, content.Spotlight, id, content.State)
 	}
 
 	// then Publications (alphabetically ordered)
-	if (queryType & queryArticles) != 0 {
+	if (queryType & QueryArticles) != 0 {
 		result.AppendLinkInfo(articlesStr, content.Articles, id, content.State)
 	}
-	if (queryType & queryBulletins) != 0 {
+	if (queryType & QueryBulletins) != 0 {
 		result.AppendLinkInfo(bulletinsStr, content.Bulletins, id, content.State)
 	}
-	if (queryType & queryMethodologies) != 0 {
+	if (queryType & QueryMethodologies) != 0 {
 		result.AppendLinkInfo(methodologiesStr, content.Methodologies, id, content.State)
 	}
-	if (queryType & queryMethodologyArticles) != 0 {
+	if (queryType & QueryMethodologyArticles) != 0 {
 		result.AppendLinkInfo(methodologyarticlesStr, content.MethodologyArticles, id, content.State)
 	}
 
 	// then Datasets (alphabetically ordered)
-	if (queryType & queryStaticDatasets) != 0 {
+	if (queryType & QueryStaticDatasets) != 0 {
 		result.AppendLinkInfo(staticdatasetsStr, content.StaticDatasets, id, content.State)
 	}
-	if (queryType & queryTimeseries) != 0 {
+	if (queryType & QueryTimeseries) != 0 {
 		result.AppendLinkInfo(timeseriesStr, content.Timeseries, id, content.State)
 	}
 
 	result.Count = result.TotalCount
 
 	return &result
-}
-
-func RequiredSpotlight(queryType int) int {
-	if (queryType & querySpotlight) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredArticles(queryType int) int {
-	if (queryType & queryArticles) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredBulletins(queryType int) int {
-	if (queryType & queryBulletins) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredMethodologies(queryType int) int {
-	if (queryType & queryMethodologies) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredMethodologyArticles(queryType int) int {
-	if (queryType & queryMethodologyArticles) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredStaticDatasets(queryType int) int {
-	if (queryType & queryStaticDatasets) != 0 {
-		return 1
-	}
-	return 0
-}
-
-func RequiredTimeseries(queryType int) int {
-	if (queryType & queryTimeseries) != 0 {
-		return 1
-	}
-	return 0
 }

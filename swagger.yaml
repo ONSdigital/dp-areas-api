@@ -80,6 +80,8 @@ paths:
           description: "Json object containing an array(s) of content types"
           schema:
             $ref: '#/definitions/ListOfContent'
+        400:
+          description: "content query not recognised"
         404:
           description: "Content not found"
         500:

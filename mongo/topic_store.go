@@ -108,28 +108,135 @@ func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, e
 	defer s.Close()
 
 	var content models.ContentResponse
+	contentSelect := bson.M{"ID": 1} // int default, used to minimise the mongo response to minimise go HEAP usage
 
-	contentSelect := bson.M{
-		"_id":                          0,
-		"ID":                           1,
-		"next.id":                      1,
-		"next.state":                   1,
-		"next.spotlight":               api.RequiredSpotlight(queryType),
-		"next.articles":                api.RequiredArticles(queryType),
-		"next.bulletins":               api.RequiredBulletins(queryType),
-		"next.methodologies":           api.RequiredMethodologies(queryType),
-		"next.methodology_articles":    api.RequiredMethodologyArticles(queryType),
-		"next.static_datasets":         api.RequiredStaticDatasets(queryType),
-		"next.timeseries":              api.RequiredTimeseries(queryType),
-		"current.id":                   1,
-		"current.state":                1,
-		"current.spotlight":            api.RequiredSpotlight(queryType),
-		"current.articles":             api.RequiredArticles(queryType),
-		"current.bulletins":            api.RequiredBulletins(queryType),
-		"current.methodologies":        api.RequiredMethodologies(queryType),
-		"current.methodology_articles": api.RequiredMethodologyArticles(queryType),
-		"current.static_datasets":      api.RequiredStaticDatasets(queryType),
-		"current.timeseries":           api.RequiredTimeseries(queryType),
+	/* NOTE: if we have:
+
+			contentSelect = bson.M{
+			"ID":                           1,
+			"next.id":                      1,
+			"next.state":                   1,
+			"next.spotlight":               0,
+			"next.articles":                1,
+			"current.id":                   1,
+			"current.state":                1,
+			"current.spotlight":            0,
+			"current.articles":             1,
+		}
+
+		the line where spotlight is flaged as `0` causes the search to return no fields,
+
+		so .. due to not being able to `de-select` items with a `0` parameter the
+	         below has to select just the required type(s) for the desired query.
+	*/
+	switch queryType {
+	case api.QuerySpotlight:
+		contentSelect = bson.M{
+			"ID":                1,
+			"next.id":           1,
+			"next.state":        1,
+			"next.spotlight":    1,
+			"current.id":        1,
+			"current.state":     1,
+			"current.spotlight": 1,
+		}
+
+	case api.QueryArticles:
+		contentSelect = bson.M{
+			"ID":               1,
+			"next.id":          1,
+			"next.state":       1,
+			"next.articles":    1,
+			"current.id":       1,
+			"current.state":    1,
+			"current.articles": 1,
+		}
+
+	case api.QueryBulletins:
+		contentSelect = bson.M{
+			"ID":                1,
+			"next.id":           1,
+			"next.state":        1,
+			"next.bulletins":    1,
+			"current.id":        1,
+			"current.state":     1,
+			"current.bulletins": 1,
+		}
+
+	case api.QueryMethodologies:
+		contentSelect = bson.M{
+			"ID":                    1,
+			"next.id":               1,
+			"next.state":            1,
+			"next.methodologies":    1,
+			"current.id":            1,
+			"current.state":         1,
+			"current.methodologies": 1,
+		}
+	case api.QueryMethodologyArticles:
+		contentSelect = bson.M{
+			"ID":                           1,
+			"next.id":                      1,
+			"next.state":                   1,
+			"next.methodology_articles":    1,
+			"current.id":                   1,
+			"current.state":                1,
+			"current.methodology_articles": 1,
+		}
+
+	case api.QueryStaticDatasets:
+		contentSelect = bson.M{
+			"ID":                      1,
+			"next.id":                 1,
+			"next.state":              1,
+			"next.static_datasets":    1,
+			"current.id":              1,
+			"current.state":           1,
+			"current.static_datasets": 1,
+		}
+
+	case api.QueryTimeseries:
+		contentSelect = bson.M{
+			"ID":                 1,
+			"next.id":            1,
+			"next.state":         1,
+			"next.timeseries":    1,
+			"current.id":         1,
+			"current.state":      1,
+			"current.timeseries": 1,
+		}
+
+	// Publications:
+	case api.QueryArticles | api.QueryBulletins | api.QueryMethodologies | api.QueryMethodologyArticles:
+		contentSelect = bson.M{
+			"ID":                           1,
+			"next.id":                      1,
+			"next.state":                   1,
+			"next.articles":                1,
+			"next.bulletins":               1,
+			"next.methodologies":           1,
+			"next.methodology_articles":    1,
+			"current.id":                   1,
+			"current.state":                1,
+			"current.articles":             1,
+			"current.bulletins":            1,
+			"current.methodologies":        1,
+			"current.methodology_articles": 1,
+		}
+
+	// Datasets:
+	case api.QueryStaticDatasets | api.QueryTimeseries:
+		contentSelect = bson.M{
+			"ID":                      1,
+			"next.id":                 1,
+			"next.state":              1,
+			"next.static_datasets":    1,
+			"next.timeseries":         1,
+			"current.id":              1,
+			"current.state":           1,
+			"current.static_datasets": 1,
+			"current.timeseries":      1,
+		}
 	}
 
 	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)

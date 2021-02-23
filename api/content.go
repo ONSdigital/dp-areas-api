@@ -23,6 +23,10 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 
 	// get type from query parameters, or default value
 	queryType := getContentTypeParameter(req.URL.Query())
+	if queryType == 0 {
+		handleError(ctx, w, apierrors.ErrContentUnrecognisedParameter, logdata)
+		return
+	}
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -73,6 +77,10 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 
 	// get type from query parameters, or default value
 	queryType := getContentTypeParameter(req.URL.Query())
+	if queryType == 0 {
+		handleError(ctx, w, apierrors.ErrContentUnrecognisedParameter, logdata)
+		return
+	}
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
