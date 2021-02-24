@@ -17,7 +17,7 @@ type Service struct {
 	Router      *mux.Router
 	API         *api.API
 	ServiceList *ExternalServiceList
-	MongoDB     AreaStore
+	MongoDB     api.AreaStore
 	HealthCheck HealthChecker
 }
 
@@ -43,7 +43,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Setup the API
-	a := api.Setup(ctx, r)
+	a := api.Setup(ctx, cfg, r, mongoDB)
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 
@@ -132,7 +132,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB AreaStore) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB api.AreaStore) (err error) {
 	hasErrors := false
 
 	// ADD CODE: add other health checks here
