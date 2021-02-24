@@ -103,165 +103,56 @@ func (m *Mongo) CheckTopicExists(id string) error {
 }
 
 // GetContent retrieves a content document by its ID
-func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, error) {
+func (m *Mongo) GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
 	var content models.ContentResponse
-	contentSelect := bson.M{"ID": 1} // init default, used to minimise the mongo response to minimise go HEAP usage
+	// init default, used to minimise the mongo response to minimise go HEAP usage
+	contentSelect := bson.M{
+		"ID":            1,
+		"next.id":       1,
+		"next.state":    1,
+		"current.id":    1,
+		"current.state": 1,
+	}
 
-	/* NOTE: if we have:
+	// Add spotlight first
+	if (queryTypeFlags & api.QuerySpotlightFlag) != 0 {
+		contentSelect["next.spotlight"] = 1
+		contentSelect["current.spotlight"] = 1
+	}
 
-			contentSelect = bson.M{
-			"ID":                           1,
-			"next.id":                      1,
-			"next.state":                   1,
-			"next.spotlight":               0,
-			"next.articles":                1,
-			"current.id":                   1,
-			"current.state":                1,
-			"current.spotlight":            0,
-			"current.articles":             1,
-		}
+	// then Publications
+	if (queryTypeFlags & api.QueryArticlesFlag) != 0 {
+		contentSelect["next.articles"] = 1
+		contentSelect["current.articles"] = 1
+	}
 
-		the line where spotlight is flaged as `0` causes the search to return no fields,
+	if (queryTypeFlags & api.QueryBulletinsFlag) != 0 {
+		contentSelect["next.bulletins"] = 1
+		contentSelect["current.bulletins"] = 1
+	}
 
-		so .. due to not being able to `de-select` items with a `0` parameter the
-	         below has to select just the required type(s) for the desired query.
-	*/
-	switch queryType {
-	case api.QuerySpotlight:
-		contentSelect = bson.M{
-			"ID":                1,
-			"next.id":           1,
-			"next.state":        1,
-			"next.spotlight":    1,
-			"current.id":        1,
-			"current.state":     1,
-			"current.spotlight": 1,
-		}
+	if (queryTypeFlags & api.QueryMethodologiesFlag) != 0 {
+		contentSelect["next.methodologies"] = 1
+		contentSelect["current.methodologies"] = 1
+	}
 
-	case api.QueryArticles:
-		contentSelect = bson.M{
-			"ID":               1,
-			"next.id":          1,
-			"next.state":       1,
-			"next.articles":    1,
-			"current.id":       1,
-			"current.state":    1,
-			"current.articles": 1,
-		}
+	if (queryTypeFlags & api.QueryMethodologyArticlesFlag) != 0 {
+		contentSelect["next.methodology_articles"] = 1
+		contentSelect["current.methodology_articles"] = 1
+	}
 
-	case api.QueryBulletins:
-		contentSelect = bson.M{
-			"ID":                1,
-			"next.id":           1,
-			"next.state":        1,
-			"next.bulletins":    1,
-			"current.id":        1,
-			"current.state":     1,
-			"current.bulletins": 1,
-		}
+	// then Datasets
+	if (queryTypeFlags & api.QueryStaticDatasetsFlag) != 0 {
+		contentSelect["next.static_datasets"] = 1
+		contentSelect["current.static_datasets"] = 1
+	}
 
-	case api.QueryMethodologies:
-		contentSelect = bson.M{
-			"ID":                    1,
-			"next.id":               1,
-			"next.state":            1,
-			"next.methodologies":    1,
-			"current.id":            1,
-			"current.state":         1,
-			"current.methodologies": 1,
-		}
-	case api.QueryMethodologyArticles:
-		contentSelect = bson.M{
-			"ID":                           1,
-			"next.id":                      1,
-			"next.state":                   1,
-			"next.methodology_articles":    1,
-			"current.id":                   1,
-			"current.state":                1,
-			"current.methodology_articles": 1,
-		}
-
-	case api.QueryStaticDatasets:
-		contentSelect = bson.M{
-			"ID":                      1,
-			"next.id":                 1,
-			"next.state":              1,
-			"next.static_datasets":    1,
-			"current.id":              1,
-			"current.state":           1,
-			"current.static_datasets": 1,
-		}
-
-	case api.QueryTimeseries:
-		contentSelect = bson.M{
-			"ID":                 1,
-			"next.id":            1,
-			"next.state":         1,
-			"next.timeseries":    1,
-			"current.id":         1,
-			"current.state":      1,
-			"current.timeseries": 1,
-		}
-
-	// Publications:
-	case api.QueryArticles | api.QueryBulletins | api.QueryMethodologies | api.QueryMethodologyArticles:
-		contentSelect = bson.M{
-			"ID":                           1,
-			"next.id":                      1,
-			"next.state":                   1,
-			"next.articles":                1,
-			"next.bulletins":               1,
-			"next.methodologies":           1,
-			"next.methodology_articles":    1,
-			"current.id":                   1,
-			"current.state":                1,
-			"current.articles":             1,
-			"current.bulletins":            1,
-			"current.methodologies":        1,
-			"current.methodology_articles": 1,
-		}
-
-	// Datasets:
-	case api.QueryStaticDatasets | api.QueryTimeseries:
-		contentSelect = bson.M{
-			"ID":                      1,
-			"next.id":                 1,
-			"next.state":              1,
-			"next.static_datasets":    1,
-			"next.timeseries":         1,
-			"current.id":              1,
-			"current.state":           1,
-			"current.static_datasets": 1,
-			"current.timeseries":      1,
-		}
-
-	// All types, that is a request for the content with no query parameter
-	case api.QuerySpotlight | api.QueryArticles | api.QueryBulletins | api.QueryMethodologies |
-		api.QueryMethodologyArticles | api.QueryStaticDatasets | api.QueryTimeseries:
-		contentSelect = bson.M{
-			"ID":                           1,
-			"next.id":                      1,
-			"next.state":                   1,
-			"next.spotlight":               1,
-			"next.articles":                1,
-			"next.bulletins":               1,
-			"next.methodologies":           1,
-			"next.methodology_articles":    1,
-			"next.static_datasets":         1,
-			"next.timeseries":              1,
-			"current.id":                   1,
-			"current.state":                1,
-			"current.spotlight":            1,
-			"current.articles":             1,
-			"current.bulletins":            1,
-			"current.methodologies":        1,
-			"current.methodology_articles": 1,
-			"current.static_datasets":      1,
-			"current.timeseries":           1,
-		}
+	if (queryTypeFlags & api.QueryTimeseriesFlag) != 0 {
+		contentSelect["next.timeseries"] = 1
+		contentSelect["current.timeseries"] = 1
 	}
 
 	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)

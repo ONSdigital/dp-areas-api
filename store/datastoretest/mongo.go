@@ -30,7 +30,7 @@ var _ store.MongoDB = &MongoDBMock{}
 //             CloseFunc: func(in1 context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
-//             GetContentFunc: func(id string, queryType int) (*models.ContentResponse, error) {
+//             GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 // 	               panic("mock out the GetContent method")
 //             },
 //             GetTopicFunc: func(id string) (*models.TopicResponse, error) {
@@ -53,7 +53,7 @@ type MongoDBMock struct {
 	CloseFunc func(in1 context.Context) error
 
 	// GetContentFunc mocks the GetContent method.
-	GetContentFunc func(id string, queryType int) (*models.ContentResponse, error)
+	GetContentFunc func(id string, queryTypeFlags int) (*models.ContentResponse, error)
 
 	// GetTopicFunc mocks the GetTopic method.
 	GetTopicFunc func(id string) (*models.TopicResponse, error)
@@ -81,8 +81,8 @@ type MongoDBMock struct {
 		GetContent []struct {
 			// ID is the id argument value.
 			ID string
-			// QueryType is the queryType argument value.
-			QueryType int
+			// QueryTypeFlags is the queryTypeFlags argument value.
+			QueryTypeFlags int
 		}
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
@@ -195,33 +195,33 @@ func (mock *MongoDBMock) CloseCalls() []struct {
 }
 
 // GetContent calls GetContentFunc.
-func (mock *MongoDBMock) GetContent(id string, queryType int) (*models.ContentResponse, error) {
+func (mock *MongoDBMock) GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 	if mock.GetContentFunc == nil {
 		panic("MongoDBMock.GetContentFunc: method is nil but MongoDB.GetContent was just called")
 	}
 	callInfo := struct {
-		ID        string
-		QueryType int
+		ID             string
+		QueryTypeFlags int
 	}{
-		ID:        id,
-		QueryType: queryType,
+		ID:             id,
+		QueryTypeFlags: queryTypeFlags,
 	}
 	mock.lockGetContent.Lock()
 	mock.calls.GetContent = append(mock.calls.GetContent, callInfo)
 	mock.lockGetContent.Unlock()
-	return mock.GetContentFunc(id, queryType)
+	return mock.GetContentFunc(id, queryTypeFlags)
 }
 
 // GetContentCalls gets all the calls that were made to GetContent.
 // Check the length with:
 //     len(mockedMongoDB.GetContentCalls())
 func (mock *MongoDBMock) GetContentCalls() []struct {
-	ID        string
-	QueryType int
+	ID             string
+	QueryTypeFlags int
 } {
 	var calls []struct {
-		ID        string
-		QueryType int
+		ID             string
+		QueryTypeFlags int
 	}
 	mock.lockGetContent.RLock()
 	calls = mock.calls.GetContent

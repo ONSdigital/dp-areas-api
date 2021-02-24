@@ -9,17 +9,17 @@ import (
 
 // Flag values for a query type:
 const (
-	QuerySpotlight int = 1 << iota // powers of 2, for combining bit flags
+	QuerySpotlightFlag int = 1 << iota // powers of 2, for combining bit flags
 
 	// Publications:
-	QueryArticles
-	QueryBulletins
-	QueryMethodologies
-	QueryMethodologyArticles
+	QueryArticlesFlag
+	QueryBulletinsFlag
+	QueryMethodologiesFlag
+	QueryMethodologyArticlesFlag
 
 	// Datasets:
-	QueryStaticDatasets
-	QueryTimeseries
+	QueryStaticDatasetsFlag
+	QueryTimeseriesFlag
 )
 
 const (
@@ -36,17 +36,17 @@ const (
 
 var querySets map[string]int = map[string]int{
 	// search keys are done as lower case to make searches work regardless of case
-	spotlightStr:           QuerySpotlight,
-	articlesStr:            QueryArticles,
-	bulletinsStr:           QueryBulletins,
-	methodologiesStr:       QueryMethodologies,
-	methodologyarticlesStr: QueryMethodologyArticles,
-	staticdatasetsStr:      QueryStaticDatasets,
-	timeseriesStr:          QueryTimeseries,
+	spotlightStr:           QuerySpotlightFlag,
+	articlesStr:            QueryArticlesFlag,
+	bulletinsStr:           QueryBulletinsFlag,
+	methodologiesStr:       QueryMethodologiesFlag,
+	methodologyarticlesStr: QueryMethodologyArticlesFlag,
+	staticdatasetsStr:      QueryStaticDatasetsFlag,
+	timeseriesStr:          QueryTimeseriesFlag,
 
-	publicationsStr: QueryArticles | QueryBulletins | QueryMethodologies | QueryMethodologyArticles,
+	publicationsStr: QueryArticlesFlag | QueryBulletinsFlag | QueryMethodologiesFlag | QueryMethodologyArticlesFlag,
 
-	datasetsStr: QueryStaticDatasets | QueryTimeseries,
+	datasetsStr: QueryStaticDatasetsFlag | QueryTimeseriesFlag,
 }
 
 // getContentTypeParameter obtains a filter that defines a set of possible types
@@ -54,8 +54,8 @@ func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
 		// no type specified, so return flags for all types
-		return QuerySpotlight | QueryArticles | QueryBulletins | QueryMethodologies |
-			QueryMethodologyArticles | QueryStaticDatasets | QueryTimeseries
+		return QuerySpotlightFlag | QueryArticlesFlag | QueryBulletinsFlag | QueryMethodologiesFlag |
+			QueryMethodologyArticlesFlag | QueryStaticDatasetsFlag | QueryTimeseriesFlag
 	}
 
 	// make query type lower case for following comparison to cope with wrong case of letter(s)
@@ -73,33 +73,33 @@ func getContentTypeParameter(queryVars url.Values) int {
 }
 
 // getRequiredItems builds up a list of required links info in specifc order as commented within function
-func getRequiredItems(queryType int, content *models.Content, id string) *models.ContentResponseAPI {
+func getRequiredItems(queryTypeFlags int, content *models.Content, id string) *models.ContentResponseAPI {
 	var result models.ContentResponseAPI
 
 	// Add spotlight first
-	if (queryType & QuerySpotlight) != 0 {
+	if (queryTypeFlags & QuerySpotlightFlag) != 0 {
 		result.AppendLinkInfo(spotlightStr, content.Spotlight, id, content.State)
 	}
 
 	// then Publications (alphabetically ordered)
-	if (queryType & QueryArticles) != 0 {
+	if (queryTypeFlags & QueryArticlesFlag) != 0 {
 		result.AppendLinkInfo(articlesStr, content.Articles, id, content.State)
 	}
-	if (queryType & QueryBulletins) != 0 {
+	if (queryTypeFlags & QueryBulletinsFlag) != 0 {
 		result.AppendLinkInfo(bulletinsStr, content.Bulletins, id, content.State)
 	}
-	if (queryType & QueryMethodologies) != 0 {
+	if (queryTypeFlags & QueryMethodologiesFlag) != 0 {
 		result.AppendLinkInfo(methodologiesStr, content.Methodologies, id, content.State)
 	}
-	if (queryType & QueryMethodologyArticles) != 0 {
+	if (queryTypeFlags & QueryMethodologyArticlesFlag) != 0 {
 		result.AppendLinkInfo(methodologyarticlesStr, content.MethodologyArticles, id, content.State)
 	}
 
 	// then Datasets (alphabetically ordered)
-	if (queryType & QueryStaticDatasets) != 0 {
+	if (queryTypeFlags & QueryStaticDatasetsFlag) != 0 {
 		result.AppendLinkInfo(staticdatasetsStr, content.StaticDatasets, id, content.State)
 	}
-	if (queryType & QueryTimeseries) != 0 {
+	if (queryTypeFlags & QueryTimeseriesFlag) != 0 {
 		result.AppendLinkInfo(timeseriesStr, content.Timeseries, id, content.State)
 	}
 
