@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -23,10 +24,12 @@ type BindingsStruct struct {
 	Bindings []BindingsData `json:"bindings,omitempty"`
 }
 type BindingsData struct {
-	AreaName GenStruct `json:"areaname,omitempty"`
-	AreaCode GenStruct `json:"areacode,omitempty"`
-	Code     GenStruct `json:"code,omitempty"`
-	Name     GenStruct `json:"name,omitempty"`
+	AreaName   GenStruct `json:"areaname,omitempty"`
+	AreaCode   GenStruct `json:"areacode,omitempty"`
+	Code       GenStruct `json:"code,omitempty"`
+	Name       GenStruct `json:"name,omitempty"`
+	ParentCode GenStruct `json:"parentcode,omitempty"`
+	ParentName GenStruct `json:"parentname,omitempty"`
 }
 type GenStruct struct {
 	Type  string `json:"type,omitempty"`
@@ -83,6 +86,24 @@ WHERE {
 	?child pmdfoi:parent geoid:W92000004 ;
 		pmdfoi:code ?code ;
 	  	geodef:officialname ?name ;
+}`
+
+var queryRegionEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
+PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
+PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname 
+WHERE {
+	VALUES ?types { statid:E12 }
+	?area statdef:code ?types ;
+		geodef:status "live" ;
+		geodef:officialname ?areaname ;
+		rdfs:label ?areacode ;
+		pmdfoi:parent ?parent .
+	?parent geodef:status "live" ;
+		geodef:officialname ?parentname ;
+		rdfs:label ?parentcode .
 }`
 
 func lookupAreaType(code string) (string, error) {
@@ -156,6 +177,62 @@ func postCountryQuery(query string) (*models.Area, error) {
 	return countryData, nil
 }
 
+func buildAreas(as AreaStruct) ([]models.Area, error) {
+	areas := make([]models.Area, 0)
+
+	for _, binding := range as.Results.Bindings {
+		areaType, _ := lookupAreaType((binding.AreaCode.Value))
+		//Check error - to Do
+		area := models.Area{
+			ID:   binding.AreaCode.Value,
+			Name: binding.AreaName.Value,
+			Type: areaType,
+		}
+
+		parentType, _ := lookupAreaType(binding.ParentCode.Value)
+		area.ParentAreas = append(area.ParentAreas, models.LinkedAreas{
+			ID:   binding.ParentCode.Value,
+			Name: binding.ParentName.Value,
+			Type: parentType,
+		})
+
+		areas = append(areas, area)
+	}
+
+	return areas, nil
+}
+
+func postAreaQuery(query string) ([]models.Area, error) {
+	ctx := context.Background()
+
+	v := url.Values{}
+	v.Set("query", query)
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+	req.Header.Add("Accept", "application/sparql-results+json")
+	resp, _ := client.Do(req)
+
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	var returnedAreaData AreaStruct
+
+	if err := json.Unmarshal(data, &returnedAreaData); err != nil {
+		logData := log.Data{"json file": returnedAreaData}
+		log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+		os.Exit(1)
+	}
+
+	areaData, err := buildAreas(returnedAreaData)
+	if err != nil {
+		log.Event(ctx, "error returned from building the country area", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
+	return areaData, nil
+}
+
 func main() {
 
 	var (
@@ -186,12 +263,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
+
 	walesData, err := postCountryQuery(queryCountryWales)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
 	}
-
-	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
 
 	logData = log.Data{"AreaData": walesData}
 
@@ -201,4 +278,12 @@ func main() {
 	}
 
 	log.Event(ctx, "successfully put Wales area data into Mongo", log.INFO, logData)
+
+	regionData, err := postAreaQuery(queryRegionEngland)
+
+	if err != nil {
+		log.Event(ctx, "error returned from the region query POST", log.ERROR, log.Error(err))
+	}
+
+	fmt.Printf("%#v\n", regionData)
 }
