@@ -65,10 +65,10 @@ func getContentTypeParameter(queryVars url.Values) int {
 
 	set, ok := querySets[trimmedVal]
 	if ok {
-		return set
+		return set // return bit flag or flags for requested query
 	}
 
-	return 0
+	return 0 // query not recognised, so bad request
 }
 
 // getRequiredItems builds up a list of required links info in specifc order as commented within function
