@@ -70,17 +70,14 @@ type ContentLinks struct {
 	Topic *LinkObject `json:"topic,omitempty"`
 }
 
-// !!! add code to validate state transitions as per topic.go
-//!!! fix the following, and sort test code elsewhere, as per topic
-
-// Validate checks that a content struct complies with the state constraints, if provided. !!! may want to add more in future
+// Validate checks that a content struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Content) Validate() error {
 
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
 
-	// !!! add other checks, etc
+	// TODO add other checks, etc ?
 	return nil
 }
 
@@ -103,14 +100,14 @@ func (t *Content) ValidateTransitionFrom(existing *Content) error {
 func (t *Content) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
 		currentState = StateCreated // default value, if state is not present or invalid value
-		//TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
+		// TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
 	}
 	targetState, err := ParseState(target)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		//TODO to get to here is most likely a code programming error and a panic is probably best
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO to get to here is most likely a code programming error and a panic is probably best
 		//     because i believe all state changes are explicity program code specified ...
 		return false
 	}
@@ -163,5 +160,5 @@ func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink 
 		}
 	}
 
-	contentList.TotalCount = contentList.TotalCount + nofItems
+	contentList.TotalCount += nofItems
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -21,6 +22,11 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"topic_id":   id,
 		"function":   "getTopicPublicHandler",
+	}
+
+	if id == "topic_root" {
+		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		return
 	}
 
 	// get topic from mongoDB by id
@@ -64,17 +70,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
-// getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB for Web
-func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	vars := mux.Vars(req)
-	id := vars["id"]
-	logdata := log.Data{
-		"request_id": ctx.Value(dprequest.RequestIdKey),
-		"topic_id":   id,
-		"function":   "getSubtopicsPublicHandler",
-	}
-
+func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata log.Data, w http.ResponseWriter) {
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
@@ -126,17 +122,26 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
 }
 
-// getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
-func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Request) {
+// getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB for Web
+func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	id := vars["id"]
 	logdata := log.Data{
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"topic_id":   id,
-		"function":   "getSubtopicsPrivateHandler",
+		"function":   "getSubtopicsPublicHandler",
 	}
 
+	if id == "topic_root" {
+		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		return
+	}
+
+	api.getSubtopicsPublicByID(ctx, id, logdata, w)
+}
+
+func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata log.Data, w http.ResponseWriter) {
 	// get topic from mongoDB by id
 	topic, err := api.dataStore.Backend.GetTopic(id)
 	if err != nil {
@@ -186,6 +191,50 @@ func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Requ
 		return
 	}
 	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+}
+
+// getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
+func (api *API) getSubtopicsPrivateHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	vars := mux.Vars(req)
+	id := vars["id"]
+	logdata := log.Data{
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getSubtopicsPrivateHandler",
+	}
+
+	api.getSubtopicsPrivateByID(ctx, id, logdata, w)
+}
+
+// getTopicsListPublicHandler is a handler that gets a public list of top level topics by a specific id from MongoDB for Web
+func (api *API) getTopicsListPublicHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	id := "topic_root" // access specific document to retrieve list
+	logdata := log.Data{
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getTopicsListPublicHandler",
+	}
+
+	// The mongo document with id: `topic_root` contains the list of sobtopics,
+	// so we directly return that list
+	api.getSubtopicsPublicByID(ctx, id, logdata, w)
+}
+
+// getTopicsListPrivateHandler is a handler that gets a private list of top level topics by a specific id from MongoDB for Web
+func (api *API) getTopicsListPrivateHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	id := "topic_root" // access specific document to retrieve list
+	logdata := log.Data{
+		"request_id": ctx.Value(dprequest.RequestIdKey),
+		"topic_id":   id,
+		"function":   "getTopicsListPrivateHandler",
+	}
+
+	// The mongo document with id: `topic_root` contains the list of sobtopics,
+	// so we directly return that list
+	api.getSubtopicsPrivateByID(ctx, id, logdata, w)
 }
 
 func (api *API) getDataset(w http.ResponseWriter, req *http.Request) {

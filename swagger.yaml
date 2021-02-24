@@ -12,8 +12,6 @@ schemes:
   - http
 tags:
   - name: "Public"
-  - name: "Private user"
-  - name: "Private"
 parameters:
   id:
     name: id
@@ -21,6 +19,12 @@ parameters:
     in: path
     type: string
     required: true
+  content_options:
+    description: "An option to select a subset of the possible types of content returned; can be one of: spotlight, articles, bulletins, methodologies, methodologyarticles, staticdatasets, timeseries, publications or datasets"
+    name: "<type>"
+    in: query
+    required: false
+    type: string
 paths:
   /topics/{id}:
     get:
@@ -60,14 +64,15 @@ paths:
           description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
-  /topics/{id}/content:
+  /topics/{id}/content/{content_options}:
     get:
       tags:
         - "Public"
-      summary: "Get a list oc content"
+      summary: "Get a list of content"
       description: "Get a list of different content types of all documents for ID"
       parameters:
         - $ref: '#/parameters/id'
+        - $ref: '#/parameters/content_options'
       produces:
         - "application/json"
       responses:

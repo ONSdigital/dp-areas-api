@@ -28,10 +28,6 @@ const (
 	ctestContentID8 = "ContentID8"
 )
 
-const (
-	chost = "http://localhost:25300"
-)
-
 // build up response from following:
 // Given this mongo collection document:
 /*
@@ -812,7 +808,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 
 			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
 			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent/content"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()

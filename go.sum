@@ -2,8 +2,6 @@ github.com/ONSdigital/dp-api-clients-go v1.1.0/go.mod h1:9lqor0I7caCnRWr04gU/r7x
 github.com/ONSdigital/dp-api-clients-go v1.9.0/go.mod h1:SM0b/NXDWndJ9EulmAGdfDY4DxPxK+pNsP8eZlIWiqM=
 github.com/ONSdigital/dp-api-clients-go v1.28.0 h1:ExIUlHC6uBdBlFwt/gAI0ApSzpyigy0NWJFK3XCwSVc=
 github.com/ONSdigital/dp-api-clients-go v1.28.0/go.mod h1:iyJy6uRL4B6OYOJA0XMr5UHt6+Q8XmN9uwmURO+9Oj4=
-github.com/ONSdigital/dp-api-clients-go v1.30.0 h1:TA3LHTccG4GHlUqDHGSrJRZEq15Wd1q1thE4Yxdv8H8=
-github.com/ONSdigital/dp-api-clients-go v1.30.0/go.mod h1:iyJy6uRL4B6OYOJA0XMr5UHt6+Q8XmN9uwmURO+9Oj4=
 github.com/ONSdigital/dp-api-clients-go v1.32.5 h1:/Fg2KBjxdaLkgnXBqnxMUg+Y/vWhyk2WsOsVphuCQzU=
 github.com/ONSdigital/dp-api-clients-go v1.32.5/go.mod h1:0pUK3MN1v7DTjq0JSAD+DqbsZ8AVTodrXSXgJecg9Pw=
 github.com/ONSdigital/dp-authorisation v0.1.0 h1:HzYwJdvk7ZAeB56KMAH6MP5+5uZuuJnEyGq6CViDoCg=
@@ -130,6 +128,7 @@ golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+golang.org/x/text v0.3.3 h1:cokOdA+Jmi5PJGXLlLllQSgYigAEfHXJAERHVMaCc2k=
 golang.org/x/text v0.3.3/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20190328211700-ab21143f2384 h1:TFlARGu6Czu1z7q93HTxcP1P+/ZFC/IKythI5RzrnRg=

@@ -57,14 +57,14 @@ type PrivateSubtopics struct {
 	PrivateItems *[]TopicResponse `bson:"items,omitempty"        json:"items"`
 }
 
-// Validate checks that a topic struct complies with the state constraints, if provided. !!! may want to add more in future
+// Validate checks that a topic struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Topic) Validate() error {
 
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
 
-	// !!! add other checks, etc
+	// TODO add other checks, etc
 	return nil
 }
 
@@ -87,14 +87,14 @@ func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
 func (t *Topic) StateTransitionAllowed(target string) bool {
 	currentState, err := ParseState(t.State)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
 		currentState = StateCreated // default value, if state is not present or invalid value
-		//TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
+		// TODO more comments needed here to state under what conditions the state may not be present or has an invalid value
 	}
 	targetState, err := ParseState(target)
 	if err != nil {
-		//TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
-		//TODO to get to here is most likely a code programming error and a panic is probably best
+		// TODO once the rest of the system is implemented, check that this logic is applicable, and adjust tests accordingly
+		// TODO to get to here is most likely a code programming error and a panic is probably best
 		//     because i believe all state changes are explicity program code specified ...
 		return false
 	}

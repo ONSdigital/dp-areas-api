@@ -8,7 +8,7 @@ import (
 )
 
 func TestStateValidation(t *testing.T) {
-	//!!! these need rationalising when final code is done
+	// TODO these need rationalising when final code is done
 	Convey("Given a Created State, then only transitions to completed allowed", t, func() {
 		So(models.StateCreated.TransitionAllowed(models.StateCreated), ShouldBeFalse)
 		So(models.StateCreated.TransitionAllowed(models.StatePublished), ShouldBeFalse)
