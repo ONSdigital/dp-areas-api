@@ -108,7 +108,7 @@ func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, e
 	defer s.Close()
 
 	var content models.ContentResponse
-	contentSelect := bson.M{"ID": 1} // int default, used to minimise the mongo response to minimise go HEAP usage
+	contentSelect := bson.M{"ID": 1} // init default, used to minimise the mongo response to minimise go HEAP usage
 
 	/* NOTE: if we have:
 
