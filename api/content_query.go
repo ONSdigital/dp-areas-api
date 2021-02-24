@@ -54,7 +54,8 @@ func getContentTypeParameter(queryVars url.Values) int {
 	valArray, found := queryVars["type"]
 	if !found {
 		// no type specified, so return flags for all types
-		return QuerySpotlight | QueryArticles | QueryBulletins | QueryMethodologies | QueryMethodologyArticles | QueryStaticDatasets | QueryTimeseries
+		return QuerySpotlight | QueryArticles | QueryBulletins | QueryMethodologies |
+			QueryMethodologyArticles | QueryStaticDatasets | QueryTimeseries
 	}
 
 	// make query type lower case for following comparison to cope with wrong case of letter(s)

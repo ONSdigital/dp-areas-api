@@ -237,6 +237,31 @@ func (m *Mongo) GetContent(id string, queryType int) (*models.ContentResponse, e
 			"current.static_datasets": 1,
 			"current.timeseries":      1,
 		}
+
+	// All types, that is a request for the content with no query parameter
+	case api.QuerySpotlight | api.QueryArticles | api.QueryBulletins | api.QueryMethodologies |
+		api.QueryMethodologyArticles | api.QueryStaticDatasets | api.QueryTimeseries:
+		contentSelect = bson.M{
+			"ID":                           1,
+			"next.id":                      1,
+			"next.state":                   1,
+			"next.spotlight":               1,
+			"next.articles":                1,
+			"next.bulletins":               1,
+			"next.methodologies":           1,
+			"next.methodology_articles":    1,
+			"next.static_datasets":         1,
+			"next.timeseries":              1,
+			"current.id":                   1,
+			"current.state":                1,
+			"current.spotlight":            1,
+			"current.articles":             1,
+			"current.bulletins":            1,
+			"current.methodologies":        1,
+			"current.methodology_articles": 1,
+			"current.static_datasets":      1,
+			"current.timeseries":           1,
+		}
 	}
 
 	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)
