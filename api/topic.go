@@ -7,7 +7,6 @@ import (
 
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
-	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -25,7 +24,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	}
 
 	if id == "topic_root" {
-		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}
 
@@ -134,7 +133,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	}
 
 	if id == "topic_root" {
-		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}
 
@@ -263,7 +262,7 @@ func (api *API) getDataset(w http.ResponseWriter, req *http.Request) {
 			// User is not authenticated and hence has only access to current sub document
 			if dataset.Current == nil {
 				log.Event(ctx, "getDataste endpoint: published dataset not found", log.INFO, logdata)
-				return nil, errs.ErrTopicNotFound
+				return nil, apierrors.ErrTopicNotFound
 			}
 
 			log.Event(ctx, "getDataset endpoint: caller not authenticated returning dataset current sub document", log.INFO, logdata)
@@ -274,7 +273,7 @@ func (api *API) getDataset(w http.ResponseWriter, req *http.Request) {
 			// User has valid authentication to get raw dataset document
 			if dataset == nil {
 				log.Event(ctx, "getDataset endpoint: published or unpublished dataset not found", log.INFO, logdata)
-				return nil, errs.ErrTopicNotFound
+				return nil, apierrors.ErrTopicNotFound
 			}
 			log.Event(ctx, "getDataset endpoint: caller authenticated returning dataset", log.INFO, logdata)
 			datasetResponse = dataset
