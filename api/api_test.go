@@ -75,7 +75,7 @@ func TestWriteJSONBody(t *testing.T) {
 
 			err := WriteJSONBody(ctx, v, w, logdata)
 			Convey("Then the expected write failure is seen", func() {
-				errorResult := errors.New("Broken write")
+				errorResult := errors.New("broken write")
 				So(err, ShouldResemble, errorResult)
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
