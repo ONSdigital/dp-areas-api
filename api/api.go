@@ -191,6 +191,8 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 		case apierrors.ErrUnableToReadMessage,
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrTopicInvalidState:
+			status = http.StatusInternalServerError
+		case apierrors.ErrContentUnrecognisedParameter:
 			status = http.StatusBadRequest
 		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden
@@ -204,7 +206,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	}
 
 	switch status {
-	case http.StatusNotFound, http.StatusForbidden:
+	case http.StatusNotFound, http.StatusForbidden, http.StatusBadRequest:
 		data["response_status"] = status
 		data["user_error"] = err.Error()
 		log.Event(ctx, "request unsuccessful", log.ERROR, data)

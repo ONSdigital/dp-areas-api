@@ -80,6 +80,8 @@ paths:
           description: "Json object containing an array(s) of content types"
           schema:
             $ref: '#/definitions/ListOfContent'
+        400:
+          description: "content query not recognised"
         404:
           description: "Content not found"
         500:
@@ -104,6 +106,8 @@ definitions:
             $ref: '#/definitions/SelfHref'
           topic:
             $ref: '#/definitions/TopicLink'
+      state:
+        $ref: '#/definitions/State'
   Topic:
     type: object
     properties:
@@ -118,6 +122,8 @@ definitions:
         items:
           type: string
         description: "List of keywords that relate to the topic"
+      state:
+        $ref: '#/definitions/State'
       links:
         type: object
         properties:
@@ -145,34 +151,34 @@ definitions:
     type: object
     description: "A list of Content items"
     properties:
+      count:
+        $ref: '#/definitions/Count'
+      offset:
+        $ref: '#/definitions/Offset'
+      limit:
+        $ref: '#/definitions/Limit'
+      total_count:
+        $ref: '#/definitions/TotalCount'
       items:
         type: array
         items:
           $ref: '#/definitions/Content'
-      count:
-        $ref: '#/definitions/Count'
-      total_count:
-        $ref: '#/definitions/TotalCount'
-      limit:
-        $ref: '#/definitions/Limit'
-      offset:
-        $ref: '#/definitions/Offset'
   ListOfTopics:
     type: object
     description: "A list of Topics"
     properties:
+      count:
+        $ref: '#/definitions/Count'
+      offset:
+        $ref: '#/definitions/Offset'
+      limit:
+        $ref: '#/definitions/Limit'
+      total_count:
+        $ref: '#/definitions/TotalCount'
       items:
         type: array
         items:
           $ref: '#/definitions/Topic'
-      count:
-        $ref: '#/definitions/Count'
-      total_count:
-        $ref: '#/definitions/TotalCount'
-      limit:
-        $ref: '#/definitions/Limit'
-      offset:
-        $ref: '#/definitions/Offset'
   SelfHref:
     type: object
     properties:
@@ -182,6 +188,13 @@ definitions:
       href:
         type: string
         description: "The URL to the resource"
+  State:
+    description: |
+      The state of the resource, can only be one of the following:
+        * created
+        * published
+        * completed
+    type: string
   TopicLink:
     type: object
     description: "A link to the topic for this content"

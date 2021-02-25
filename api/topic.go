@@ -23,7 +23,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	}
 
 	if id == "topic_root" {
-		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}
 
@@ -132,7 +132,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 	}
 
 	if id == "topic_root" {
-		handleError(ctx, w, errs.ErrTopicNotFound, logdata)
+		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}
 

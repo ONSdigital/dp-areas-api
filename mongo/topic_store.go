@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongodb "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
+	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/globalsign/mgo"
@@ -102,13 +103,59 @@ func (m *Mongo) CheckTopicExists(id string) error {
 }
 
 // GetContent retrieves a content document by its ID
-func (m *Mongo) GetContent(id string) (*models.ContentResponse, error) {
+func (m *Mongo) GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
 	var content models.ContentResponse
+	// init default, used to minimise the mongo response to minimise go HEAP usage
+	contentSelect := bson.M{
+		"ID":            1,
+		"next.id":       1,
+		"next.state":    1,
+		"current.id":    1,
+		"current.state": 1,
+	}
 
-	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).One(&content)
+	// Add spotlight first
+	if (queryTypeFlags & api.QuerySpotlightFlag) != 0 {
+		contentSelect["next.spotlight"] = 1
+		contentSelect["current.spotlight"] = 1
+	}
+
+	// then Publications
+	if (queryTypeFlags & api.QueryArticlesFlag) != 0 {
+		contentSelect["next.articles"] = 1
+		contentSelect["current.articles"] = 1
+	}
+
+	if (queryTypeFlags & api.QueryBulletinsFlag) != 0 {
+		contentSelect["next.bulletins"] = 1
+		contentSelect["current.bulletins"] = 1
+	}
+
+	if (queryTypeFlags & api.QueryMethodologiesFlag) != 0 {
+		contentSelect["next.methodologies"] = 1
+		contentSelect["current.methodologies"] = 1
+	}
+
+	if (queryTypeFlags & api.QueryMethodologyArticlesFlag) != 0 {
+		contentSelect["next.methodology_articles"] = 1
+		contentSelect["current.methodology_articles"] = 1
+	}
+
+	// then Datasets
+	if (queryTypeFlags & api.QueryStaticDatasetsFlag) != 0 {
+		contentSelect["next.static_datasets"] = 1
+		contentSelect["current.static_datasets"] = 1
+	}
+
+	if (queryTypeFlags & api.QueryTimeseriesFlag) != 0 {
+		contentSelect["next.timeseries"] = 1
+		contentSelect["current.timeseries"] = 1
+	}
+
+	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, errs.ErrContentNotFound

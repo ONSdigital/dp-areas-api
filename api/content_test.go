@@ -369,7 +369,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string) (*models.ContentResponse, error) {
+				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
@@ -594,18 +594,10 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected empty response is returned with status code 200", func() {
-					So(w.Code, ShouldEqual, http.StatusOK)
+					So(w.Code, ShouldEqual, http.StatusBadRequest)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					retContent := models.ContentResponseAPI{}
-					err = json.Unmarshal(payload, &retContent)
-					So(err, ShouldBeNil)
-
-					So(retContent.Items, ShouldBeNil)
-					So(retContent.Count, ShouldEqual, 0)
-					So(retContent.Offset, ShouldEqual, 0)
-					So(retContent.Limit, ShouldEqual, 0)
-					So(retContent.TotalCount, ShouldEqual, 0)
+					So(payload, ShouldResemble, []byte("content query not recognised\n"))
 				})
 			})
 
@@ -699,7 +691,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string) (*models.ContentResponse, error) {
+				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
