@@ -60,14 +60,12 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 		api.enablePublicEndpoints(ctx)
 	}
 
-	router.HandleFunc("/hello", HelloHandler()).Methods("GET")
 	return api
 }
 
 // enablePublicEndpoints register only the public GET endpoints.
 func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
-	api.get("/datasets/{id}", api.getDataset) // !!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
 	api.get("/topics", api.getTopicsListPublicHandler)
@@ -80,12 +78,6 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		"/topics/{id}",
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getTopicPrivateHandler)),
-	)
-
-	api.get(
-		"/datasets/{id}",
-		// !!! NOTE: authentication is checked in the handler as per in dp-dataset-api for equality of benchmarking
-		api.isAuthorised(readPermission, api.getDataset), // !!! added for benchmarking
 	)
 
 	api.get(
