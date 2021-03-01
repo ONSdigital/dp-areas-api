@@ -19,7 +19,7 @@ type DataStore struct {
 type dataMongoDB interface {
 	GetTopic(id string) (*models.TopicResponse, error)
 	CheckTopicExists(id string) error
-	GetContent(id string) (*models.ContentResponse, error)
+	GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error)
 }
 
 // MongoDB represents all the required methods from mongo DB

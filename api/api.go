@@ -31,7 +31,7 @@ type AuthHandler interface {
 	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
 
-//API provides a struct to wrap the api around
+// API provides a struct to wrap the api around
 type API struct {
 	Router                 *mux.Router
 	dataStore              store.DataStore
@@ -39,7 +39,7 @@ type API struct {
 	enablePrivateEndpoints bool
 }
 
-//Setup function sets up the api and returns an api
+// Setup function sets up the api and returns an api
 func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStore store.DataStore, permissions AuthHandler) *API {
 	api := &API{
 		Router:                 router,
@@ -60,16 +60,15 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 		api.enablePublicEndpoints(ctx)
 	}
 
-	router.HandleFunc("/hello", HelloHandler()).Methods("GET")
 	return api
 }
 
 // enablePublicEndpoints register only the public GET endpoints.
 func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
-	api.get("/datasets/{id}", api.getDataset) //!!! added for benchmarking
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
+	api.get("/topics", api.getTopicsListPublicHandler)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
@@ -82,12 +81,6 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 	)
 
 	api.get(
-		"/datasets/{id}",
-		// !!! NOTE: authentication is checked in the handler as per in dp-dataset-api for equality of benchmarking
-		api.isAuthorised(readPermission, api.getDataset), //!!! added for benchmarking
-	)
-
-	api.get(
 		"/topics/{id}/subtopics",
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getSubtopicsPrivateHandler)),
@@ -97,6 +90,12 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		"/topics/{id}/content",
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getContentPrivateHandler)),
+	)
+
+	api.get(
+		"/topics",
+		api.isAuthenticated(
+			api.isAuthorised(readPermission, api.getTopicsListPrivateHandler)),
 	)
 }
 
@@ -149,7 +148,9 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 
 	// Write payload to body
 	if _, err := w.Write(payload); err != nil {
-		handleError(ctx, w, apierrors.ErrInternalServer, data)
+		// a stack trace is added for Non User errors
+		data["response_status"] = http.StatusInternalServerError
+		log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
 		return err
 	}
 	return nil
@@ -190,6 +191,8 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 		case apierrors.ErrUnableToReadMessage,
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrTopicInvalidState:
+			status = http.StatusInternalServerError
+		case apierrors.ErrContentUnrecognisedParameter:
 			status = http.StatusBadRequest
 		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden
@@ -203,7 +206,7 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	}
 
 	switch status {
-	case http.StatusNotFound, http.StatusForbidden:
+	case http.StatusNotFound, http.StatusForbidden, http.StatusBadRequest:
 		data["response_status"] = status
 		data["user_error"] = err.Error()
 		log.Event(ctx, "request unsuccessful", log.ERROR, data)

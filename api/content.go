@@ -22,7 +22,11 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// get type from query parameters, or default value
-	queryType := getContentTypeParameter(req.URL.Query())
+	queryTypeFlags := getContentTypeParameter(req.URL.Query())
+	if queryTypeFlags == 0 {
+		handleError(ctx, w, apierrors.ErrContentUnrecognisedParameter, logdata)
+		return
+	}
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -32,7 +36,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id)
+	content, err := api.dataStore.Backend.GetContent(id, queryTypeFlags)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)
@@ -46,9 +50,9 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	currentResult := getRequiredItems(queryType, content.Current, content.ID)
+	currentResult := getRequiredItems(queryTypeFlags, content.Current, content.ID)
 
-	if queryType != 0 && currentResult.TotalCount == 0 {
+	if currentResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}
@@ -72,7 +76,11 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	// get type from query parameters, or default value
-	queryType := getContentTypeParameter(req.URL.Query())
+	queryTypeFlags := getContentTypeParameter(req.URL.Query())
+	if queryTypeFlags == 0 {
+		handleError(ctx, w, apierrors.ErrContentUnrecognisedParameter, logdata)
+		return
+	}
 
 	// check topic from mongoDB by id
 	err := api.dataStore.Backend.CheckTopicExists(id)
@@ -82,7 +90,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id)
+	content, err := api.dataStore.Backend.GetContent(id, queryTypeFlags)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)
@@ -92,7 +100,7 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	// User has valid authentication to get raw full content document(s)
 
 	if content.Current == nil {
-		//TODO
+		// TODO
 		/*
 			In the future: when the API becomes more than read-only
 			When a document is first created, it will only have 'next' until it is published, when it gets 'current' populated.
@@ -108,12 +116,12 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	currentResult := getRequiredItems(queryType, content.Current, content.ID)
+	currentResult := getRequiredItems(queryTypeFlags, content.Current, content.ID)
 
 	// The 'Next' type items may have a different length to the current, so we do the above again, but for Next
-	nextResult := getRequiredItems(queryType, content.Next, content.ID)
+	nextResult := getRequiredItems(queryTypeFlags, content.Next, content.ID)
 
-	if queryType != 0 && currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
+	if currentResult.TotalCount == 0 && nextResult.TotalCount == 0 {
 		handleError(ctx, w, apierrors.ErrContentNotFound, logdata)
 		return
 	}

@@ -22,7 +22,7 @@ var _ store.Storer = &StorerMock{}
 //             CheckTopicExistsFunc: func(id string) error {
 // 	               panic("mock out the CheckTopicExists method")
 //             },
-//             GetContentFunc: func(id string) (*models.ContentResponse, error) {
+//             GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 // 	               panic("mock out the GetContent method")
 //             },
 //             GetTopicFunc: func(id string) (*models.TopicResponse, error) {
@@ -39,7 +39,7 @@ type StorerMock struct {
 	CheckTopicExistsFunc func(id string) error
 
 	// GetContentFunc mocks the GetContent method.
-	GetContentFunc func(id string) (*models.ContentResponse, error)
+	GetContentFunc func(id string, queryTypeFlags int) (*models.ContentResponse, error)
 
 	// GetTopicFunc mocks the GetTopic method.
 	GetTopicFunc func(id string) (*models.TopicResponse, error)
@@ -55,6 +55,8 @@ type StorerMock struct {
 		GetContent []struct {
 			// ID is the id argument value.
 			ID string
+			// QueryTypeFlags is the queryTypeFlags argument value.
+			QueryTypeFlags int
 		}
 		// GetTopic holds details about calls to the GetTopic method.
 		GetTopic []struct {
@@ -99,29 +101,33 @@ func (mock *StorerMock) CheckTopicExistsCalls() []struct {
 }
 
 // GetContent calls GetContentFunc.
-func (mock *StorerMock) GetContent(id string) (*models.ContentResponse, error) {
+func (mock *StorerMock) GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 	if mock.GetContentFunc == nil {
 		panic("StorerMock.GetContentFunc: method is nil but Storer.GetContent was just called")
 	}
 	callInfo := struct {
-		ID string
+		ID             string
+		QueryTypeFlags int
 	}{
-		ID: id,
+		ID:             id,
+		QueryTypeFlags: queryTypeFlags,
 	}
 	mock.lockGetContent.Lock()
 	mock.calls.GetContent = append(mock.calls.GetContent, callInfo)
 	mock.lockGetContent.Unlock()
-	return mock.GetContentFunc(id)
+	return mock.GetContentFunc(id, queryTypeFlags)
 }
 
 // GetContentCalls gets all the calls that were made to GetContent.
 // Check the length with:
 //     len(mockedStorer.GetContentCalls())
 func (mock *StorerMock) GetContentCalls() []struct {
-	ID string
+	ID             string
+	QueryTypeFlags int
 } {
 	var calls []struct {
-		ID string
+		ID             string
+		QueryTypeFlags int
 	}
 	mock.lockGetContent.RLock()
 	calls = mock.calls.GetContent

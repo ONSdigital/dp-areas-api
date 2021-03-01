@@ -21,7 +21,7 @@ import (
 // check that DatsetAPIStore satifies the the store.Storer interface
 var _ store.Storer = (*DatsetAPIStore)(nil)
 
-//DatsetAPIStore is a wrapper which embeds (Neo4j) Mongo structs which between them satisfy the store.Storer interface.
+// DatsetAPIStore is a wrapper which embeds (Neo4j) Mongo structs which between them satisfy the store.Storer interface.
 type DatsetAPIStore struct {
 	store.MongoDB
 	//	store.GraphDB
@@ -98,7 +98,7 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 }
 
 func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) api.AuthHandler {
-	if cfg.EnablePermissionsAuth == false {
+	if !cfg.EnablePermissionsAuth {
 		log.Event(ctx, "feature flag not enabled defaulting to nop authZ impl", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
 		return &auth.NopHandler{}
 	}

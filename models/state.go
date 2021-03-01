@@ -19,8 +19,6 @@ import (
 // including having the state 'published' so when we next want to make a change to it it
 // needs to go to 'created' state while being worked on.
 //
-// !!! (my note), so from last sentence, add a state change of: Published -> Created
-//
 // Deleted and Failed I dont think will be needed (we wont want to allow people to delete pages,
 // and failed publishes in this area I would expect not to be reported through a state change.
 

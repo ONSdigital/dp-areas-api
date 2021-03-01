@@ -28,10 +28,6 @@ const (
 	ctestContentID8 = "ContentID8"
 )
 
-const (
-	chost = "http://localhost:25300"
-)
-
 // build up response from following:
 // Given this mongo collection document:
 /*
@@ -373,7 +369,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string) (*models.ContentResponse, error) {
+				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
@@ -598,18 +594,10 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected empty response is returned with status code 200", func() {
-					So(w.Code, ShouldEqual, http.StatusOK)
+					So(w.Code, ShouldEqual, http.StatusBadRequest)
 					payload, err := ioutil.ReadAll(w.Body)
 					So(err, ShouldBeNil)
-					retContent := models.ContentResponseAPI{}
-					err = json.Unmarshal(payload, &retContent)
-					So(err, ShouldBeNil)
-
-					So(retContent.Items, ShouldBeNil)
-					So(retContent.Count, ShouldEqual, 0)
-					So(retContent.Offset, ShouldEqual, 0)
-					So(retContent.Limit, ShouldEqual, 0)
-					So(retContent.TotalCount, ShouldEqual, 0)
+					So(payload, ShouldResemble, []byte("content query not recognised\n"))
 				})
 			})
 
@@ -703,7 +691,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string) (*models.ContentResponse, error) {
+				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
@@ -812,7 +800,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 
 			// the following two tests cover different failure modes and code coverage in 'getContentPublicHandler'
 			Convey("Requesting an nonexistent content & topic ID results in a NotFound response (topic read fails)", func() {
-				request, err := createRequestWithAuth(http.MethodGet, fmt.Sprintf("http://localhost:25300/topics/inexistent/content"), nil)
+				request, err := createRequestWithAuth(http.MethodGet, "http://localhost:25300/topics/inexistent/content", nil)
 				So(err, ShouldBeNil)
 
 				w := httptest.NewRecorder()

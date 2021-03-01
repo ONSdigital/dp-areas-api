@@ -15,4 +15,5 @@ var (
 	ErrTopicInvalidState              = errors.New("topic state is not a valid state name")
 	ErrTopicStateTransitionNotAllowed = errors.New("topic state transition not allowed")
 	ErrTopicUploadEmpty               = errors.New("topic upload section is not populated")
+	ErrContentUnrecognisedParameter   = errors.New("content query not recognised")
 )
