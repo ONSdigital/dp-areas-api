@@ -64,7 +64,7 @@ paths:
           description: "Topic not found"
         500:
           $ref: '#/responses/InternalError'
-  /topics/{id}/content/{content_options}:
+  /topics/{id}/content:
     get:
       tags:
         - "Public"
