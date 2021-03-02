@@ -93,7 +93,7 @@ PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
 PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
 PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
 PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname 
+SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname ?sibling
 WHERE {
 	VALUES ?types { statid:E12 }
 	?area statdef:code ?types ;
@@ -105,6 +105,22 @@ WHERE {
 		geodef:officialname ?parentname ;
 		rdfs:label ?parentcode .
 }`
+
+func buildRegionQuery(geoid string) string {
+
+	queryRegionChildEngland := fmt.Sprintf(
+		`PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+		PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+		PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+		SELECT DISTINCT ?code ?name
+		WHERE {
+			?child pmdfoi:parent geoid:%v;
+				pmdfoi:code ?code ;
+				geodef:officialname ?name.
+		}`, geoid)
+
+	return queryRegionChildEngland
+}
 
 func lookupAreaType(code string) (string, error) {
 	prefix := code[:3]
@@ -177,12 +193,17 @@ func postCountryQuery(query string) (*models.Area, error) {
 	return countryData, nil
 }
 
-func buildAreas(as AreaStruct) ([]models.Area, error) {
+func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
+	ctx := context.Background()
 	areas := make([]models.Area, 0)
 
-	for _, binding := range as.Results.Bindings {
-		areaType, _ := lookupAreaType((binding.AreaCode.Value))
-		//Check error - to Do
+	for _, binding := range areaStruct.Results.Bindings {
+		areaType, err := lookupAreaType(binding.AreaCode.Value)
+		logData := log.Data{"AreaCode": binding.AreaCode.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
 		area := models.Area{
 			ID:   binding.AreaCode.Value,
 			Name: binding.AreaName.Value,
@@ -190,6 +211,11 @@ func buildAreas(as AreaStruct) ([]models.Area, error) {
 		}
 
 		parentType, _ := lookupAreaType(binding.ParentCode.Value)
+		logData = log.Data{"ParentAreaCode": binding.ParentCode.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
 		area.ParentAreas = append(area.ParentAreas, models.LinkedAreas{
 			ID:   binding.ParentCode.Value,
 			Name: binding.ParentName.Value,
@@ -221,7 +247,7 @@ func postAreaQuery(query string) ([]models.Area, error) {
 	if err := json.Unmarshal(data, &returnedAreaData); err != nil {
 		logData := log.Data{"json file": returnedAreaData}
 		log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
-		os.Exit(1)
+		return nil, err
 	}
 
 	areaData, err := buildAreas(returnedAreaData)
@@ -230,7 +256,60 @@ func postAreaQuery(query string) ([]models.Area, error) {
 		return nil, err
 	}
 
-	return areaData, nil
+	areasWithChild := make([]models.Area, 0)
+
+	for _, region := range areaData {
+
+		areaID := region.ID
+		query := buildRegionQuery(areaID)
+
+		v := url.Values{}
+		v.Set("query", query)
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+		req.Header.Add("Accept", "application/sparql-results+json")
+		resp, _ := client.Do(req)
+
+		data, _ := ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+
+		var returnedChildData AreaStruct
+
+		if err := json.Unmarshal(data, &returnedChildData); err != nil {
+			logData := log.Data{"json file": returnedChildData}
+			log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
+
+		regionDataWithChild := buildChildAreas(returnedChildData, region)
+
+		areasWithChild = append(areasWithChild, regionDataWithChild)
+	}
+	return areasWithChild, nil
+}
+
+func buildChildAreas(childStruct AreaStruct, region models.Area) models.Area {
+
+	ctx := context.Background()
+
+	for _, binding := range childStruct.Results.Bindings {
+
+		childType, err := lookupAreaType(binding.Code.Value)
+		logData := log.Data{"ChildAreaCode": binding.Code.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+		} else {
+			child := &models.LinkedAreas{
+				ID:   binding.Code.Value,
+				Name: binding.Name.Value,
+				Type: childType,
+			}
+			region.ChildAreas = append(region.ChildAreas, *child)
+		}
+	}
+	return region
+
 }
 
 func main() {
@@ -254,6 +333,7 @@ func main() {
 	englandData, err := postCountryQuery(queryCountryEngland)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
 	}
 
 	logData := log.Data{"AreaData": englandData}
@@ -268,6 +348,7 @@ func main() {
 	walesData, err := postCountryQuery(queryCountryWales)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
 	}
 
 	logData = log.Data{"AreaData": walesData}
@@ -280,10 +361,19 @@ func main() {
 	log.Event(ctx, "successfully put Wales area data into Mongo", log.INFO, logData)
 
 	regionData, err := postAreaQuery(queryRegionEngland)
-
 	if err != nil {
 		log.Event(ctx, "error returned from the region query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
 	}
 
-	fmt.Printf("%#v\n", regionData)
+	for _, region := range regionData {
+		logData = log.Data{"AreaData": region}
+		if err = session.DB("areas").C("areas").Insert(region); err != nil {
+			log.Event(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
+			os.Exit(1)
+		}
+	}
+
+	logData = log.Data{"AreaData": regionData}
+	log.Event(ctx, "successfully put region area data into Mongo", log.INFO, logData)
 }
