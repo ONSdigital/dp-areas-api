@@ -338,7 +338,7 @@ func main() {
 
 	logData := log.Data{"AreaData": englandData}
 
-	if err = session.DB("areas").C("areas").Insert(englandData); err != nil {
+	if err = session.DB("areas").C("areas").update({"id":"E92000001"}, englandData, {upsert: true}); err != nil {
 		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
