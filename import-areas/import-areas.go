@@ -15,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type AreaStruct struct {
@@ -338,7 +339,7 @@ func main() {
 
 	logData := log.Data{"AreaData": englandData}
 
-	if err = session.DB("areas").C("areas").update({"id":"E92000001"}, englandData, {upsert: true}); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": "E92000001"}, englandData); err != nil {
 		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
@@ -353,7 +354,7 @@ func main() {
 
 	logData = log.Data{"AreaData": walesData}
 
-	if err = session.DB("areas").C("areas").Insert(walesData); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": "W92000004"}, walesData); err != nil {
 		log.Event(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
@@ -368,7 +369,7 @@ func main() {
 
 	for _, region := range regionData {
 		logData = log.Data{"AreaData": region}
-		if err = session.DB("areas").C("areas").Insert(region); err != nil {
+		if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": region.ID}, region); err != nil {
 			log.Event(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 			os.Exit(1)
 		}
