@@ -15,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type AreaStruct struct {
@@ -52,41 +53,8 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
-var queryCountryEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
-PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
-PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
-PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-SELECT DISTINCT ?areacode ?areaname ?code ?name
-WHERE {
-	VALUES ?types { statid:E92 }
-	?area statdef:code ?types ;
-		geodef:status "live" ;
-		geodef:officialname ?areaname ;
-		rdfs:label ?areacode .
-	?child pmdfoi:parent geoid:E92000001 ;
-		pmdfoi:code ?code ;
-		geodef:officialname ?name ;
-}`
-
-var queryCountryWales = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
-PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
-PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
-PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-SELECT DISTINCT ?areacode ?areaname ?code ?name
-WHERE {
-	VALUES ?types { statid:W92 }
-	?area statdef:code ?types ;
-		geodef:status "live" ;
-		geodef:officialname ?areaname ;
-		rdfs:label ?areacode .
-	?child pmdfoi:parent geoid:W92000004 ;
-		pmdfoi:code ?code ;
-	  	geodef:officialname ?name ;
-}`
+var countryIDs = map[string]string{"England": "E92000001", "Wales": "W92000004"}
+var countryStatIDs = map[string]string{"England": "E92", "Wales": "W92"}
 
 var queryRegionEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
@@ -105,6 +73,29 @@ WHERE {
 		geodef:officialname ?parentname ;
 		rdfs:label ?parentcode .
 }`
+
+func buildCountryQuery(statid, geoid string) string {
+
+	queryCountry := fmt.Sprintf(
+		`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+		PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
+		PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+		PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
+		PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+		PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+		SELECT DISTINCT ?areacode ?areaname ?code ?name
+		WHERE {
+			VALUES ?types { statid:%v }
+			?area statdef:code ?types ;
+				geodef:status "live" ;
+				geodef:officialname ?areaname ;
+				rdfs:label ?areacode .
+			?child pmdfoi:parent geoid:%v ;
+				pmdfoi:code ?code ;
+				geodef:officialname ?name ;
+		}`, statid, geoid)
+	return queryCountry
+}
 
 func buildRegionQuery(geoid string) string {
 
@@ -330,7 +321,8 @@ func main() {
 	}
 	defer session.Close()
 
-	englandData, err := postCountryQuery(queryCountryEngland)
+	englandQuery := buildCountryQuery(countryStatIDs["England"], countryIDs["England"])
+	englandData, err := postCountryQuery(englandQuery)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
 		os.Exit(1)
@@ -338,14 +330,15 @@ func main() {
 
 	logData := log.Data{"AreaData": englandData}
 
-	if err = session.DB("areas").C("areas").Insert(englandData); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["England"]}, englandData); err != nil {
 		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
 
 	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
 
-	walesData, err := postCountryQuery(queryCountryWales)
+	walesQuery := buildCountryQuery(countryStatIDs["Wales"], countryIDs["Wales"])
+	walesData, err := postCountryQuery(walesQuery)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
 		os.Exit(1)
@@ -353,7 +346,7 @@ func main() {
 
 	logData = log.Data{"AreaData": walesData}
 
-	if err = session.DB("areas").C("areas").Insert(walesData); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["Wales"]}, walesData); err != nil {
 		log.Event(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
@@ -368,7 +361,7 @@ func main() {
 
 	for _, region := range regionData {
 		logData = log.Data{"AreaData": region}
-		if err = session.DB("areas").C("areas").Insert(region); err != nil {
+		if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": region.ID}, region); err != nil {
 			log.Event(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 			os.Exit(1)
 		}
