@@ -61,7 +61,7 @@ PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
 PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
 PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
 PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname ?sibling
+SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname
 WHERE {
 	VALUES ?types { statid:E12 }
 	?area statdef:code ?types ;
