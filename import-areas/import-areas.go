@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type AreaStruct struct {
@@ -23,10 +25,12 @@ type BindingsStruct struct {
 	Bindings []BindingsData `json:"bindings,omitempty"`
 }
 type BindingsData struct {
-	AreaName GenStruct `json:"areaname,omitempty"`
-	AreaCode GenStruct `json:"areacode,omitempty"`
-	Code     GenStruct `json:"code,omitempty"`
-	Name     GenStruct `json:"name,omitempty"`
+	AreaName   GenStruct `json:"areaname,omitempty"`
+	AreaCode   GenStruct `json:"areacode,omitempty"`
+	Code       GenStruct `json:"code,omitempty"`
+	Name       GenStruct `json:"name,omitempty"`
+	ParentCode GenStruct `json:"parentcode,omitempty"`
+	ParentName GenStruct `json:"parentname,omitempty"`
 }
 type GenStruct struct {
 	Type  string `json:"type,omitempty"`
@@ -49,41 +53,65 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
-var queryCountryEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+var countryIDs = map[string]string{"England": "E92000001", "Wales": "W92000004"}
+var countryStatIDs = map[string]string{"England": "E92", "Wales": "W92"}
+
+var queryRegionEngland = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
 PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
 PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
 PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-SELECT DISTINCT ?areacode ?areaname ?code ?name
+SELECT DISTINCT ?areacode ?areaname ?parentcode ?parentname
 WHERE {
-	VALUES ?types { statid:E92 }
+	VALUES ?types { statid:E12 }
 	?area statdef:code ?types ;
 		geodef:status "live" ;
 		geodef:officialname ?areaname ;
-		rdfs:label ?areacode .
-	?child pmdfoi:parent geoid:E92000001 ;
-		pmdfoi:code ?code ;
-		geodef:officialname ?name ;
+		rdfs:label ?areacode ;
+		pmdfoi:parent ?parent .
+	?parent geodef:status "live" ;
+		geodef:officialname ?parentname ;
+		rdfs:label ?parentcode .
 }`
 
-var queryCountryWales = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
-PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
-PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
-PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
-PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
-SELECT DISTINCT ?areacode ?areaname ?code ?name
-WHERE {
-	VALUES ?types { statid:W92 }
-	?area statdef:code ?types ;
-		geodef:status "live" ;
-		geodef:officialname ?areaname ;
-		rdfs:label ?areacode .
-	?child pmdfoi:parent geoid:W92000004 ;
-		pmdfoi:code ?code ;
-	  	geodef:officialname ?name ;
-}`
+func buildCountryQuery(statid, geoid string) string {
+
+	queryCountry := fmt.Sprintf(
+		`PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+		PREFIX statdef: <http://statistics.data.gov.uk/def/statistical-entity#>
+		PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+		PREFIX statid: <http://statistics.data.gov.uk/id/statistical-entity/>
+		PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+		PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+		SELECT DISTINCT ?areacode ?areaname ?code ?name
+		WHERE {
+			VALUES ?types { statid:%v }
+			?area statdef:code ?types ;
+				geodef:status "live" ;
+				geodef:officialname ?areaname ;
+				rdfs:label ?areacode .
+			?child pmdfoi:parent geoid:%v ;
+				pmdfoi:code ?code ;
+				geodef:officialname ?name ;
+		}`, statid, geoid)
+	return queryCountry
+}
+
+func buildRegionQuery(geoid string) string {
+
+	queryRegionChildEngland := fmt.Sprintf(
+		`PREFIX geodef: <http://statistics.data.gov.uk/def/statistical-geography#>
+		PREFIX pmdfoi: <http://publishmydata.com/def/ontology/foi/>
+		PREFIX geoid: <http://statistics.data.gov.uk/id/statistical-geography/>
+		SELECT DISTINCT ?code ?name
+		WHERE {
+			?child pmdfoi:parent geoid:%v;
+				pmdfoi:code ?code ;
+				geodef:officialname ?name.
+		}`, geoid)
+
+	return queryRegionChildEngland
+}
 
 func lookupAreaType(code string) (string, error) {
 	prefix := code[:3]
@@ -156,6 +184,125 @@ func postCountryQuery(query string) (*models.Area, error) {
 	return countryData, nil
 }
 
+func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
+	ctx := context.Background()
+	areas := make([]models.Area, 0)
+
+	for _, binding := range areaStruct.Results.Bindings {
+		areaType, err := lookupAreaType(binding.AreaCode.Value)
+		logData := log.Data{"AreaCode": binding.AreaCode.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
+		area := models.Area{
+			ID:   binding.AreaCode.Value,
+			Name: binding.AreaName.Value,
+			Type: areaType,
+		}
+
+		parentType, _ := lookupAreaType(binding.ParentCode.Value)
+		logData = log.Data{"ParentAreaCode": binding.ParentCode.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
+		area.ParentAreas = append(area.ParentAreas, models.LinkedAreas{
+			ID:   binding.ParentCode.Value,
+			Name: binding.ParentName.Value,
+			Type: parentType,
+		})
+
+		areas = append(areas, area)
+	}
+
+	return areas, nil
+}
+
+func postAreaQuery(query string) ([]models.Area, error) {
+	ctx := context.Background()
+
+	v := url.Values{}
+	v.Set("query", query)
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+	req.Header.Add("Accept", "application/sparql-results+json")
+	resp, _ := client.Do(req)
+
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	var returnedAreaData AreaStruct
+
+	if err := json.Unmarshal(data, &returnedAreaData); err != nil {
+		logData := log.Data{"json file": returnedAreaData}
+		log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+		return nil, err
+	}
+
+	areaData, err := buildAreas(returnedAreaData)
+	if err != nil {
+		log.Event(ctx, "error returned from building the country area", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
+	areasWithChild := make([]models.Area, 0)
+
+	for _, region := range areaData {
+
+		areaID := region.ID
+		query := buildRegionQuery(areaID)
+
+		v := url.Values{}
+		v.Set("query", query)
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+		req.Header.Add("Accept", "application/sparql-results+json")
+		resp, _ := client.Do(req)
+
+		data, _ := ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+
+		var returnedChildData AreaStruct
+
+		if err := json.Unmarshal(data, &returnedChildData); err != nil {
+			logData := log.Data{"json file": returnedChildData}
+			log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+			return nil, err
+		}
+
+		regionDataWithChild := buildChildAreas(returnedChildData, region)
+
+		areasWithChild = append(areasWithChild, regionDataWithChild)
+	}
+	return areasWithChild, nil
+}
+
+func buildChildAreas(childStruct AreaStruct, region models.Area) models.Area {
+
+	ctx := context.Background()
+
+	for _, binding := range childStruct.Results.Bindings {
+
+		childType, err := lookupAreaType(binding.Code.Value)
+		logData := log.Data{"ChildAreaCode": binding.Code.Value}
+		if err != nil {
+			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+		} else {
+			child := &models.LinkedAreas{
+				ID:   binding.Code.Value,
+				Name: binding.Name.Value,
+				Type: childType,
+			}
+			region.ChildAreas = append(region.ChildAreas, *child)
+		}
+	}
+	return region
+
+}
+
 func main() {
 
 	var (
@@ -174,31 +321,52 @@ func main() {
 	}
 	defer session.Close()
 
-	englandData, err := postCountryQuery(queryCountryEngland)
+	englandQuery := buildCountryQuery(countryStatIDs["England"], countryIDs["England"])
+	englandData, err := postCountryQuery(englandQuery)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
 	}
 
 	logData := log.Data{"AreaData": englandData}
 
-	if err = session.DB("areas").C("areas").Insert(englandData); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["England"]}, englandData); err != nil {
 		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
 
-	walesData, err := postCountryQuery(queryCountryWales)
+	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
+
+	walesQuery := buildCountryQuery(countryStatIDs["Wales"], countryIDs["Wales"])
+	walesData, err := postCountryQuery(walesQuery)
 	if err != nil {
 		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
 	}
-
-	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
 
 	logData = log.Data{"AreaData": walesData}
 
-	if err = session.DB("areas").C("areas").Insert(walesData); err != nil {
+	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["Wales"]}, walesData); err != nil {
 		log.Event(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
 		os.Exit(1)
 	}
 
 	log.Event(ctx, "successfully put Wales area data into Mongo", log.INFO, logData)
+
+	regionData, err := postAreaQuery(queryRegionEngland)
+	if err != nil {
+		log.Event(ctx, "error returned from the region query POST", log.ERROR, log.Error(err))
+		os.Exit(1)
+	}
+
+	for _, region := range regionData {
+		logData = log.Data{"AreaData": region}
+		if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": region.ID}, region); err != nil {
+			log.Event(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
+			os.Exit(1)
+		}
+	}
+
+	logData = log.Data{"AreaData": regionData}
+	log.Event(ctx, "successfully put region area data into Mongo", log.INFO, logData)
 }
