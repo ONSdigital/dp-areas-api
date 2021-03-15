@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.32.5
 	github.com/ONSdigital/dp-authorisation v0.1.0
+	github.com/ONSdigital/dp-component-test v0.2.0 // indirect
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-mongodb v1.5.0
 	github.com/ONSdigital/dp-net v1.0.11
@@ -21,5 +22,4 @@ require (
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
