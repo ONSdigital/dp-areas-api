@@ -42,6 +42,8 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 
 	f.Config.ZebedeeURL = zebedeeURL
 
+	f.Config.EnablePrivateEndpoints = false // for component tests, ensure 'false' to start
+
 	f.Config.EnablePermissionsAuth = false
 
 	mongodb := &mongo.Mongo{
@@ -70,6 +72,7 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 
 func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^private endpoints are enabled$`, f.privateEndpointsAreEnabled)
+	ctx.Step(`^I have this root topic:$`, f.iHaveThisRootTopic)
 }
 
 func (f *TopicComponent) Reset() *TopicComponent {

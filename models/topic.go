@@ -26,6 +26,22 @@ type Topic struct {
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 }
 
+type TopicWrite struct {
+	ID      string  `bson:"id,omitempty"       json:"id,omitempty"`
+	Next    *TopicW `bson:"next,omitempty"     json:"next,omitempty"`
+	Current *TopicW `bson:"current,omitempty"  json:"current,omitempty"`
+}
+
+type TopicW struct {
+	ID          string      `bson:"_id,omitempty"            json:"id,omitempty"`
+	Description string      `bson:"description,omitempty"    json:"description,omitempty"`
+	Title       string      `bson:"title,omitempty"          json:"title,omitempty"`
+	Keywords    []string    `bson:"keywords,omitempty"       json:"keywords,omitempty"`
+	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
+	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
+	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"subtopics_ids,omitempty"`
+}
+
 // LinkObject represents a generic structure for all links
 type LinkObject struct {
 	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
