@@ -172,13 +172,14 @@ func postCountryQuery(query string) (*models.Area, error) {
 		log.Event(ctx, "error returned from country POST request", log.ERROR, log.Error(err))
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
 		err = errors.New("Unexpected status code")
 		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
 		return nil, err
 	}
-
-	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -257,13 +258,14 @@ func postAreaQuery(query string) ([]models.Area, error) {
 		log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
 		err = errors.New("Unexpected status code")
 		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
 		return nil, err
 	}
-
-	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -308,13 +310,14 @@ func postAreaQuery(query string) ([]models.Area, error) {
 			log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
 			return nil, err
 		}
+
+		defer resp.Body.Close()
+
 		if resp.StatusCode != 200 {
 			err = errors.New("Unexpected status code")
 			log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
 			return nil, err
 		}
-
-		defer resp.Body.Close()
 
 		data, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
