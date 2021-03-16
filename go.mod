@@ -5,12 +5,14 @@ go 1.15
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.32.5
 	github.com/ONSdigital/dp-authorisation v0.1.0
-	github.com/ONSdigital/dp-component-test v0.2.0 // indirect
+	github.com/ONSdigital/dp-component-test v0.2.0
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-mongodb v1.5.0
 	github.com/ONSdigital/dp-net v1.0.11
 	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb // indirect
 	github.com/ONSdigital/log.go v1.0.1
+	github.com/benweissmann/memongo v0.1.1
+	github.com/cucumber/godog v0.10.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gorilla/mux v1.8.0
