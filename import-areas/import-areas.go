@@ -160,12 +160,32 @@ func postCountryQuery(query string) (*models.Area, error) {
 	v.Set("query", query)
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
-	req.Header.Add("Accept", "application/sparql-results+json")
-	resp, _ := client.Do(req)
+	req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+	if err != nil {
+		log.Event(ctx, "error returned from building the country request", log.ERROR, log.Error(err))
+		return nil, err
+	}
 
-	data, _ := ioutil.ReadAll(resp.Body)
+	req.Header.Add("Accept", "application/sparql-results+json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Event(ctx, "error returned from country POST request", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		err = errors.New("Unexpected status code")
+		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+		return nil, err
+	}
 
 	var returnedCountryData AreaStruct
 
@@ -189,8 +209,8 @@ func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
 	areas := make([]models.Area, 0)
 
 	for _, binding := range areaStruct.Results.Bindings {
-		areaType, err := lookupAreaType(binding.AreaCode.Value)
 		logData := log.Data{"AreaCode": binding.AreaCode.Value}
+		areaType, err := lookupAreaType(binding.AreaCode.Value)
 		if err != nil {
 			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
 			return nil, err
@@ -201,8 +221,8 @@ func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
 			Type: areaType,
 		}
 
-		parentType, _ := lookupAreaType(binding.ParentCode.Value)
 		logData = log.Data{"ParentAreaCode": binding.ParentCode.Value}
+		parentType, err := lookupAreaType(binding.ParentCode.Value)
 		if err != nil {
 			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
 			return nil, err
@@ -226,12 +246,32 @@ func postAreaQuery(query string) ([]models.Area, error) {
 	v.Set("query", query)
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
-	req.Header.Add("Accept", "application/sparql-results+json")
-	resp, _ := client.Do(req)
+	req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+	if err != nil {
+		log.Event(ctx, "error returned from building an area request", log.ERROR, log.Error(err))
+		return nil, err
+	}
 
-	data, _ := ioutil.ReadAll(resp.Body)
+	req.Header.Add("Accept", "application/sparql-results+json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		err = errors.New("Unexpected status code")
+		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+		return nil, err
+	}
 
 	var returnedAreaData AreaStruct
 
@@ -243,7 +283,7 @@ func postAreaQuery(query string) ([]models.Area, error) {
 
 	areaData, err := buildAreas(returnedAreaData)
 	if err != nil {
-		log.Event(ctx, "error returned from building the country area", log.ERROR, log.Error(err))
+		log.Event(ctx, "error returned from building the area", log.ERROR, log.Error(err))
 		return nil, err
 	}
 
@@ -258,12 +298,32 @@ func postAreaQuery(query string) ([]models.Area, error) {
 		v.Set("query", query)
 
 		client := &http.Client{}
-		req, _ := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
-		req.Header.Add("Accept", "application/sparql-results+json")
-		resp, _ := client.Do(req)
+		req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
+		if err != nil {
+			log.Event(ctx, "error returned from building a request for the children of an area", log.ERROR, log.Error(err))
+			return nil, err
+		}
 
-		data, _ := ioutil.ReadAll(resp.Body)
+		req.Header.Add("Accept", "application/sparql-results+json")
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
+			return nil, err
+		}
+
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			err = errors.New("Unexpected status code")
+			log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+			return nil, err
+		}
+
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+			return nil, err
+		}
 
 		var returnedChildData AreaStruct
 
@@ -290,14 +350,16 @@ func buildChildAreas(childStruct AreaStruct, region models.Area) models.Area {
 		logData := log.Data{"ChildAreaCode": binding.Code.Value}
 		if err != nil {
 			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
-		} else {
-			child := &models.LinkedAreas{
-				ID:   binding.Code.Value,
-				Name: binding.Name.Value,
-				Type: childType,
-			}
-			region.ChildAreas = append(region.ChildAreas, *child)
+			continue
 		}
+
+		child := &models.LinkedAreas{
+			ID:   binding.Code.Value,
+			Name: binding.Name.Value,
+			Type: childType,
+		}
+		region.ChildAreas = append(region.ChildAreas, *child)
+
 	}
 	return region
 
