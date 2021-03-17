@@ -44,3 +44,8 @@ func (f *TopicComponent) putTopicInDatabase(s *mgo.Session, topicDoc models.Topi
 	}
 	return nil
 }
+
+func (f *TopicComponent) privateEndpointsAreEnabled() error {
+	f.Config.EnablePrivateEndpoints = true
+	return nil
+}

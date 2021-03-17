@@ -120,8 +120,3 @@ func (f *TopicComponent) DoGetHTTPServer(bindAddr string, router http.Handler) s
 func (f *TopicComponent) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
 	return f.MongoClient, nil
 }
-
-func (f *TopicComponent) privateEndpointsAreEnabled() error {
-	f.Config.EnablePrivateEndpoints = true
-	return nil
-}
