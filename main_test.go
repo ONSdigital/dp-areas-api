@@ -25,26 +25,26 @@ type ComponentTest struct {
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature := componenttest.NewAuthorizationFeature()
-	datasetFeature, err := steps.NewTopicComponent(f.MongoFeature, authorizationFeature.FakeAuthService.ResolveURL(""))
+	topicComponent, err := steps.NewTopicComponent(f.MongoFeature, authorizationFeature.FakeAuthService.ResolveURL(""))
 	if err != nil {
 		panic(err)
 	}
 
-	apiFeature := componenttest.NewAPIFeature(datasetFeature.InitialiseService)
+	apiFeature := componenttest.NewAPIFeature(topicComponent.InitialiseService)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()
-		datasetFeature.Reset()
+		topicComponent.Reset()
 		f.MongoFeature.Reset()
 		authorizationFeature.Reset()
 	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
-		datasetFeature.Close()
+		topicComponent.Close()
 		authorizationFeature.Close()
 	})
 
-	datasetFeature.RegisterSteps(ctx)
+	topicComponent.RegisterSteps(ctx)
 	apiFeature.RegisterSteps(ctx)
 	authorizationFeature.RegisterSteps(ctx)
 }

@@ -23,7 +23,7 @@ func (f *TopicComponent) iHaveThisRootTopic(topicsWriteJson *godog.DocString) er
 	defer s.Close()
 
 	for _, topicsDoc := range topics {
-		if err := f.putDatasetInDatabase(s, topicsDoc); err != nil {
+		if err := f.putTopicInDatabase(s, topicsDoc); err != nil {
 			return err
 		}
 	}
@@ -31,7 +31,7 @@ func (f *TopicComponent) iHaveThisRootTopic(topicsWriteJson *godog.DocString) er
 	return nil
 }
 
-func (f *TopicComponent) putDatasetInDatabase(s *mgo.Session, topicDoc models.TopicWrite) error {
+func (f *TopicComponent) putTopicInDatabase(s *mgo.Session, topicDoc models.TopicWrite) error {
 	update := bson.M{
 		"$set": topicDoc,
 		"$setOnInsert": bson.M{
