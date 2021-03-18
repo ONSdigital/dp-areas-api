@@ -1,7 +1,7 @@
 Feature: Behaviour of application when doing the GET /topics endpoint, using a stripped down version of the database
 
     Scenario: GET /topics in default public mode
-        Given I have this root topic:
+        Given I have these topics:
             """
             [
                 {
@@ -74,7 +74,7 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
         Given private endpoints are enabled
         And I am identified as "user@ons.gov.uk"
         And I am authorised
-        And I have this root topic:
+        And I have these topics:
             """
             [
                 {
