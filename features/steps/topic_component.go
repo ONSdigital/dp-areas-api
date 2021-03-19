@@ -72,7 +72,8 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 
 func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^private endpoints are enabled$`, f.privateEndpointsAreEnabled)
-	ctx.Step(`^I have these topics:$`, f.iHaveThisRootTopic)
+	ctx.Step(`^I have these topics:$`, f.iHaveTheseTopics)
+	ctx.Step(`^I have these contents:$`, f.iHaveTheseContents)
 }
 
 func (f *TopicComponent) Reset() *TopicComponent {
