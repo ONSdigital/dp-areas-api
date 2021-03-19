@@ -1,6 +1,6 @@
 Feature: Behaviour of application when doing the GET /topics/{id} endpoint, using a stripped down version of the database
 
-    Scenario: [Test #3] GET /topics/economy in default public mode
+    Scenario: [Test #3] GET /topics/economy in public mode
         Given I have these topics:
             """
             [
@@ -28,11 +28,10 @@ Feature: Behaviour of application when doing the GET /topics/{id} endpoint, usin
             }
             """
 
-    Scenario: [Test #4] GET /topics/unknown in default public mode
+    Scenario: [Test #4] Receive not found when doing a GET for a non existant topic in public mode
         Given I have these topics:
             """
-            [
-            ]
+            [ ]
             """
         When I GET "/topics/unknown"
         Then the HTTP status code should be "404"
@@ -41,4 +40,42 @@ Feature: Behaviour of application when doing the GET /topics/{id} endpoint, usin
         And I should receive the following response:
             """
             topic not found
+            """
+
+    Scenario: [Test #5] GET /topics/economy in private mode
+        Given private endpoints are enabled
+        And I am identified as "user@ons.gov.uk"
+        And I am authorised
+        And I have these topics:
+            """
+            [
+                {
+                    "id": "economy",
+                    "current": {
+                        "id": "economy",
+                        "state": "published"
+                    },
+                    "next": {
+                        "id": "economy",
+                        "state": "published"
+                    }
+                }
+            ]
+            """
+        When I GET "/topics/economy"
+        Then the HTTP status code should be "200"
+        And the response header "Content-Type" should be "application/json; charset=utf-8"
+        And I should receive the following JSON response:
+            """
+            {
+                "id": "economy",
+                "current": {
+                    "id": "economy",
+                    "state": "published"
+                },
+                "next": {
+                    "id": "economy",
+                    "state": "published"
+                }
+            }
             """

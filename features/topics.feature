@@ -1,6 +1,6 @@
 Feature: Behaviour of application when doing the GET /topics endpoint, using a stripped down version of the database
 
-    Scenario: [Test #1] GET /topics in default public mode
+    Scenario: [Test #1] GET /topics in public mode
         Given I have these topics:
             """
             [
