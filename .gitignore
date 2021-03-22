@@ -10,3 +10,6 @@
 .idea/
 *.iml
 *.iws
+
+# Exclude coverage file
+coverage.txt
