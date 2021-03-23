@@ -29,10 +29,10 @@ Feature: Behaviour of application when doing the GET /topics/{id} endpoint, usin
             """
 
     Scenario: [Test #4] Receive not found when doing a GET for a non existant topic in public mode
-        Given I have these topics:
-            """
-            [ ]
-            """
+#        Given I have these topics:
+#            """
+#            [ ]
+#            """
         When I GET "/topics/unknown"
         Then the HTTP status code should be "404"
         And the response header "Content-Type" should be "text/plain; charset=utf-8"

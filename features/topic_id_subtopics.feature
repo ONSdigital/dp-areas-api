@@ -1,6 +1,7 @@
 Feature: Behaviour of application when doing the GET /topics/{id}/subtopics endpoint, using a stripped down version of the database
 
-    Scenario: [Test #6] GET /topics/businessindustryandtrade/subtopics in public mode
+    # A Background applies to all scenarios in this Feature
+    Background:
         Given I have these topics:
             """
             [
@@ -47,6 +48,7 @@ Feature: Behaviour of application when doing the GET /topics/{id}/subtopics endp
                 }
             ]
             """
+    Scenario: [Test #6] GET /topics/businessindustryandtrade/subtopics in public mode
         When I GET "/topics/businessindustryandtrade/subtopics"
         Then the HTTP status code should be "200"
         And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -74,52 +76,7 @@ Feature: Behaviour of application when doing the GET /topics/{id}/subtopics endp
         Given private endpoints are enabled
         And I am identified as "user@ons.gov.uk"
         And I am authorised
-        And I have these topics:
-            """
-            [
-                {
-                    "id": "businessindustryandtrade",
-                    "current": {
-                        "id": "businessindustryandtrade",
-                        "state": "published",
-                        "subtopics_ids": [
-                            "changestobusiness",
-                            "business"
-                        ]
-                    },
-                    "next": {
-                        "id": "businessindustryandtrade",
-                        "state": "published",
-                        "subtopics_ids": [
-                            "changestobusiness",
-                            "business"
-                        ]
-                    }
-                },
-                {
-                    "id": "changestobusiness",
-                    "current": {
-                        "id": "changestobusiness",
-                        "state": "published"
-                    },
-                    "next": {
-                        "id": "changestobusiness",
-                        "state": "published"
-                    }
-                },
-                {
-                    "id": "business",
-                    "current": {
-                        "id": "business",
-                        "state": "published"
-                    },
-                    "next": {
-                        "id": "business",
-                        "state": "published"
-                    }
-                }
-            ]
-            """
+
         When I GET "/topics/businessindustryandtrade/subtopics"
         Then the HTTP status code should be "200"
         And the response header "Content-Type" should be "application/json; charset=utf-8"

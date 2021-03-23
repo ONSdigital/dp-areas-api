@@ -26,12 +26,14 @@ type Topic struct {
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 }
 
+// TopicWrite is used for component testing
 type TopicWrite struct {
 	ID      string  `bson:"id,omitempty"       json:"id,omitempty"`
 	Next    *TopicW `bson:"next,omitempty"     json:"next,omitempty"`
 	Current *TopicW `bson:"current,omitempty"  json:"current,omitempty"`
 }
 
+// TopicW is used for component testing
 type TopicW struct {
 	ID          string      `bson:"_id,omitempty"            json:"id,omitempty"`
 	Description string      `bson:"description,omitempty"    json:"description,omitempty"`

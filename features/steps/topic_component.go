@@ -99,10 +99,6 @@ func (f *TopicComponent) InitialiseService() (http.Handler, error) {
 	return f.HTTPServer.Handler, nil
 }
 
-func funcClose(ctx context.Context) error {
-	return nil
-}
-
 func (f *TopicComponent) DoGetHealthcheckOk(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 	return &serviceMock.HealthCheckerMock{
 		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },

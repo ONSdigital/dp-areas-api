@@ -1,6 +1,7 @@
 Feature: Behaviour of application when doing the GET /topics/{id}/content endpoint, using a stripped down version of the database
 
-    Scenario: [Test #8] GET /topics/internationaltrade/content in public mode
+    # A Background applies to all scenarios in this Feature
+    Background:
         Given I have these topics:
             """
             [
@@ -44,6 +45,7 @@ Feature: Behaviour of application when doing the GET /topics/{id}/content endpoi
             ]
             """
 
+    Scenario: [Test #8] GET /topics/internationaltrade/content in public mode
         When I GET "/topics/internationaltrade/content"
         Then the HTTP status code should be "200"
         And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -74,48 +76,6 @@ Feature: Behaviour of application when doing the GET /topics/{id}/content endpoi
         Given private endpoints are enabled
         And I am identified as "user@ons.gov.uk"
         And I am authorised
-        And I have these topics:
-            """
-            [
-                {
-                    "id": "internationaltrade",
-                    "current": {
-                        "id": "internationaltrade",
-                        "state": "published"
-                    },
-                    "next": {
-                        "id": "internationaltrade",
-                        "state": "published"
-                    }
-                }
-            ]
-            """
-        And I have these contents:
-            """
-            [
-                {
-                    "id": "internationaltrade",
-                    "current": {
-                        "id": "internationaltrade",
-                        "state": "published",
-                        "spotlight": [
-                            {
-                                "state": "published"
-                            }
-                        ]
-                    },
-                    "next": {
-                        "id": "internationaltrade",
-                        "state": "published",
-                        "spotlight": [
-                            {
-                                "state": "published"
-                            }
-                        ]
-                    }
-                }
-            ]
-            """
 
         When I GET "/topics/internationaltrade/content"
         Then the HTTP status code should be "200"
