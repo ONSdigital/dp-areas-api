@@ -14,7 +14,6 @@ import (
 
 // Mongo version here is overridden in the pipeline by the URL provided in the component.sh
 const MongoVersion = "4.0.23"
-const MongoPort = 27017
 const DatabaseName = "testing"
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
