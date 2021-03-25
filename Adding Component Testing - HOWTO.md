@@ -405,3 +405,34 @@ coverage.txt
 3. Switch the pipeline type to the new one that includes component tests (in `dp-configs/manifests`), that is change “type: nomad-job” to “type: nomad-**`pipeline`**” (as a new feature branch: feature/dp-topic-api-component-pipeline).
 
 `See code as checked in ~@ 12:40 on 22nd March 2021`
+
+4. To complete the move from nomad-job to nomad-pipeline, do the following:
+
+    in:
+
+    ```text
+    dp-ci/pipelines/pipeline-generator
+    ```
+
+    WARNING: in the following make sure you type **`PIPELINE=`** correctly, otherwise it will update all pipelines
+    do:
+
+    ```shell
+    make bootstrap PIPELINE=dp-topics-api
+    ```
+
+    ![](docs/img/bootstrap.png)
+
+    The `make bootstrap` command takes less than a minute to run and in concourse you should see the new `develop-component`, thus:
+    
+    ![](docs/img/develop-component.png)
+
+    Then click on develop-component then on the top right hand side, click (attached) to run the pipeline.
+    
+    ![](docs/img/run-again.png)
+
+    For more information on how the task is running, or has run, click task: component to show the stack trace:
+    
+    ![](docs/img/run-progress.png)
+
+    This should all happen in less than 5 minutes.
