@@ -414,6 +414,14 @@ coverage.txt
     dp-ci/pipelines/pipeline-generator
     ```
 
+    Download concourse's `fly` program by clicking on:
+
+    ![](docs/img/fly-download.png)
+
+    The picture is at the bottom RHS of the page (on the footer, so make sure the folder is showing)
+    
+    You’ll then need to add that file to your path somewhere, or create a sym link to the file.
+
     WARNING: in the following make sure you type **`PIPELINE=`** correctly, otherwise it will update all pipelines
     do:
 
