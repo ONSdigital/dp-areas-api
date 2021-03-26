@@ -467,7 +467,7 @@ coverage.txt
 
     ![](docs/img/develop-component.png)
 
-    Then click on develop-component then on the top right hand side, click (attached) to run the pipeline.
+    Then click on develop-component then on the top right hand side, click refresh symbol to run the pipeline.
     
     ![](docs/img/run-again.png)
 
@@ -475,4 +475,4 @@ coverage.txt
     
     ![](docs/img/run-progress.png)
 
-    This should all happen in less than 5 minutes.
+    This should all happen in less than 5 minutes, depending on how large your test is.
