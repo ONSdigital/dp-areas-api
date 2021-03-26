@@ -414,32 +414,64 @@ coverage.txt
     dp-ci/pipelines/pipeline-generator
     ```
 
-    Download concourse's `fly` program by clicking on:
+    BUT first, if you do not have `fly` installed - On: https://concourse.onsdigital.co.uk/
+
+    Download concourse's `fly` program by clicking on apple icon:
 
     ![](docs/img/fly-download.png)
 
     The picture is at the bottom RHS of the page (on the footer, so make sure the folder is showing)
     
-    You’ll then need to add that file to your path somewhere, or create a sym link to the file.
+    You’ll then need to add that file to your path somewhere, for example:
+
+    ```shell
+    mv ~/Downloads/fly ~/bin
+    chmod +x ~/bin/fly
+    ```
+
+    For the newest mac OS version, you need to allow the App to run from System Preferences->Security & Privacy->General->Allow Anyway  (for the indicated "fly" App).
 
     WARNING: in the following make sure you type **`PIPELINE=`** correctly, otherwise it will update all pipelines
     do:
 
     ```shell
-    make bootstrap PIPELINE=dp-topics-api
+    make bootstrap PIPELINE=dp-topic-api
     ```
+
+    To get:
 
     ![](docs/img/bootstrap.png)
 
+    If you get the following sort of error from the above:
+
+    ```text
+    gpg -d secrets.yml.asc > secrets.yml
+    gpg: encrypted with 2048-bit RSA key, ID 5FF4333E6C27001E, created 2017-02-09
+          "ons-concourse"
+    fly -t dp-ci sp -p pipeline-generator -c pipeline.yml -l secrets.yml -n
+    error: unknown target: dp-ci
+    make: *** [set-generator] Error 1
+    ```
+
+    You need to run the following and try again:
+
+    ```shell
+    fly --target dp-ci login --team-name main --concourse-url https://concourse.onsdigital.co.uk
+    ```
+
+    And follow the instructions in what the above outputs.
+
+    (this creates a `.flyrc` file in your home folder that has a target for `dp-ci`)
+
     The `make bootstrap` command takes less than a minute to run and in concourse you should see the new `develop-component`, thus:
-    
+
     ![](docs/img/develop-component.png)
 
     Then click on develop-component then on the top right hand side, click (attached) to run the pipeline.
     
     ![](docs/img/run-again.png)
 
-    For more information on how the task is running, or has run, click task: component to show the stack trace:
+    For more information on how the task is running, or has run, click task: component to show the trace:
     
     ![](docs/img/run-progress.png)
 
