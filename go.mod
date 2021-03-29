@@ -15,6 +15,7 @@ require (
 	github.com/cucumber/godog v0.10.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519 // indirect
 	github.com/justinas/alice v1.2.0
