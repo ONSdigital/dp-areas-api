@@ -116,9 +116,10 @@ func hasRoute(r *mux.Router, path, method string) bool {
 }
 
 func createRequestWithAuth(method, url string, body io.Reader) (*http.Request, error) {
-	request, err := http.NewRequest(method, url, body)
+	request := httptest.NewRequest(method, url, body)
+
 	ctx := request.Context()
 	ctx = dprequest.SetCaller(ctx, "someone@ons.gov.uk")
 	request = request.WithContext(ctx)
-	return request, err
+	return request, nil
 }
