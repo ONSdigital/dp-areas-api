@@ -3,16 +3,14 @@ package mongo
 import (
 	"context"
 	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpMongodb "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/pkg/health"
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongo-driver"
 	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
-	"github.com/globalsign/mgo"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -22,7 +20,6 @@ const (
 
 // Mongo represents a simplistic MongoDB config, with session, health and lock clients
 type Mongo struct {
-	Session           *mgo.Session
 	URI               string
 	Database          string
 	TopicsCollection  string
@@ -75,10 +72,10 @@ func (m *Mongo) Init(ctx context.Context) (err error) {
 
 // Close closes the mongo session and returns any error
 func (m *Mongo) Close(ctx context.Context) error {
-	if m.Session == nil {
-		return errors.New("cannot close a mongoDB connection without a valid session")
+	if m.Connection == nil {
+		return errors.New("cannot close a empty connection")
 	}
-	return dpMongodb.Close(ctx, m.Session)
+	return m.Connection.Close(ctx)
 }
 
 // Checker is called by the healthcheck library to check the health state of this mongoDB instance
@@ -87,15 +84,12 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 }
 
 // GetTopic retrieves a topic document by its ID
-func (m *Mongo) GetTopic(id string) (*models.TopicResponse, error) {
-	s := m.Session.Copy()
-	defer s.Close()
-
+func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse, error) {
 	var topic models.TopicResponse
 
-	err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"id": id}).One(&topic)
+	err := m.Connection.GetConfiguredCollection().FindOne(ctx, bson.M{"id": id}, &topic)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return nil, errs.ErrTopicNotFound
 		}
 		return nil, err
@@ -105,13 +99,11 @@ func (m *Mongo) GetTopic(id string) (*models.TopicResponse, error) {
 }
 
 // CheckTopicExists checks that the topic exists
-func (m *Mongo) CheckTopicExists(id string) error {
-	s := m.Session.Copy()
-	defer s.Close()
+func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
 
-	count, err := s.DB(m.Database).C(m.TopicsCollection).Find(bson.M{"id": id}).Count()
+	count, err := m.Connection.GetConfiguredCollection().Find(bson.M{"id": id}).Count(ctx)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return errs.ErrTopicNotFound
 		}
 		return err
@@ -125,10 +117,7 @@ func (m *Mongo) CheckTopicExists(id string) error {
 }
 
 // GetContent retrieves a content document by its ID
-func (m *Mongo) GetContent(id string, queryTypeFlags int) (*models.ContentResponse, error) {
-	s := m.Session.Copy()
-	defer s.Close()
-
+func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error) {
 	var content models.ContentResponse
 	// init default, used to minimise the mongo response to minimise go HEAP usage
 	contentSelect := bson.M{
@@ -177,9 +166,13 @@ func (m *Mongo) GetContent(id string, queryTypeFlags int) (*models.ContentRespon
 		contentSelect["current.timeseries"] = 1
 	}
 
-	err := s.DB(m.Database).C(m.ContentCollection).Find(bson.M{"id": id}).Select(contentSelect).One(&content)
+	err := m.Connection.
+		C(m.ContentCollection).
+		Find(bson.M{"id": id}).
+		Select(contentSelect).
+		One(ctx, &content)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return nil, errs.ErrContentNotFound
 		}
 		return nil, err

@@ -29,14 +29,14 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	// check topic from mongoDB by id
-	err := api.dataStore.Backend.CheckTopicExists(id)
+	err := api.dataStore.Backend.CheckTopicExists(ctx, id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id, queryTypeFlags)
+	content, err := api.dataStore.Backend.GetContent(ctx, id, queryTypeFlags)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)
@@ -83,14 +83,14 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	}
 
 	// check topic from mongoDB by id
-	err := api.dataStore.Backend.CheckTopicExists(id)
+	err := api.dataStore.Backend.CheckTopicExists(ctx, id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
 	}
 
 	// get content from mongoDB by id
-	content, err := api.dataStore.Backend.GetContent(id, queryTypeFlags)
+	content, err := api.dataStore.Backend.GetContent(ctx, id, queryTypeFlags)
 	if err != nil {
 		// no content found
 		handleError(ctx, w, err, logdata)

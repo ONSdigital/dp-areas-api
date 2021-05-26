@@ -14,7 +14,7 @@ require (
 	github.com/benweissmann/memongo v0.1.1
 	github.com/cucumber/godog v0.10.0
 	github.com/fatih/color v1.10.0 // indirect
-	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519 // indirect
@@ -25,7 +25,7 @@ require (
 	go.mongodb.org/mongo-driver v1.5.2
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
-	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 )
 
-replace github.com/ONSdigital/dp-mongodb v1.5.0 => github.com/ONSdigital/dp-mongodb v1.5.1-0.20210525173839-450372a2f6fc
+replace github.com/ONSdigital/dp-mongodb v1.5.0 => github.com/ONSdigital/dp-mongodb v1.5.1-0.20210528164901-9cf133b820f4
