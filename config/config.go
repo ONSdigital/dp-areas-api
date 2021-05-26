@@ -22,6 +22,9 @@ type Config struct {
 type MongoConfig struct {
 	BindAddr          string `envconfig:"MONGODB_BIND_ADDR"           json:"-"` // This line contains sensitive data and the json:"-" tells the json marshaller to skip serialising it.
 	Database          string `envconfig:"MONGODB_TOPICS_DATABASE"`
+	Username          string `envconfig:"MONGODB_USERNAME"    json:"-"`
+	Password          string `envconfig:"MONGODB_PASSWORD"    json:"-"`
+	CAFilePath        string `envconfig:"MONGODB_CA_FILE_PATH"`
 	TopicsCollection  string `envconfig:"MONGODB_TOPICS_COLLECTION"`
 	ContentCollection string `envconfig:"MONGODB_CONTENT_COLLECTION"`
 }
@@ -48,6 +51,9 @@ func Get() (*Config, error) {
 			Database:          "topics",
 			TopicsCollection:  "topics",
 			ContentCollection: "content",
+			Username:          "test",
+			Password:          "test",
+			CAFilePath:        "",
 		},
 	}
 
