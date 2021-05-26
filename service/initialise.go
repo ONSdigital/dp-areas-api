@@ -75,6 +75,9 @@ func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.Mong
 		ContentCollection: cfg.MongoConfig.ContentCollection,
 		Database:          cfg.MongoConfig.Database,
 		URI:               cfg.MongoConfig.BindAddr,
+		Username:          cfg.MongoConfig.Username,
+		Password:          cfg.MongoConfig.Password,
+		CAFilePath:        cfg.MongoConfig.CAFilePath,
 	}
 	if err := mongodb.Init(ctx); err != nil {
 		return nil, err
