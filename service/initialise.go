@@ -68,8 +68,15 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 
 // DoGetMongoDB returns a MongoDB
 func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
-	mongodb := &mongo.Mongo{}
-	err := mongodb.Init(cfg.MongoConfig)
+	mongodb := &mongo.Mongo{
+		CAFilePath: cfg.MongoConfig.CAFilePath,
+		Collection: cfg.MongoConfig.Collection,
+		Database:   cfg.MongoConfig.Database,
+		Username:   cfg.MongoConfig.Username,
+		Password:   cfg.MongoConfig.Password,
+		URI:        cfg.MongoConfig.BindAddr,
+	}
+	err := mongodb.Init(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to intialise mongo", err)
 		return nil, err
