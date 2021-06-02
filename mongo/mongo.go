@@ -85,14 +85,18 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 
 //GetArea retrieves a area document by its ID
 func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
-	s := m.Session.Copy()
-	defer s.Close()
-	log.Info(ctx, "getting area by ID", log.Data{"id": id})
+	log.Event(ctx, "getting area by ID", log.INFO, log.Data{"id": id})
+
 
 	var area models.Area
-	err := s.DB(m.Database).C(m.Collection).Find(bson.M{"id": id}).Sort("-version").One(&area)
+	err := m.Connection.
+		GetConfiguredCollection().
+		Find(bson.M{"id": id}).
+		Sort("-version").
+		One(ctx, &area)
+
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return nil, apierrors.ErrAreaNotFound
 		}
 		return nil, err
@@ -102,9 +106,7 @@ func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 }
 
 // GetVersion retrieves a version document for the area
-func (m *Mongo) GetVersion(id string, versionID int) (*models.Area, error) {
-	s := m.Session.Copy()
-	defer s.Close()
+func (m *Mongo) GetVersion(ctx context.Context, id string, versionID int) (*models.Area, error) {
 
 	selector := bson.M{
 		"id":      id,
@@ -112,9 +114,9 @@ func (m *Mongo) GetVersion(id string, versionID int) (*models.Area, error) {
 	}
 
 	var version models.Area
-	err := s.DB(m.Database).C("areas").Find(selector).One(&version)
+	err := m.Connection.GetConfiguredCollection().FindOne(ctx, selector, &version)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return nil, apierrors.ErrVersionNotFound
 		}
 		return nil, err
@@ -123,15 +125,15 @@ func (m *Mongo) GetVersion(id string, versionID int) (*models.Area, error) {
 }
 
 // CheckAreaExists checks that the area exists
-func (m *Mongo) CheckAreaExists(id string) error {
-	s := m.Session.Copy()
-	defer s.Close()
-
+func (m *Mongo) CheckAreaExists(ctx context.Context, id string) error {
 	var query bson.M
 	query = bson.M{
 		"_id": id,
 	}
-	count, err := s.DB(m.Database).C("areas").Find(query).Count()
+	count, err := m.Connection.
+		GetConfiguredCollection().
+		Find(query).
+		Count(ctx)
 	if err != nil {
 		return err
 	}
@@ -144,17 +146,14 @@ func (m *Mongo) CheckAreaExists(id string) error {
 
 // GetAreas retrieves all areas documents
 func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-	s := m.Session.Copy()
-	defer s.Close()
 
-	var q *mgo.Query
-
-	q = s.DB(m.Database).C("areas").Find(nil)
-
-	totalCount, err := q.Count()
+	findQuery := m.Connection.
+		GetConfiguredCollection().
+		Find(nil)
+	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
-		log.Error(ctx, "error counting items", err)
-		if err == mgo.ErrNotFound {
+		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
+		if dpMongoDriver.IsErrCollectionNotFound(err) {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
 				Count:      0,
@@ -169,21 +168,17 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	values := []models.Area{}
 
 	if limit > 0 {
-		iter := q.Skip(offset).Limit(limit).Iter()
+		err := findQuery.
+			Skip(int64(offset)).
+			Limit(int64(limit)).
+			IterAll(ctx, &values)
 
-		defer func() {
-			err := iter.Close()
-			if err != nil {
-				log.Event(ctx, "error closing iterator", log.ERROR, log.Error(err))
-			}
-		}()
-
-		if err := iter.All(&values); err != nil {
-			if err == mgo.ErrNotFound {
+		if err != nil {
+			if dpMongoDriver.IsErrCollectionNotFound(err) {
 				return &models.AreasResults{
 					Items:      &values,
 					Count:      0,
-					TotalCount: totalCount,
+					TotalCount: int(totalCount),
 					Offset:     offset,
 					Limit:      limit,
 				}, nil
@@ -195,7 +190,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	return &models.AreasResults{
 		Items:      &values,
 		Count:      len(values),
-		TotalCount: totalCount,
+		TotalCount: int(totalCount),
 		Offset:     offset,
 		Limit:      limit,
 	}, nil

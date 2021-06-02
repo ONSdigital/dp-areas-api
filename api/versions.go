@@ -34,8 +34,8 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 
 	//gets version for an area from mongoDb
 	b, getVersionErr := func() ([]byte, error) {
-		if err := api.areaStore.CheckAreaExists(areaID); err != nil {
-			log.Error(ctx, "failed to find area", err, logData)
+		if err := api.areaStore.CheckAreaExists(ctx, areaID); err != nil {
+			log.Event(ctx, "failed to find area", log.ERROR, log.Error(err), logData)
 			return nil, err
 		}
 		areaVersion, err := strconv.Atoi(version)
@@ -43,7 +43,7 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 			log.Error(ctx, "failed to convert version id to areas.version int", err, logData)
 			return nil, err
 		}
-		results, err := api.areaStore.GetVersion(areaID, areaVersion)
+		results, err := api.areaStore.GetVersion(ctx, areaID, areaVersion)
 		if err != nil {
 			log.Error(ctx, "failed to find version for areas", err, logData)
 			return nil, err
