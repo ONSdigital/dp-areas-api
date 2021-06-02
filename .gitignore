@@ -11,3 +11,4 @@ dp-areas-api
 .idea/
 *.iml
 *.iws
+vendor/

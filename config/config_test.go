@@ -35,6 +35,9 @@ func TestConfig(t *testing.T) {
 						BindAddr:   "localhost:27017",
 						Collection: "areas",
 						Database:   "areas",
+						Username:   "test",
+						Password:   "test",
+						CAFilePath: "",
 					},
 				})
 			})

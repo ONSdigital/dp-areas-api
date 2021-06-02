@@ -23,6 +23,9 @@ type MongoConfig struct {
 	BindAddr   string `envconfig:"MONGODB_BIND_ADDR"   json:"-"`
 	Collection string `envconfig:"MONGODB_AREAS_COLLECTION"`
 	Database   string `envconfig:"MONGODB_AREAS_DATABASE"`
+	Username   string `envconfig:"MONGODB_USERNAME"    json:"-"`
+	Password   string `envconfig:"MONGODB_PASSWORD"    json:"-"`
+	CAFilePath string `envconfig:"MONGODB_CA_FILE_PATH"`
 }
 
 var cfg *Config
@@ -46,6 +49,9 @@ func Get() (*Config, error) {
 			BindAddr:   "localhost:27017",
 			Collection: "areas",
 			Database:   "areas",
+			Username:   "test",
+			Password:   "test",
+			CAFilePath: "",
 		},
 	}
 
