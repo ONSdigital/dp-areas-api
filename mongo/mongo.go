@@ -9,8 +9,7 @@ import (
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/pkg/health"
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongo-driver"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -20,7 +19,6 @@ const (
 
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
-	Session      *mgo.Session
 	healthClient *dpMongoHealth.CheckMongoClient
 	Database     string
 	Collection   string
