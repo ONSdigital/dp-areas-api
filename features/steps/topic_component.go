@@ -2,8 +2,7 @@ package steps
 
 import (
 	"context"
-	"net/http"
-
+	"fmt"
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/config"
@@ -13,6 +12,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/store"
 	"github.com/benweissmann/memongo"
 	"github.com/cucumber/godog"
+	"net/http"
 )
 
 type TopicComponent struct {
@@ -46,14 +46,18 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 
 	f.Config.EnablePermissionsAuth = false
 
+	getMongoURI := fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
 	mongodb := &mongo.Mongo{
 		Database:          memongo.RandomDatabase(),
-		URI:               mongoFeature.Server.URI(),
+		URI:               getMongoURI,
+		Username:          "",
+		Password:          "",
 		TopicsCollection:  f.Config.MongoConfig.TopicsCollection,
 		ContentCollection: f.Config.MongoConfig.ContentCollection,
+		IsSSL: false,
 	}
 
-	if err := mongodb.Init(context.TODO()); err != nil {
+	if err := mongodb.Init(context.TODO(), false, true); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +82,7 @@ func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 
 func (f *TopicComponent) Reset() *TopicComponent {
 	f.MongoClient.Database = memongo.RandomDatabase()
-	f.MongoClient.Init(context.TODO())
+	f.MongoClient.Init(context.TODO(), false, true)
 	f.Config.EnablePrivateEndpoints = false
 	return f
 }

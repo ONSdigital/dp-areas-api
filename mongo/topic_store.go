@@ -29,29 +29,31 @@ type Mongo struct {
 	Password          string
 	CAFilePath        string
 	healthClient      *dpMongoHealth.CheckMongoClient
+	IsSSL             bool
 }
 
-func (m *Mongo) getConnectionConfig() *dpMongoDriver.MongoConnectionConfig {
+func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
 	return &dpMongoDriver.MongoConnectionConfig{
-		CaFilePath:              m.CAFilePath,
+		IsSSL:                   m.IsSSL,
 		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
 		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
 
-		Username:             m.Username,
-		Password:             m.Password,
-		ClusterEndpoint:      m.URI,
-		Database:             m.Database,
-		Collection:           m.TopicsCollection,
-		SkipCertVerification: true,
+		Username:                      m.Username,
+		Password:                      m.Password,
+		ClusterEndpoint:               m.URI,
+		Database:                      m.Database,
+		Collection:                    m.TopicsCollection,
+		IsWriteConcernMajorityEnabled: shouldEnableWriteConcern,
+		IsStrongReadConcernEnabled:    shouldEnableReadConcern,
 	}
 }
 
 // Init creates a new mongoConnection with a strong consistency and a write mode of "majority".
-func (m *Mongo) Init(ctx context.Context) (err error) {
+func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableWriteConcern bool) (err error) {
 	if m.Connection != nil {
 		return errors.New("Datastore Connection already exists")
 	}
-	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig())
+	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern))
 	if err != nil {
 		return err
 	}
