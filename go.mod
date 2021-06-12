@@ -13,7 +13,7 @@ require (
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/benweissmann/memongo v0.1.1
 	github.com/cucumber/godog v0.10.0
-	github.com/fatih/color v1.10.0 // indirect
+	github.com/fatih/color v1.10.0 // indirect; indirectfind.go:115:1
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gorilla/mux v1.8.0
@@ -28,4 +28,4 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 )
 
-replace github.com/ONSdigital/dp-mongodb v1.5.0 => github.com/ONSdigital/dp-mongodb v1.5.1-0.20210609183228-e6bd644db7df
+replace github.com/ONSdigital/dp-mongodb v1.5.0 => github.com/ONSdigital/dp-mongodb v1.5.1-0.20210612164748-a2ddfb2382f8

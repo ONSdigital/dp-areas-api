@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"errors"
+	"github.com/ONSdigital/log.go/log"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -91,7 +92,7 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse,
 
 	err := m.Connection.GetConfiguredCollection().FindOne(ctx, bson.M{"id": id}, &topic)
 	if err != nil {
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, errs.ErrTopicNotFound
 		}
 		return nil, err
@@ -103,9 +104,12 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse,
 // CheckTopicExists checks that the topic exists
 func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
 
-	count, err := m.Connection.GetConfiguredCollection().Find(bson.M{"id": id}).Count(ctx)
+	count, err := m.Connection.
+		GetConfiguredCollection().
+		Find(bson.M{"id": id}).
+		Count(ctx)
 	if err != nil {
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return errs.ErrTopicNotFound
 		}
 		return err
@@ -174,7 +178,7 @@ func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (
 		Select(contentSelect).
 		One(ctx, &content)
 	if err != nil {
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, errs.ErrContentNotFound
 		}
 		return nil, err
