@@ -27,7 +27,6 @@ type Mongo struct {
 	Connection        *dpMongoDriver.MongoConnection
 	Username          string
 	Password          string
-	CAFilePath        string
 	healthClient      *dpMongoHealth.CheckMongoClient
 	IsSSL             bool
 }
