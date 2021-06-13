@@ -25,7 +25,6 @@ type Mongo struct {
 	Connection   *dpMongoDriver.MongoConnection
 	Username     string
 	Password     string
-	CAFilePath   string
 	URI          string
 	IsSSL        bool
 }
