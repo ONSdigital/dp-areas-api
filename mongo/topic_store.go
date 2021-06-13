@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/log.go/log"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"

@@ -71,7 +71,7 @@ func (f *TopicComponent) putContentInDatabase(ctx context.Context, mongoConnecti
 			"last_updated": time.Now(),
 		},
 	}
-	_, err := mongoConnection.GetConfiguredCollection().UpsertId(ctx, contentDoc.ID, update)
+	_, err := mongoConnection.C(f.MongoClient.ContentCollection).UpsertId(ctx, contentDoc.ID, update)
 	if err != nil {
 		return err
 	}
