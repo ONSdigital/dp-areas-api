@@ -27,29 +27,31 @@ type Mongo struct {
 	Password     string
 	CAFilePath   string
 	URI          string
+	IsSSL        bool
 }
 
-func (m *Mongo) getConnectionConfig() *dpMongoDriver.MongoConnectionConfig {
+func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
 	return &dpMongoDriver.MongoConnectionConfig{
-		CaFilePath:              m.CAFilePath,
+		IsSSL:                   m.IsSSL,
 		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
 		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
 
-		Username:             m.Username,
-		Password:             m.Password,
-		ClusterEndpoint:      m.URI,
-		Database:             m.Database,
-		Collection:           m.Collection,
-		SkipCertVerification: true,
+		Username:                      m.Username,
+		Password:                      m.Password,
+		ClusterEndpoint:               m.URI,
+		Database:                      m.Database,
+		Collection:                    m.Collection,
+		IsWriteConcernMajorityEnabled: shouldEnableWriteConcern,
+		IsStrongReadConcernEnabled:    shouldEnableReadConcern,
 	}
 }
 
 // Init creates a new mongoConnection with a strong consistency and a write mode of "majority".
-func (m *Mongo) Init(ctx context.Context) error {
+func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableWriteConcern bool) error {
 	if m.Connection != nil {
 		return errors.New("Datastore Connection already exists")
 	}
-	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig())
+	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern))
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,7 @@ func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 		One(ctx, &area)
 
 	if err != nil {
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrAreaNotFound
 		}
 		return nil, err
@@ -114,7 +116,7 @@ func (m *Mongo) GetVersion(ctx context.Context, id string, versionID int) (*mode
 	var version models.Area
 	err := m.Connection.GetConfiguredCollection().FindOne(ctx, selector, &version)
 	if err != nil {
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrVersionNotFound
 		}
 		return nil, err
@@ -151,7 +153,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
 		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
-		if dpMongoDriver.IsErrCollectionNotFound(err) {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
 				Count:      0,
@@ -172,7 +174,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 			IterAll(ctx, &values)
 
 		if err != nil {
-			if dpMongoDriver.IsErrCollectionNotFound(err) {
+			if dpMongoDriver.IsErrNoDocumentFound(err) {
 				return &models.AreasResults{
 					Items:      &values,
 					Count:      0,

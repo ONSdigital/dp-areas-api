@@ -22,7 +22,7 @@ Digital Publishing areas API used to navigate profiles for different geographica
 | MONGODB_AREAS_COLLECTION     | areas     | The MongoDB areas collection
 | MONGODB_USERNAME             | test      | The MongoDB Username
 | MONGODB_PASSWORD             | test      | The MongoDB Password
-| MONGODB_CA_FILE_PATH         | file-path | The MongoDB CA FilePath
+| MONGODB_IS_SSL               | false     | is SSL enabled for mongo server
 | DEFAULT_LIMIT                | 20        | Default limit for pagination
 | DEFAULT_OFFSET               | 0         | Default offset for pagination
 | DEFAULT_MAXIMUM_LIMIT        | 1000      | Default maximum limit for pagination
