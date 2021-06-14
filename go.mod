@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-areas-api
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ONSdigital/dp-healthcheck v1.0.5
