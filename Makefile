@@ -34,3 +34,7 @@ test-component:
 convey:
 	goconvey ./...
 
+.PHONY: fixfmt
+fixfmt:
+	go fmt ./...
+

@@ -54,7 +54,7 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 		Password:          "",
 		TopicsCollection:  f.Config.MongoConfig.TopicsCollection,
 		ContentCollection: f.Config.MongoConfig.ContentCollection,
-		IsSSL: false,
+		IsSSL:             false,
 	}
 
 	if err := mongodb.Init(context.TODO(), false, true); err != nil {

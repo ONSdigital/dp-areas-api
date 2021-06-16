@@ -21,7 +21,6 @@ func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) erro
 		return err
 	}
 
-
 	for _, topicsDoc := range topics {
 		if err := f.putTopicInDatabase(ctx, m.Connection, topicsDoc); err != nil {
 			return err
