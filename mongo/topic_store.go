@@ -7,7 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/pkg/health"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongo-driver"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongodb"
 	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
