@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/pkg/health"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongo-driver"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongodb"
 	"github.com/ONSdigital/log.go/log"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -168,8 +168,8 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 
 	if limit > 0 {
 		err := findQuery.
-			Skip(int64(offset)).
-			Limit(int64(limit)).
+			Skip(offset).
+			Limit(limit).
 			IterAll(ctx, &values)
 
 		if err != nil {

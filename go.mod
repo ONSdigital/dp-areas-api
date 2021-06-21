@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/ONSdigital/dp-healthcheck v1.0.5
-	github.com/ONSdigital/dp-mongodb v1.5.0
+	github.com/ONSdigital/dp-mongodb/v2 v2.2.0
 	github.com/ONSdigital/dp-net v1.0.12
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/ONSdigital/log.go/v2 v2.0.4
@@ -18,5 +18,3 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/ONSdigital/dp-mongodb v1.5.0 => github.com/ONSdigital/dp-mongodb v1.5.1-0.20210613162655-0f90bde40748
