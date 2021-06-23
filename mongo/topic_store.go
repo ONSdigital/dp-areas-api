@@ -107,6 +107,9 @@ func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
 		Find(bson.M{"id": id}).
 		Count(ctx)
 	if err != nil {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
+			return errs.ErrTopicNotFound
+		}
 		return err
 	}
 
