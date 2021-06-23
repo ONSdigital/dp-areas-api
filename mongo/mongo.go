@@ -148,7 +148,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 
 	findQuery := m.Connection.
 		GetConfiguredCollection().
-		Find(nil)
+		Find(bson.D{})
 	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
 		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
