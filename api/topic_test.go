@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -118,7 +119,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StatePublished), nil
@@ -165,7 +166,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'created' and 'full' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case testTopicID1:
 						return dbTopic(models.StateCreated), nil
@@ -327,7 +328,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case "1":
 						return dbTopic1(models.StatePublished), nil
@@ -444,7 +445,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case "1":
 						return dbTopic1(models.StatePublished), nil
@@ -576,7 +577,7 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case "2":
 						return dbTopic2(models.StatePublished), nil
@@ -641,7 +642,7 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetTopicFunc: func(id string) (*models.TopicResponse, error) {
+				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
 					case "2":
 						return dbTopic2(models.StatePublished), nil

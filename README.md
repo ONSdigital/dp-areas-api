@@ -23,6 +23,9 @@ Enables greater flexibility in creating journeys through the website
 | MONGODB_TOPICS_DATABASE      | topics                 | The MongoDB topics database
 | MONGODB_TOPICS_COLLECTION    | topics                 | MongoDB topics collection
 | MONGODB_CONTENT_COLLECTION   | content                | MongoDB content collection
+| MONGODB_USERNAME             | test                   | MongoDB Username
+| MONGODB_PASSWORD             | test                   | MongoDB Password
+| MONGODB_IS_SSL               | false                  | is SSL is enabled for mongo server
 | ZEBEDEE_URL                  | http://localhost:8082  | The URL to Zebedee (for authentication)
 | ENABLE_PRIVATE_ENDPOINTS     | false                  | Enable private endpoints for the API
 | ENABLE_PERMISSIONS_AUTHZ     | false                  | Enable/disable user/service permissions checking for private endpoints
