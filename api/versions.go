@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/ONSdigital/dp-areas-api/apierrors"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -35,22 +35,22 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 	//gets version for an area from mongoDb
 	b, getVersionErr := func() ([]byte, error) {
 		if err := api.areaStore.CheckAreaExists(areaID); err != nil {
-			log.Event(ctx, "failed to find area", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to find area", err, logData)
 			return nil, err
 		}
 		areaVersion, err := strconv.Atoi(version)
 		if err != nil {
-			log.Event(ctx, "failed to convert version id to areas.version int", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to convert version id to areas.version int", err, logData)
 			return nil, err
 		}
 		results, err := api.areaStore.GetVersion(areaID, areaVersion)
 		if err != nil {
-			log.Event(ctx, "failed to find version for areas", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to find version for areas", err, logData)
 			return nil, err
 		}
 		b, err := json.Marshal(results)
 		if err != nil {
-			log.Event(ctx, "failed to marshal version resource into bytes", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to marshal version resource into bytes", err, logData)
 			return nil, err
 		}
 		return b, nil
@@ -64,10 +64,10 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 	setJSONContentType(w)
 	_, err := w.Write(b)
 	if err != nil {
-		log.Event(ctx, "failed writing bytes to response", log.ERROR, log.Error(err), logData)
+		log.Error(ctx, "failed writing bytes to response", err, logData)
 		handleAPIErr(ctx, err, w, logData)
 	}
-	log.Event(ctx, "getVersion endpoint: request successful", log.INFO, logData)
+	log.Info(ctx, "getVersion endpoint: request successful", logData)
 }
 
 func handleAPIErr(ctx context.Context, err error, w http.ResponseWriter, data log.Data) {
@@ -87,7 +87,7 @@ func handleAPIErr(ctx context.Context, err error, w http.ResponseWriter, data lo
 		data = log.Data{}
 	}
 
-	log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
+	log.Error(ctx, "request unsuccessful", err, data)
 	http.Error(w, err.Error(), status)
 }
 

@@ -2,11 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/ONSdigital/dp-areas-api/utils"
 	"net/http"
 
+	"github.com/ONSdigital/dp-areas-api/utils"
+
 	errs "github.com/ONSdigital/dp-areas-api/apierrors"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -20,7 +21,7 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 	//get area from mongoDB by id
 	area, err := api.areaStore.GetArea(ctx, areaID)
 	if err != nil {
-		log.Event(ctx, "getArea Handler: retrieving area from mongoDB returned an error", log.ERROR, log.Error(err), logdata)
+		log.Error(ctx, "getArea Handler: retrieving area from mongoDB returned an error", err, logdata)
 		if err == errs.ErrAreaNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -31,7 +32,7 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(area)
 	if err != nil {
-		log.Event(ctx, "getArea Handler: failed to marshal area resource into bytes", log.ERROR, log.Error(err), logdata)
+		log.Error(ctx, "getArea Handler: failed to marshal area resource into bytes", err, logdata)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -40,11 +41,11 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 	setJSONContentType(w)
 
 	if _, err := w.Write(b); err != nil {
-		log.Event(ctx, "getArea Handler: error writing bytes to response", log.ERROR, log.Error(err), logdata)
+		log.Error(ctx, "getArea Handler: error writing bytes to response", err, logdata)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Event(ctx, "getArea Handler: Successfully retrieved area", log.INFO, logdata)
+	log.Info(ctx, "getArea Handler: Successfully retrieved area", logdata)
 
 }
 
@@ -65,7 +66,7 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 		logData["limit"] = limitParameter
 		limit, err = utils.ValidatePositiveInt(limitParameter)
 		if err != nil {
-			log.Event(ctx, "invalid query parameter: limit", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "invalid query parameter: limit", err, logData)
 			err = errs.ErrInvalidQueryParameter
 			handleAPIErr(ctx, err, w, nil)
 			return
@@ -75,7 +76,7 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 	if limit > api.maxLimit {
 		logData["max_limit"] = api.maxLimit
 		err = errs.ErrQueryParamLimitExceedMax
-		log.Event(ctx, "limit is greater than the maximum allowed", log.ERROR, logData)
+		log.Error(ctx, "limit is greater than the maximum allowed", err, logData)
 		handleAPIErr(ctx, err, w, nil)
 		return
 	}
@@ -84,7 +85,7 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 		logData["offset"] = offsetParameter
 		offset, err = utils.ValidatePositiveInt(offsetParameter)
 		if err != nil {
-			log.Event(ctx, "invalid query parameter: offset", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "invalid query parameter: offset", err, logData)
 			err = errs.ErrInvalidQueryParameter
 			handleAPIErr(ctx, err, w, nil)
 			return
@@ -97,14 +98,14 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 
 		areasResult, err := api.areaStore.GetAreas(ctx, offset, limit)
 		if err != nil {
-			log.Event(ctx, "api endpoint getAreas returned an error", log.ERROR, log.Error(err))
+			log.Error(ctx, "api endpoint getAreas returned an error", err)
 			return nil, err
 		}
 
 		b, err := json.Marshal(areasResult)
 
 		if err != nil {
-			log.Event(ctx, "api endpoint getAreas failed to marshal resource into bytes", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "api endpoint getAreas failed to marshal resource into bytes", err, logData)
 			return nil, err
 		}
 
@@ -118,9 +119,9 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 
 	setJSONContentType(w)
 	if _, err = w.Write(b); err != nil {
-		log.Event(ctx, "api endpoint getAreas error writing response body", log.ERROR, log.Error(err))
+		log.Error(ctx, "api endpoint getAreas error writing response body", err)
 		handleAPIErr(ctx, err, w, nil)
 		return
 	}
-	log.Event(ctx, "api endpoint getAreas request successful", log.INFO)
+	log.Info(ctx, "api endpoint getAreas request successful")
 }

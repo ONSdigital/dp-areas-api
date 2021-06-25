@@ -9,7 +9,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpmongo "github.com/ONSdigital/dp-mongodb"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -70,7 +70,7 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 	s := m.Session.Copy()
 	defer s.Close()
-	log.Event(ctx, "getting area by ID", log.INFO, log.Data{"id": id})
+	log.Info(ctx, "getting area by ID", log.Data{"id": id})
 
 	var area models.Area
 	err := s.DB(m.Database).C(m.Collection).Find(bson.M{"id": id}).Sort("-version").One(&area)
@@ -137,7 +137,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 
 	totalCount, err := q.Count()
 	if err != nil {
-		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
+		log.Error(ctx, "error counting items", err)
 		if err == mgo.ErrNotFound {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
@@ -158,7 +158,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	defer func() {
 		err := iter.Close()
 		if err != nil {
-			log.Event(ctx, "error closing iterator", log.ERROR, log.Error(err))
+			log.Error(ctx, "error closing iterator", err)
 		}
 	}()
 
