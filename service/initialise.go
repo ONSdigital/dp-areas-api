@@ -79,7 +79,7 @@ func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.Mong
 		Password:          cfg.MongoConfig.Password,
 		IsSSL:             cfg.MongoConfig.IsSSL,
 	}
-	if err := mongodb.Init(ctx, true, true); err != nil {
+	if err := mongodb.Init(ctx, false, true); err != nil {
 		return nil, err
 	}
 	return mongodb, nil
