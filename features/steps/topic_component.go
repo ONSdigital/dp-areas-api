@@ -94,7 +94,10 @@ func createCredsInDB(getMongoURI string, databaseName string) (string, string) {
 		ClusterEndpoint: getMongoURI,
 		Database:        databaseName,
 	}
-	mongoConnection, _ := dpMongoDriver.Open(mongoConnectionConfig)
+	mongoConnection, err := dpMongoDriver.Open(mongoConnectionConfig)
+	if err != nil {
+		panic("expected db connection to be opened")
+	}
 	mongoDatabaseSelection := mongoConnection.
 		GetMongoCollection().
 		Database()
