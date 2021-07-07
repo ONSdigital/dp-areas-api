@@ -76,7 +76,7 @@ func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaSt
 		URI:        cfg.MongoConfig.BindAddr,
 		IsSSL:      cfg.MongoConfig.IsSSL,
 	}
-	err := mongodb.Init(ctx, true, true)
+	err := mongodb.Init(ctx, false, true)
 	if err != nil {
 		log.Error(ctx, "failed to intialise mongo", err)
 		return nil, err
