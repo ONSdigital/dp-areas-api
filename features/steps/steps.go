@@ -3,7 +3,7 @@ package steps
 import (
 	"context"
 	"encoding/json"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongodb"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
 	"time"
 
 	"github.com/ONSdigital/dp-topic-api/models"

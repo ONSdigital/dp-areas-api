@@ -5,7 +5,7 @@ import (
 	"fmt"
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/pkg/mongodb"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/mongo"
 	"github.com/ONSdigital/dp-topic-api/service"
