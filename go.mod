@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/ONSdigital/dp-healthcheck v1.0.5
-	github.com/ONSdigital/dp-mongodb/v2 v2.2.1
+	github.com/ONSdigital/dp-mongodb/v2 v2.3.0
 	github.com/ONSdigital/dp-net v1.0.11
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/ONSdigital/log.go/v2 v2.0.4
