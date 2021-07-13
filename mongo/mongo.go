@@ -91,7 +91,7 @@ func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 	err := m.Connection.
 		GetConfiguredCollection().
 		Find(bson.M{"id": id}).
-		Sort("-version").
+		Sort(bson.D{{"version", -1}}).
 		One(ctx, &area)
 
 	if err != nil {
