@@ -6,7 +6,6 @@ require (
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-mongodb/v2 v2.3.0
 	github.com/ONSdigital/dp-net v1.0.12
-	github.com/ONSdigital/log.go v1.0.1
 	github.com/ONSdigital/log.go/v2 v2.0.4
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gorilla/mux v1.8.0

@@ -8,7 +8,7 @@ import (
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/health"
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -84,8 +84,7 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 
 //GetArea retrieves a area document by its ID
 func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
-	log.Event(ctx, "getting area by ID", log.INFO, log.Data{"id": id})
-
+	log.Info(ctx, "getting area by ID", log.Data{"id": id})
 
 	var area models.Area
 	err := m.Connection.
@@ -151,7 +150,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 		Find(bson.D{})
 	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
-		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
+		log.Error(ctx, "error counting items", err)
 		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
