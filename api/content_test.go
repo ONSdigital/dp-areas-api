@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -369,7 +370,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
+				GetContentFunc: func(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
@@ -385,7 +386,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				CheckTopicExistsFunc: func(id string) error {
+				CheckTopicExistsFunc: func(ctx context.Context, id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,
@@ -691,7 +692,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
 
 			mongoDBMock := &storeMock.MongoDBMock{
-				GetContentFunc: func(id string, queryTypeFlags int) (*models.ContentResponse, error) {
+				GetContentFunc: func(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
 					case ctestContentID1:
 						return dbContent(models.StatePublished), nil
@@ -709,7 +710,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 						return nil, apierrors.ErrContentNotFound
 					}
 				},
-				CheckTopicExistsFunc: func(id string) error {
+				CheckTopicExistsFunc: func(ctx context.Context, id string) error {
 					switch id {
 					case ctestContentID1,
 						ctestContentID2,

@@ -28,7 +28,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 	}
 
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(id)
+	topic, err := api.dataStore.Backend.GetTopic(ctx, id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -54,7 +54,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 	}
 
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(id)
+	topic, err := api.dataStore.Backend.GetTopic(ctx, id)
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -70,7 +70,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 
 func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata log.Data, w http.ResponseWriter) {
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(id)
+	topic, err := api.dataStore.Backend.GetTopic(ctx, id)
 	if err != nil {
 		// no topic found to retrieve the subtopics from
 		handleError(ctx, w, err, logdata)
@@ -93,7 +93,7 @@ func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata l
 
 	for _, subTopicID := range topic.Current.SubtopicIds {
 		// get sub topic from mongoDB by subTopicID
-		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
+		topic, err := api.dataStore.Backend.GetTopic(ctx, subTopicID)
 		if err != nil {
 			logdata["missing subtopic for id"] = subTopicID
 			log.Event(ctx, err.Error(), log.ERROR, logdata)
@@ -141,7 +141,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 
 func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata log.Data, w http.ResponseWriter) {
 	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.GetTopic(id)
+	topic, err := api.dataStore.Backend.GetTopic(ctx, id)
 	if err != nil {
 		// no topic found to retrieve the subtopics from
 		handleError(ctx, w, err, logdata)
@@ -164,7 +164,7 @@ func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata 
 
 	for _, subTopicID := range topic.Next.SubtopicIds {
 		// get topic from mongoDB by subTopicID
-		topic, err := api.dataStore.Backend.GetTopic(subTopicID)
+		topic, err := api.dataStore.Backend.GetTopic(ctx, subTopicID)
 		if err != nil {
 			logdata["missing subtopic for id"] = subTopicID
 			log.Event(ctx, err.Error(), log.ERROR, logdata)

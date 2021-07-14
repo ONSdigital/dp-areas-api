@@ -22,6 +22,10 @@ debug:
 	go build -tags 'debug' $(LDFLAGS) -o $(BINPATH)/dp-topic-api
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-topic-api
 
+.PHONY: lint
+lint:
+	exit
+
 .PHONY: test
 test:
 	go test -race -cover ./...
@@ -33,4 +37,8 @@ test-component:
 .PHONY: convey
 convey:
 	goconvey ./...
+
+.PHONY: fixfmt
+fixfmt:
+	go fmt ./...
 

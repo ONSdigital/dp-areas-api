@@ -2,10 +2,10 @@ package steps
 
 import (
 	"context"
-	"net/http"
-
+	"fmt"
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/mongo"
 	"github.com/ONSdigital/dp-topic-api/service"
@@ -13,6 +13,9 @@ import (
 	"github.com/ONSdigital/dp-topic-api/store"
 	"github.com/benweissmann/memongo"
 	"github.com/cucumber/godog"
+	"github.com/gofrs/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	"net/http"
 )
 
 type TopicComponent struct {
@@ -46,14 +49,22 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 
 	f.Config.EnablePermissionsAuth = false
 
+	getMongoURI := fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
+	databaseName := memongo.RandomDatabase()
+
+	username, password := createCredsInDB(getMongoURI, databaseName)
+
 	mongodb := &mongo.Mongo{
-		Database:          memongo.RandomDatabase(),
-		URI:               mongoFeature.Server.URI(),
+		Database:          databaseName,
+		URI:               getMongoURI,
+		Username:          username,
+		Password:          password,
 		TopicsCollection:  f.Config.MongoConfig.TopicsCollection,
 		ContentCollection: f.Config.MongoConfig.ContentCollection,
+		IsSSL:             false,
 	}
 
-	if err := mongodb.Init(context.TODO()); err != nil {
+	if err := mongodb.Init(context.TODO(), false, true); err != nil {
 		return nil, err
 	}
 
@@ -70,6 +81,45 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 	return f, nil
 }
 
+func createCredsInDB(getMongoURI string, databaseName string) (string, string) {
+	username := "admin"
+	password, _ := uuid.NewV4()
+	mongoConnectionConfig := &dpMongoDriver.MongoConnectionConfig{
+		IsSSL:                   false,
+		ConnectTimeoutInSeconds: 15,
+		QueryTimeoutInSeconds:   15,
+
+		Username:        "",
+		Password:        "",
+		ClusterEndpoint: getMongoURI,
+		Database:        databaseName,
+	}
+	mongoConnection, err := dpMongoDriver.Open(mongoConnectionConfig)
+	if err != nil {
+		panic("expected db connection to be opened")
+	}
+	mongoDatabaseSelection := mongoConnection.
+		GetMongoCollection().
+		Database()
+	createCollectionResponse := mongoDatabaseSelection.RunCommand(context.TODO(), bson.D{
+		{"create", "test"},
+	})
+	if createCollectionResponse.Err() != nil {
+		panic("expected collection creation to go through")
+	}
+	userCreationResponse := mongoDatabaseSelection.RunCommand(context.TODO(), bson.D{
+		{"createUser", username},
+		{"pwd", password.String()},
+		{"roles", []bson.M{
+			{"role": "root", "db": "admin"},
+		}},
+	})
+	if userCreationResponse.Err() != nil {
+		panic("expected user creation to go through")
+	}
+	return username, password.String()
+}
+
 func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^private endpoints are enabled$`, f.privateEndpointsAreEnabled)
 	ctx.Step(`^I have these topics:$`, f.iHaveTheseTopics)
@@ -78,7 +128,7 @@ func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 
 func (f *TopicComponent) Reset() *TopicComponent {
 	f.MongoClient.Database = memongo.RandomDatabase()
-	f.MongoClient.Init(context.TODO())
+	f.MongoClient.Init(context.TODO(), false, true)
 	f.Config.EnablePrivateEndpoints = false
 	return f
 }

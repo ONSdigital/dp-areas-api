@@ -13,3 +13,4 @@
 
 # Exclude coverage file
 coverage.txt
+vendor/
