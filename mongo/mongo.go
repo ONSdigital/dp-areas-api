@@ -176,7 +176,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 				return &models.AreasResults{
 					Items:      &values,
 					Count:      0,
-					TotalCount: int(totalCount),
+					TotalCount: totalCount,
 					Offset:     offset,
 					Limit:      limit,
 				}, nil
@@ -188,7 +188,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	return &models.AreasResults{
 		Items:      &values,
 		Count:      len(values),
-		TotalCount: int(totalCount),
+		TotalCount: totalCount,
 		Offset:     offset,
 		Limit:      limit,
 	}, nil
