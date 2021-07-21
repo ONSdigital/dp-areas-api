@@ -116,7 +116,7 @@ type AreaStoreMock struct {
 }
 
 // CheckAreaExists calls CheckAreaExistsFunc.
-func (mock *AreaStoreMock) CheckAreaExists(id string) error {
+func (mock *AreaStoreMock) CheckAreaExists(ctx context.Context, id string) error {
 	if mock.CheckAreaExistsFunc == nil {
 		panic("AreaStoreMock.CheckAreaExistsFunc: method is nil but AreaStore.CheckAreaExists was just called")
 	}
@@ -287,7 +287,7 @@ func (mock *AreaStoreMock) GetAreasCalls() []struct {
 }
 
 // GetVersion calls GetVersionFunc.
-func (mock *AreaStoreMock) GetVersion(id string, versionID int) (*models.Area, error) {
+func (mock *AreaStoreMock) GetVersion(ctx context.Context, id string, versionID int) (*models.Area, error) {
 	if mock.GetVersionFunc == nil {
 		panic("AreaStoreMock.GetVersionFunc: method is nil but AreaStore.GetVersion was just called")
 	}

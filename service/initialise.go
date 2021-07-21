@@ -7,7 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/mongo"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -42,7 +42,7 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
 	if err != nil {
-		log.Event(ctx, "failed to create mongodb client", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to create mongodb client", err)
 		return nil, err
 	}
 	e.MongoDB = true
@@ -68,10 +68,17 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 
 // DoGetMongoDB returns a MongoDB
 func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
-	mongodb := &mongo.Mongo{}
-	err := mongodb.Init(cfg.MongoConfig)
+	mongodb := &mongo.Mongo{
+		Collection: cfg.MongoConfig.Collection,
+		Database:   cfg.MongoConfig.Database,
+		Username:   cfg.MongoConfig.Username,
+		Password:   cfg.MongoConfig.Password,
+		URI:        cfg.MongoConfig.BindAddr,
+		IsSSL:      cfg.MongoConfig.IsSSL,
+	}
+	err := mongodb.Init(ctx, false, true)
 	if err != nil {
-		log.Event(ctx, "failed to intialise mongo", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to intialise mongo", err)
 		return nil, err
 	}
 	return mongodb, nil

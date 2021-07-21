@@ -13,7 +13,7 @@ type AreaStore interface {
 	Close(ctx context.Context) error
 	Checker(context.Context, *healthcheck.CheckState) error
 	GetArea(ctx context.Context, id string) (*models.Area, error)
-	GetVersion(id string, versionID int) (*models.Area, error)
-	CheckAreaExists(id string) error
+	GetVersion(ctx context.Context, id string, versionID int) (*models.Area, error)
+	CheckAreaExists(ctx context.Context, id string) error
 	GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error)
 }
