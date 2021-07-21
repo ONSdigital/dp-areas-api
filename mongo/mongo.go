@@ -72,7 +72,7 @@ func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableW
 // Close closes the mongo session and returns any error
 func (m *Mongo) Close(ctx context.Context) error {
 	if m.Connection == nil {
-		return errors.New("cannot close a empty connection")
+		return errors.New("cannot close an empty connection")
 	}
 	return m.Connection.Close(ctx)
 }
