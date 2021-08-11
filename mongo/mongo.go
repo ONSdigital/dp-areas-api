@@ -4,46 +4,62 @@ import (
 	"context"
 	"errors"
 	"github.com/ONSdigital/dp-areas-api/apierrors"
-	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpmongo "github.com/ONSdigital/dp-mongodb"
-	dpMongoHealth "github.com/ONSdigital/dp-mongodb/health"
-	"github.com/ONSdigital/log.go/log"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
+	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/health"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
+	"github.com/ONSdigital/log.go/v2/log"
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+const (
+	connectTimeoutInSeconds = 5
+	queryTimeoutInSeconds   = 15
 )
 
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
-	Session      *mgo.Session
 	healthClient *dpMongoHealth.CheckMongoClient
 	Database     string
 	Collection   string
+	Connection   *dpMongoDriver.MongoConnection
+	Username     string
+	Password     string
+	URI          string
+	IsSSL        bool
 }
 
-// Init creates a new mgo.Session with a strong consistency and a write mode of "majority".
-func (m *Mongo) Init(mongoConf config.MongoConfig) error {
-	if m.Session != nil {
-		return errors.New("session already exists")
-	}
+func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
+	return &dpMongoDriver.MongoConnectionConfig{
+		IsSSL:                   m.IsSSL,
+		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
+		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
 
-	var err error
-	if m.Session, err = mgo.Dial(mongoConf.BindAddr); err != nil {
+		Username:                      m.Username,
+		Password:                      m.Password,
+		ClusterEndpoint:               m.URI,
+		Database:                      m.Database,
+		Collection:                    m.Collection,
+		IsWriteConcernMajorityEnabled: shouldEnableWriteConcern,
+		IsStrongReadConcernEnabled:    shouldEnableReadConcern,
+	}
+}
+
+// Init creates a new mongoConnection with a strong consistency and a write mode of "majority".
+func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableWriteConcern bool) error {
+	if m.Connection != nil {
+		return errors.New("Datastore Connection already exists")
+	}
+	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern))
+	if err != nil {
 		return err
 	}
-
-	m.Session.EnsureSafe(&mgo.Safe{WMode: "majority"})
-	m.Session.SetMode(mgo.Strong, true)
-
-	m.Database = mongoConf.Database
-	m.Collection = mongoConf.Collection
-
+	m.Connection = mongoConnection
 	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
-	databaseCollectionBuilder[(dpMongoHealth.Database)(mongoConf.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(mongoConf.Collection)}
+	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.Collection)}
 
-	// Create client and healthclient from session AND collections
-	client := dpMongoHealth.NewClientWithCollections(m.Session, databaseCollectionBuilder)
+	// Create client and health-client from session AND collections
+	client := dpMongoHealth.NewClientWithCollections(mongoConnection, databaseCollectionBuilder)
 
 	m.healthClient = &dpMongoHealth.CheckMongoClient{
 		Client:      *client,
@@ -55,10 +71,10 @@ func (m *Mongo) Init(mongoConf config.MongoConfig) error {
 
 // Close closes the mongo session and returns any error
 func (m *Mongo) Close(ctx context.Context) error {
-	if m.Session == nil {
-		return errors.New("cannot close a mongoDB connection without a valid session")
+	if m.Connection == nil {
+		return errors.New("cannot close an empty connection")
 	}
-	return dpmongo.Close(ctx, m.Session)
+	return m.Connection.Close(ctx)
 }
 
 // Checker is called by the healthcheck library to check the health state of this mongoDB instance
@@ -68,14 +84,17 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 
 //GetArea retrieves a area document by its ID
 func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
-	s := m.Session.Copy()
-	defer s.Close()
-	log.Event(ctx, "getting area by ID", log.INFO, log.Data{"id": id})
+	log.Info(ctx, "getting area by ID", log.Data{"id": id})
 
 	var area models.Area
-	err := s.DB(m.Database).C(m.Collection).Find(bson.M{"id": id}).Sort("-version").One(&area)
+	err := m.Connection.
+		GetConfiguredCollection().
+		Find(bson.M{"id": id}).
+		Sort(bson.D{{"version", -1}}).
+		One(ctx, &area)
+
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrAreaNotFound
 		}
 		return nil, err
@@ -85,19 +104,17 @@ func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 }
 
 // GetVersion retrieves a version document for the area
-func (m *Mongo) GetVersion(id string, versionID int) (*models.Area, error) {
-	s := m.Session.Copy()
-	defer s.Close()
+func (m *Mongo) GetVersion(ctx context.Context, id string, versionID int) (*models.Area, error) {
 
 	selector := bson.M{
-		"id":     id,
+		"id":      id,
 		"version": versionID,
 	}
 
 	var version models.Area
-	err := s.DB(m.Database).C("areas").Find(selector).One(&version)
+	err := m.Connection.GetConfiguredCollection().FindOne(ctx, selector, &version)
 	if err != nil {
-		if err == mgo.ErrNotFound {
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrVersionNotFound
 		}
 		return nil, err
@@ -106,15 +123,15 @@ func (m *Mongo) GetVersion(id string, versionID int) (*models.Area, error) {
 }
 
 // CheckAreaExists checks that the area exists
-func (m *Mongo) CheckAreaExists(id string) error {
-	s := m.Session.Copy()
-	defer s.Close()
-
+func (m *Mongo) CheckAreaExists(ctx context.Context, id string) error {
 	var query bson.M
 	query = bson.M{
 		"_id": id,
 	}
-	count, err := s.DB(m.Database).C("areas").Find(query).Count()
+	count, err := m.Connection.
+		GetConfiguredCollection().
+		Find(query).
+		Count(ctx)
 	if err != nil {
 		return err
 	}
@@ -125,20 +142,16 @@ func (m *Mongo) CheckAreaExists(id string) error {
 	return nil
 }
 
-
 // GetAreas retrieves all areas documents
 func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-	s := m.Session.Copy()
-	defer s.Close()
 
-	var q *mgo.Query
-
-	q = s.DB(m.Database).C("areas").Find(nil)
-
-	totalCount, err := q.Count()
+	findQuery := m.Connection.
+		GetConfiguredCollection().
+		Find(bson.D{})
+	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
-		log.Event(ctx, "error counting items", log.ERROR, log.Error(err))
-		if err == mgo.ErrNotFound {
+		log.Error(ctx, "error counting items", err)
+		if dpMongoDriver.IsErrNoDocumentFound(err) {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
 				Count:      0,
@@ -153,17 +166,13 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 	values := []models.Area{}
 
 	if limit > 0 {
-	iter := q.Skip(offset).Limit(limit).Iter()
+		err := findQuery.
+			Skip(offset).
+			Limit(limit).
+			IterAll(ctx, &values)
 
-	defer func() {
-		err := iter.Close()
 		if err != nil {
-			log.Event(ctx, "error closing iterator", log.ERROR, log.Error(err))
-		}
-	}()
-
-		if err := iter.All(&values); err != nil {
-			if err == mgo.ErrNotFound {
+			if dpMongoDriver.IsErrNoDocumentFound(err) {
 				return &models.AreasResults{
 					Items:      &values,
 					Count:      0,
@@ -184,4 +193,3 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 		Limit:      limit,
 	}, nil
 }
-

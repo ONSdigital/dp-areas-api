@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-areas-api/models"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/globalsign/mgo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -133,14 +133,14 @@ func buildCountryArea(areaStruct AreaStruct) (*models.Area, error) {
 		areaType, err := lookupAreaType(binding.AreaCode.Value)
 		logData := log.Data{"AreaCode": binding.AreaCode.Value}
 		if err != nil {
-			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "error returned from areaType lookup", err, logData)
 			return nil, err
 		}
 		area.Type = areaType
 		childType, err := lookupAreaType(binding.Code.Value)
 		logData = log.Data{"ChildAreaCode": binding.Code.Value}
 		if err != nil {
-			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "error returned from areaType lookup", err, logData)
 			return nil, err
 		}
 		child := &models.LinkedAreas{
@@ -162,14 +162,14 @@ func postCountryQuery(query string) (*models.Area, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
 	if err != nil {
-		log.Event(ctx, "error returned from building the country request", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from building the country request", err)
 		return nil, err
 	}
 
 	req.Header.Add("Accept", "application/sparql-results+json")
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Event(ctx, "error returned from country POST request", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from country POST request", err)
 		return nil, err
 	}
 
@@ -177,13 +177,13 @@ func postCountryQuery(query string) (*models.Area, error) {
 
 	if resp.StatusCode != 200 {
 		err = errors.New("Unexpected status code")
-		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+		log.Error(ctx, "Response from POST request is not a 200", err)
 		return nil, err
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from reading the response body", err)
 		return nil, err
 	}
 
@@ -191,13 +191,13 @@ func postCountryQuery(query string) (*models.Area, error) {
 
 	if err := json.Unmarshal(data, &returnedCountryData); err != nil {
 		logData := log.Data{"json file": returnedCountryData}
-		log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+		log.Error(ctx, "failed to unmarshal json", err, logData)
 		return nil, err
 	}
 
 	countryData, err := buildCountryArea(returnedCountryData)
 	if err != nil {
-		log.Event(ctx, "error returned from building the country area", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from building the country area", err)
 		return nil, err
 	}
 
@@ -212,7 +212,7 @@ func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
 		logData := log.Data{"AreaCode": binding.AreaCode.Value}
 		areaType, err := lookupAreaType(binding.AreaCode.Value)
 		if err != nil {
-			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "error returned from areaType lookup", err, logData)
 			return nil, err
 		}
 		area := models.Area{
@@ -224,7 +224,7 @@ func buildAreas(areaStruct AreaStruct) ([]models.Area, error) {
 		logData = log.Data{"ParentAreaCode": binding.ParentCode.Value}
 		parentType, err := lookupAreaType(binding.ParentCode.Value)
 		if err != nil {
-			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "error returned from areaType lookup", err, logData)
 			return nil, err
 		}
 		area.ParentAreas = append(area.ParentAreas, models.LinkedAreas{
@@ -248,14 +248,14 @@ func postAreaQuery(query string) ([]models.Area, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
 	if err != nil {
-		log.Event(ctx, "error returned from building an area request", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from building an area request", err)
 		return nil, err
 	}
 
 	req.Header.Add("Accept", "application/sparql-results+json")
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from the POST request", err)
 		return nil, err
 	}
 
@@ -263,13 +263,13 @@ func postAreaQuery(query string) ([]models.Area, error) {
 
 	if resp.StatusCode != 200 {
 		err = errors.New("Unexpected status code")
-		log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+		log.Error(ctx, "Response from POST request is not a 200", err)
 		return nil, err
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from reading the response body", err)
 		return nil, err
 	}
 
@@ -277,13 +277,13 @@ func postAreaQuery(query string) ([]models.Area, error) {
 
 	if err := json.Unmarshal(data, &returnedAreaData); err != nil {
 		logData := log.Data{"json file": returnedAreaData}
-		log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+		log.Error(ctx, "failed to unmarshal json", err, logData)
 		return nil, err
 	}
 
 	areaData, err := buildAreas(returnedAreaData)
 	if err != nil {
-		log.Event(ctx, "error returned from building the area", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from building the area", err)
 		return nil, err
 	}
 
@@ -300,14 +300,14 @@ func postAreaQuery(query string) ([]models.Area, error) {
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://statistics.data.gov.uk/sparql", strings.NewReader(v.Encode()))
 		if err != nil {
-			log.Event(ctx, "error returned from building a request for the children of an area", log.ERROR, log.Error(err))
+			log.Error(ctx, "error returned from building a request for the children of an area", err)
 			return nil, err
 		}
 
 		req.Header.Add("Accept", "application/sparql-results+json")
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Event(ctx, "error returned from the POST request", log.ERROR, log.Error(err))
+			log.Error(ctx, "error returned from the POST request", err)
 			return nil, err
 		}
 
@@ -315,13 +315,13 @@ func postAreaQuery(query string) ([]models.Area, error) {
 
 		if resp.StatusCode != 200 {
 			err = errors.New("Unexpected status code")
-			log.Event(ctx, "Response from POST request is not a 200", log.ERROR, log.Error(err))
+			log.Error(ctx, "Response from POST request is not a 200", err)
 			return nil, err
 		}
 
 		data, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Event(ctx, "error returned from reading the response body", log.ERROR, log.Error(err))
+			log.Error(ctx, "error returned from reading the response body", err)
 			return nil, err
 		}
 
@@ -329,7 +329,7 @@ func postAreaQuery(query string) ([]models.Area, error) {
 
 		if err := json.Unmarshal(data, &returnedChildData); err != nil {
 			logData := log.Data{"json file": returnedChildData}
-			log.Event(ctx, "failed to unmarshal json", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to unmarshal json", err, logData)
 			return nil, err
 		}
 
@@ -349,7 +349,7 @@ func buildChildAreas(childStruct AreaStruct, region models.Area) models.Area {
 		childType, err := lookupAreaType(binding.Code.Value)
 		logData := log.Data{"ChildAreaCode": binding.Code.Value}
 		if err != nil {
-			log.Event(ctx, "error returned from areaType lookup", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "error returned from areaType lookup", err, logData)
 			continue
 		}
 
@@ -378,7 +378,7 @@ func main() {
 
 	session, err := mgo.Dial(mongoURL)
 	if err != nil {
-		log.Event(ctx, "unable to create mongo session", log.ERROR, log.Error(err))
+		log.Error(ctx, "unable to create mongo session", err)
 		os.Exit(1)
 	}
 	defer session.Close()
@@ -386,49 +386,49 @@ func main() {
 	englandQuery := buildCountryQuery(countryStatIDs["England"], countryIDs["England"])
 	englandData, err := postCountryQuery(englandQuery)
 	if err != nil {
-		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from the country query POST", err)
 		os.Exit(1)
 	}
 
 	logData := log.Data{"AreaData": englandData}
 
 	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["England"]}, englandData); err != nil {
-		log.Event(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
+		log.Error(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", err, logData)
 		os.Exit(1)
 	}
 
-	log.Event(ctx, "successfully put England area data into Mongo", log.INFO, logData)
+	log.Info(ctx, "successfully put England area data into Mongo", logData)
 
 	walesQuery := buildCountryQuery(countryStatIDs["Wales"], countryIDs["Wales"])
 	walesData, err := postCountryQuery(walesQuery)
 	if err != nil {
-		log.Event(ctx, "error returned from the country query POST", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from the country query POST", err)
 		os.Exit(1)
 	}
 
 	logData = log.Data{"AreaData": walesData}
 
 	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["Wales"]}, walesData); err != nil {
-		log.Event(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
+		log.Error(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", err, logData)
 		os.Exit(1)
 	}
 
-	log.Event(ctx, "successfully put Wales area data into Mongo", log.INFO, logData)
+	log.Info(ctx, "successfully put Wales area data into Mongo", logData)
 
 	regionData, err := postAreaQuery(queryRegionEngland)
 	if err != nil {
-		log.Event(ctx, "error returned from the region query POST", log.ERROR, log.Error(err))
+		log.Error(ctx, "error returned from the region query POST", err)
 		os.Exit(1)
 	}
 
 	for _, region := range regionData {
 		logData = log.Data{"AreaData": region}
 		if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": region.ID}, region); err != nil {
-			log.Event(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", log.ERROR, log.Error(err), logData)
+			log.Error(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", err, logData)
 			os.Exit(1)
 		}
 	}
 
 	logData = log.Data{"AreaData": regionData}
-	log.Event(ctx, "successfully put region area data into Mongo", log.INFO, logData)
+	log.Info(ctx, "successfully put region area data into Mongo", logData)
 }
