@@ -3,12 +3,12 @@ module github.com/ONSdigital/dp-topic-api
 go 1.16
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.32.5
+	github.com/ONSdigital/dp-api-clients-go v1.34.3
 	github.com/ONSdigital/dp-authorisation v0.1.0
 	github.com/ONSdigital/dp-component-test v0.3.1
 	github.com/ONSdigital/dp-healthcheck v1.0.5
-	github.com/ONSdigital/dp-mongodb/v2 v2.3.0
-	github.com/ONSdigital/dp-net v1.0.11
+	github.com/ONSdigital/dp-mongodb/v2 v2.8.0
+	github.com/ONSdigital/dp-net v1.0.12
 	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb // indirect
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/benweissmann/memongo v0.1.1
@@ -23,5 +23,4 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	go.mongodb.org/mongo-driver v1.5.2
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 )
