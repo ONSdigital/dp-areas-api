@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	brokenrecorder "github.com/ONSdigital/dp-topic-api/broken"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

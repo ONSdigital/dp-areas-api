@@ -7,7 +7,7 @@ import (
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -39,7 +39,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
 
 // getTopicPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
@@ -65,7 +65,7 @@ func (api *API) getTopicPrivateHandler(w http.ResponseWriter, req *http.Request)
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
 
 func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata log.Data, w http.ResponseWriter) {
@@ -96,7 +96,7 @@ func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata l
 		topic, err := api.dataStore.Backend.GetTopic(ctx, subTopicID)
 		if err != nil {
 			logdata["missing subtopic for id"] = subTopicID
-			log.Event(ctx, err.Error(), log.ERROR, logdata)
+			log.Error(ctx, "missing subtopic for id", err, logdata)
 			continue
 		}
 
@@ -117,7 +117,7 @@ func (api *API) getSubtopicsPublicByID(ctx context.Context, id string, logdata l
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
 
 // getSubtopicsPublicHandler is a handler that gets a topic by its id from MongoDB for Web
@@ -167,7 +167,7 @@ func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata 
 		topic, err := api.dataStore.Backend.GetTopic(ctx, subTopicID)
 		if err != nil {
 			logdata["missing subtopic for id"] = subTopicID
-			log.Event(ctx, err.Error(), log.ERROR, logdata)
+			log.Error(ctx, "missing subtopic for id", err, logdata)
 			continue
 		}
 
@@ -188,7 +188,7 @@ func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata 
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
 
 // getSubtopicsPrivateHandler is a handler that gets a topic by its id from MongoDB for Publishing
