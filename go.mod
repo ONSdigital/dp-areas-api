@@ -5,13 +5,12 @@ go 1.16
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0
 	github.com/ONSdigital/dp-authorisation v0.2.0
-	github.com/ONSdigital/dp-component-test v0.3.1
+	github.com/ONSdigital/dp-component-test v0.5.0
 	github.com/ONSdigital/dp-healthcheck v1.1.0
 	github.com/ONSdigital/dp-mongodb/v2 v2.8.0
 	github.com/ONSdigital/dp-net v1.2.0
 	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb // indirect
 	github.com/ONSdigital/log.go/v2 v2.0.9
-	github.com/benweissmann/memongo v0.1.1
 	github.com/cucumber/godog v0.10.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/mux v1.8.0
@@ -19,5 +18,5 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4
-	go.mongodb.org/mongo-driver v1.5.2
+	go.mongodb.org/mongo-driver v1.7.1
 )

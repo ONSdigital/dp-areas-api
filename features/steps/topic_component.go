@@ -3,7 +3,10 @@ package steps
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	componenttest "github.com/ONSdigital/dp-component-test"
+	"github.com/ONSdigital/dp-component-test/utils"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
 	"github.com/ONSdigital/dp-topic-api/config"
@@ -11,11 +14,9 @@ import (
 	"github.com/ONSdigital/dp-topic-api/service"
 	serviceMock "github.com/ONSdigital/dp-topic-api/service/mock"
 	"github.com/ONSdigital/dp-topic-api/store"
-	"github.com/benweissmann/memongo"
 	"github.com/cucumber/godog"
 	"github.com/gofrs/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	"net/http"
 )
 
 type TopicComponent struct {
@@ -50,7 +51,7 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 	f.Config.EnablePermissionsAuth = false
 
 	getMongoURI := fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
-	databaseName := memongo.RandomDatabase()
+	databaseName := utils.RandomDatabase()
 
 	username, password := createCredsInDB(getMongoURI, databaseName)
 
@@ -127,7 +128,7 @@ func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (f *TopicComponent) Reset() *TopicComponent {
-	f.MongoClient.Database = memongo.RandomDatabase()
+	f.MongoClient.Database = utils.RandomDatabase()
 	f.MongoClient.Init(context.TODO(), false, true)
 	f.Config.EnablePrivateEndpoints = false
 	return f
