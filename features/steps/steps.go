@@ -3,8 +3,9 @@ package steps
 import (
 	"context"
 	"encoding/json"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
 	"time"
+
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
 
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/cucumber/godog"
@@ -37,7 +38,7 @@ func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoConnection
 			"last_updated": time.Now(),
 		},
 	}
-	_, err := mongoConnection.GetConfiguredCollection().UpsertId(ctx, topicDoc.ID, update)
+	_, err := mongoConnection.GetConfiguredCollection().UpsertById(ctx, topicDoc.ID, update)
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (f *TopicComponent) putContentInDatabase(ctx context.Context, mongoConnecti
 			"last_updated": time.Now(),
 		},
 	}
-	_, err := mongoConnection.C(f.MongoClient.ContentCollection).UpsertId(ctx, contentDoc.ID, update)
+	_, err := mongoConnection.C(f.MongoClient.ContentCollection).UpsertById(ctx, contentDoc.ID, update)
 	if err != nil {
 		return err
 	}

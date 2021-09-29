@@ -3,11 +3,12 @@ package mongo
 import (
 	"context"
 	"errors"
+
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v2/health"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v2/mongodb"
+	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v3/health"
+	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
 	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"

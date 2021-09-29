@@ -7,9 +7,8 @@ require (
 	github.com/ONSdigital/dp-authorisation v0.2.0
 	github.com/ONSdigital/dp-component-test v0.5.0
 	github.com/ONSdigital/dp-healthcheck v1.1.0
-	github.com/ONSdigital/dp-mongodb/v2 v2.8.0
+	github.com/ONSdigital/dp-mongodb/v3 v3.0.0-beta
 	github.com/ONSdigital/dp-net v1.2.0
-	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb // indirect
 	github.com/ONSdigital/log.go/v2 v2.0.9
 	github.com/cucumber/godog v0.10.0
 	github.com/gofrs/uuid v3.2.0+incompatible
