@@ -14,8 +14,9 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/globalsign/mgo"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type AreaStruct struct {
@@ -376,12 +377,12 @@ func main() {
 
 	ctx := context.Background()
 
-	session, err := mgo.Dial(mongoURL)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s", mongoURL)))
 	if err != nil {
-		log.Error(ctx, "unable to create mongo session", err)
+		log.Error(ctx, "unable to connect to mongo", err)
 		os.Exit(1)
 	}
-	defer session.Close()
+	defer client.Disconnect(ctx)
 
 	englandQuery := buildCountryQuery(countryStatIDs["England"], countryIDs["England"])
 	englandData, err := postCountryQuery(englandQuery)
@@ -390,9 +391,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	upsert := true
+	updateOpts := options.UpdateOptions{Upsert: &upsert}
 	logData := log.Data{"AreaData": englandData}
-
-	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["England"]}, englandData); err != nil {
+	if _, err = client.Database("areas").Collection("areas").UpdateByID(ctx, bson.M{"id": countryIDs["England"]}, bson.M{"$set": englandData}, &updateOpts); err != nil {
 		log.Error(ctx, "failed to insert England area data document, data lost in mongo but exists in this log", err, logData)
 		os.Exit(1)
 	}
@@ -408,7 +410,7 @@ func main() {
 
 	logData = log.Data{"AreaData": walesData}
 
-	if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": countryIDs["Wales"]}, walesData); err != nil {
+	if _, err = client.Database("areas").Collection("areas").UpdateByID(ctx, bson.M{"id": countryIDs["Wales"]}, bson.M{"$set": walesData}, &updateOpts); err != nil {
 		log.Error(ctx, "failed to insert Wales area data document, data lost in mongo but exists in this log", err, logData)
 		os.Exit(1)
 	}
@@ -423,7 +425,7 @@ func main() {
 
 	for _, region := range regionData {
 		logData = log.Data{"AreaData": region}
-		if _, err = session.DB("areas").C("areas").Upsert(bson.M{"id": region.ID}, region); err != nil {
+		if _, err = client.Database("areas").Collection("areas").UpdateByID(ctx, bson.M{"id": region.ID}, bson.M{"$set": region}, &updateOpts); err != nil {
 			log.Error(ctx, "failed to insert region area data document, data lost in mongo but exists in this log", err, logData)
 			os.Exit(1)
 		}
