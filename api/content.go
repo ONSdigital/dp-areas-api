@@ -6,7 +6,7 @@ import (
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -61,7 +61,7 @@ func (api *API) getContentPublicHandler(w http.ResponseWriter, req *http.Request
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
 
 // getContentPrivateHandler is a handler that gets content by its id from MongoDB for Publishing
@@ -134,5 +134,5 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 		// WriteJSONBody has already logged the error
 		return
 	}
-	log.Event(ctx, "request successful", log.INFO, logdata) // NOTE: name of function is in logdata
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }

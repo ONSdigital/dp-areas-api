@@ -13,7 +13,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/api"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/store"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -54,7 +54,7 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	// Get MongoDB client
 	svc.mongoDB, err = svc.ServiceList.GetMongoDB(ctx, svc.Config)
 	if err != nil {
-		log.Event(ctx, "failed to initialise mongo DB", log.FATAL, log.Error(err))
+		log.Fatal(ctx, "failed to initialise mongo DB", err)
 		return err
 	}
 	store := store.DataStore{Backend: DatsetAPIStore{svc.mongoDB}}
@@ -68,7 +68,7 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	// Get HealthCheck
 	svc.HealthCheck, err = svc.ServiceList.GetHealthCheck(svc.Config, buildTime, gitCommit, version)
 	if err != nil {
-		log.Event(ctx, "could not instantiate healthcheck", log.FATAL, log.Error(err))
+		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return err
 	}
 
@@ -99,11 +99,11 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 
 func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) api.AuthHandler {
 	if !cfg.EnablePermissionsAuth {
-		log.Event(ctx, "feature flag not enabled defaulting to nop authZ impl", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
+		log.Info(ctx, "feature flag not enabled defaulting to nop authZ impl", log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
 		return &auth.NopHandler{}
 	}
 
-	log.Event(ctx, "feature flag enabled", log.INFO, log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
+	log.Info(ctx, "feature flag enabled", log.Data{"feature": "ENABLE_PERMISSIONS_AUTHZ"})
 
 	authClient := auth.NewPermissionsClient(dphttp.NewClient())
 	authVerifier := auth.DefaultPermissionsVerifier()
@@ -152,7 +152,7 @@ func healthcheckMiddleware(healthcheckHandler func(http.ResponseWriter, *http.Re
 // Close gracefully shuts the service down in the required order, with timeout
 func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Config.GracefulShutdownTimeout
-	log.Event(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout}, log.INFO)
+	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 
 	// track shutown gracefully closes up
@@ -168,7 +168,7 @@ func (svc *Service) Close(ctx context.Context) error {
 
 		// stop any incoming requests before closing any outbound connections
 		if err := svc.Server.Shutdown(ctx); err != nil {
-			log.Event(ctx, "failed to shutdown http server", log.Error(err), log.ERROR)
+			log.Error(ctx, "failed to shutdown http server", err)
 			hasShutdownError = true
 		}
 
@@ -177,7 +177,7 @@ func (svc *Service) Close(ctx context.Context) error {
 		// close mongoDB
 		if svc.ServiceList.MongoDB {
 			if err := svc.mongoDB.Close(ctx); err != nil {
-				log.Event(ctx, "error closing mongoDB", log.Error(err), log.ERROR)
+				log.Error(ctx, "error closing mongoDB", err)
 				hasShutdownError = true
 			}
 		}
@@ -188,18 +188,18 @@ func (svc *Service) Close(ctx context.Context) error {
 
 	// timeout expired
 	if ctx.Err() == context.DeadlineExceeded {
-		log.Event(ctx, "shutdown timed out", log.ERROR, log.Error(ctx.Err()))
+		log.Error(ctx, "shutdown timed out", ctx.Err())
 		return ctx.Err()
 	}
 
 	// other error
 	if hasShutdownError {
 		err := errors.New("failed to shutdown gracefully")
-		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to shutdown gracefully ", err)
 		return err
 	}
 
-	log.Event(ctx, "graceful shutdown was successful", log.INFO)
+	log.Info(ctx, "graceful shutdown was successful")
 	return nil
 }
 
@@ -216,13 +216,13 @@ func (svc *Service) registerCheckers(ctx context.Context) (err error) {
 
 		if err = svc.HealthCheck.AddCheck("Zebedee", svc.IdentityClient.Checker); err != nil {
 			hasErrors = true
-			log.Event(ctx, "error adding check for zebedee", log.ERROR, log.Error(err))
+			log.Error(ctx, "error adding check for zebedee", err)
 		}
 	}
 
 	if err = svc.HealthCheck.AddCheck("Mongo DB", svc.mongoDB.Checker); err != nil {
 		hasErrors = true
-		log.Event(ctx, "error adding check for mongo db", log.ERROR, log.Error(err))
+		log.Error(ctx, "error adding check for mongo db", err)
 	}
 
 	if hasErrors {

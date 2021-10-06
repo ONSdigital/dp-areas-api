@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/store"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -50,13 +51,13 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 
 	if cfg.EnablePrivateEndpoints {
 		// create publishing related endpoints ...
-		log.Event(ctx, "enabling private endpoints for topic api", log.INFO)
+		log.Info(ctx, "enabling private endpoints for topic api")
 
 		api.enablePrivateTopicEndpoints(ctx)
 	} else {
 		// create web related endpoints ...
 
-		log.Event(ctx, "enabling only public endpoints for dataset api", log.INFO)
+		log.Info(ctx, "enabling only public endpoints for dataset api")
 		api.enablePublicEndpoints(ctx)
 	}
 
@@ -150,7 +151,7 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 	if _, err := w.Write(payload); err != nil {
 		// a stack trace is added for Non User errors
 		data["response_status"] = http.StatusInternalServerError
-		log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
+		log.Error(ctx, "request unsuccessful", err, data)
 		return err
 	}
 	return nil
@@ -209,12 +210,12 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 	case http.StatusNotFound, http.StatusForbidden, http.StatusBadRequest:
 		data["response_status"] = status
 		data["user_error"] = err.Error()
-		log.Event(ctx, "request unsuccessful", log.ERROR, data)
+		log.Error(ctx, "request unsuccessful", errors.New("request unsuccessful"), data)
 		http.Error(w, err.Error(), status)
 	default:
 		// a stack trace is added for Non User errors
 		data["response_status"] = status
-		log.Event(ctx, "request unsuccessful", log.ERROR, log.Error(err), data)
+		log.Error(ctx, "request unsuccessful", err, data)
 		http.Error(w, apierrors.ErrInternalServer.Error(), status)
 	}
 }

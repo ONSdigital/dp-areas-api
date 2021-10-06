@@ -7,7 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/service"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
 
@@ -29,12 +29,13 @@ var (
 	*/
 )
 
+
 func main() {
 	log.Namespace = serviceName
 	ctx := context.Background()
 
 	if err := run(ctx); err != nil {
-		log.Event(ctx, "fatal runtime error", log.Error(err), log.FATAL)
+		log.Fatal(ctx, "fatal runtime error", err)
 		os.Exit(1)
 	}
 }
@@ -47,14 +48,14 @@ func run(ctx context.Context) error {
 	svcErrors := make(chan error, 1)
 	svcList := service.NewServiceList(&service.Init{})
 
-	log.Event(ctx, "dp-topic-api version", log.INFO, log.Data{"version": Version})
+	log.Info(ctx, "dp-topic-api version", log.Data{"version": Version})
 
 	// Read config
 	cfg, err := config.Get()
 	if err != nil {
 		return errors.Wrap(err, "error getting config")
 	}
-	log.Event(ctx, "config on startup", log.INFO, log.Data{"config": cfg, "build_time": BuildTime, "git-commit": GitCommit})
+	log.Info(ctx, "config on startup", log.Data{"config": cfg, "build_time": BuildTime, "git-commit": GitCommit})
 
 	// Run the service
 	svc := service.New(cfg, svcList)
@@ -65,9 +66,9 @@ func run(ctx context.Context) error {
 	// Blocks until an os interrupt or a fatal error occurs
 	select {
 	case err := <-svcErrors:
-		log.Event(ctx, "service error received", log.ERROR, log.Error(err))
+		log.Error(ctx, "service error received", err)
 	case sig := <-signals:
-		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
+		log.Info(ctx, "os signal received", log.Data{"signal": sig})
 	}
 	return svc.Close(ctx)
 }
