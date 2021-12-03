@@ -86,7 +86,9 @@ func createCredsInDB(getMongoURI string, databaseName string) (string, string) {
 	username := "admin"
 	password, _ := uuid.NewV4()
 	mongoConnectionConfig := &dpMongoDriver.MongoConnectionConfig{
-		IsSSL:                   false,
+		TLSConnectionConfig: dpMongoDriver.TLSConnectionConfig{
+			IsSSL: false,
+		},
 		ConnectTimeoutInSeconds: 15,
 		QueryTimeoutInSeconds:   15,
 
@@ -99,23 +101,20 @@ func createCredsInDB(getMongoURI string, databaseName string) (string, string) {
 	if err != nil {
 		panic("expected db connection to be opened")
 	}
-	mongoDatabaseSelection := mongoConnection.
-		GetMongoCollection().
-		Database()
-	createCollectionResponse := mongoDatabaseSelection.RunCommand(context.TODO(), bson.D{
-		{"create", "test"},
-	})
-	if createCollectionResponse.Err() != nil {
+
+	createCollectionResponse := mongoConnection.RunCommand(context.TODO(), bson.D{{"create", "test"}})
+
+	if createCollectionResponse != nil {
 		panic("expected collection creation to go through")
 	}
-	userCreationResponse := mongoDatabaseSelection.RunCommand(context.TODO(), bson.D{
-		{"createUser", username},
-		{"pwd", password.String()},
-		{"roles", []bson.M{
+	userCreationResponse := mongoConnection.RunCommand(context.TODO(), bson.D{
+		{Key: "createUser", Value: username},
+		{Key: "pwd", Value: password.String()},
+		{Key: "roles", Value: []bson.M{
 			{"role": "root", "db": "admin"},
 		}},
 	})
-	if userCreationResponse.Err() != nil {
+	if userCreationResponse != nil {
 		panic("expected user creation to go through")
 	}
 	return username, password.String()
