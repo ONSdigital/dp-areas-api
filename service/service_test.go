@@ -41,7 +41,7 @@ var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.
 	return nil
 }
 
-var funcDoGetMongoDBErr = func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+var funcDoGetMongoDBErr = func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 	return nil, errMongo
 }
 
@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 			return failingServerMock
 		}
 
-		funcDoGetMongoDBOk := func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+		funcDoGetMongoDBOk := func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 			return mongoMock, nil
 		}
 
@@ -159,7 +159,7 @@ func TestRun(t *testing.T) {
 				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "Mongo DB")
 				So(initMock.DoGetHTTPServerCalls(), ShouldHaveLength, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25500")
-				So(initMock.DoGetMongoDBCalls()[0].Cfg.MongoConfig.BindAddr, ShouldEqual, "localhost:27017")
+				So(initMock.DoGetMongoDBCalls()[0].Cfg.ClusterEndpoint, ShouldEqual, "localhost:27017")
 				So(hcMock.StartCalls(), ShouldHaveLength, 1)
 				//!!! a call needed to stop the server, maybe ?
 				serverWg.Wait() // Wait for HTTP server go-routine to finish
@@ -274,7 +274,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 					return mongoMock, nil
 				},
 			}
@@ -305,7 +305,7 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 					return mongoMockCloseErr, nil
 				},
 			}

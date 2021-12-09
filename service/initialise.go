@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-areas-api/api"
 	"net/http"
 
+	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/mongo"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -39,7 +39,7 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 }
 
 // GetMongoDB creates a mongoDB client and sets the Mongo flag to true
-func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
 	if err != nil {
 		log.Error(ctx, "failed to create mongodb client", err)
@@ -67,21 +67,14 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 }
 
 // DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
-	mongodb := &mongo.Mongo{
-		Collection: cfg.MongoConfig.Collection,
-		Database:   cfg.MongoConfig.Database,
-		Username:   cfg.MongoConfig.Username,
-		Password:   cfg.MongoConfig.Password,
-		URI:        cfg.MongoConfig.BindAddr,
-		IsSSL:      cfg.MongoConfig.IsSSL,
-	}
-	err := mongodb.Init(ctx, false, true)
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
+	mongoDB, err := mongo.NewMongoStore(ctx, cfg)
 	if err != nil {
 		log.Error(ctx, "failed to intialise mongo", err)
 		return nil, err
 	}
-	return mongodb, nil
+
+	return mongoDB, nil
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo

@@ -36,7 +36,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	// ADD CODE: Add other(s) to serviceList here
 
 	// Get MongoDB client
-	mongoDB, err := serviceList.GetMongoDB(ctx, cfg)
+	mongoDB, err := serviceList.GetMongoDB(ctx, cfg.MongoConfig)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise mongo db client", err)
 		return nil, err
@@ -132,7 +132,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB api.AreaStore) (err error) {
+func registerCheckers(ctx context.Context, _ *config.Config, hc HealthChecker, mongoDB api.AreaStore) (err error) {
 	hasErrors := false
 
 	// ADD CODE: add other health checks here

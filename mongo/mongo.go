@@ -2,77 +2,47 @@ package mongo
 
 import (
 	"context"
-	"errors"
-
 	"github.com/ONSdigital/dp-areas-api/apierrors"
+	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v3/health"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
 	"github.com/ONSdigital/log.go/v2/log"
+
+	mongohealth "github.com/ONSdigital/dp-mongodb/v3/health"
+	mongodriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-const (
-	connectTimeoutInSeconds = 5
-	queryTimeoutInSeconds   = 15
-)
-
-// Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
-	healthClient *dpMongoHealth.CheckMongoClient
-	Database     string
-	Collection   string
-	Connection   *dpMongoDriver.MongoConnection
-	Username     string
-	Password     string
-	URI          string
-	IsSSL        bool
+	mongodriver.MongoConnectionConfig
+
+	connection   *mongodriver.MongoConnection
+	healthClient *mongohealth.CheckMongoClient
 }
 
-func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
-	return &dpMongoDriver.MongoConnectionConfig{
-		TLSConnectionConfig: dpMongoDriver.TLSConnectionConfig{
-			IsSSL: m.IsSSL,
-		},
-		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
-		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
+// NewMongoStore creates a new Mongo object encapsulating a connection to the mongo server/cluster with the given configuration,
+// and a health client to check the health of the mongo server/cluster
+func NewMongoStore(_ context.Context, cfg config.MongoConfig) (m *Mongo, err error) {
+	m = &Mongo{MongoConnectionConfig: cfg}
 
-		Username:                      m.Username,
-		Password:                      m.Password,
-		ClusterEndpoint:               m.URI,
-		Database:                      m.Database,
-		Collection:                    m.Collection,
-		IsWriteConcernMajorityEnabled: shouldEnableWriteConcern,
-		IsStrongReadConcernEnabled:    shouldEnableReadConcern,
-	}
-}
-
-// Init creates a new mongoConnection with a strong consistency and a write mode of "majority".
-func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableWriteConcern bool) error {
-	if m.Connection != nil {
-		return errors.New("Datastore Connection already exists")
-	}
-	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern))
+	m.connection, err = mongodriver.Open(&m.MongoConnectionConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	m.Connection = mongoConnection
-	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
-	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.Collection)}
 
-	// Create health-client from session AND collections
-	m.healthClient = dpMongoHealth.NewClientWithCollections(mongoConnection, databaseCollectionBuilder)
+	databaseCollectionBuilder := make(map[mongohealth.Database][]mongohealth.Collection)
+	databaseCollectionBuilder[(mongohealth.Database)(m.Database)] = []mongohealth.Collection{(mongohealth.Collection)(m.Collection)}
 
-	return nil
+	m.healthClient = mongohealth.NewClientWithCollections(m.connection, databaseCollectionBuilder)
+
+	return m, nil
 }
 
-// Close closes the mongo session and returns any error
+// Close the mongo session and returns any error
+// It is an error to call m.Close if m.Init() returned an error, and there is no open connection
 func (m *Mongo) Close(ctx context.Context) error {
-	if m.Connection == nil {
-		return errors.New("cannot close an empty connection")
-	}
-	return m.Connection.Close(ctx)
+	return m.connection.Close(ctx)
 }
 
 // Checker is called by the healthcheck library to check the health state of this mongoDB instance
@@ -85,14 +55,14 @@ func (m *Mongo) GetArea(ctx context.Context, id string) (*models.Area, error) {
 	log.Info(ctx, "getting area by ID", log.Data{"id": id})
 
 	var area models.Area
-	err := m.Connection.
+	err := m.connection.
 		GetConfiguredCollection().
 		Find(bson.M{"id": id}).
 		Sort(bson.D{{"version", -1}}).
 		One(ctx, &area)
 
 	if err != nil {
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
+		if mongodriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrAreaNotFound
 		}
 		return nil, err
@@ -110,9 +80,9 @@ func (m *Mongo) GetVersion(ctx context.Context, id string, versionID int) (*mode
 	}
 
 	var version models.Area
-	err := m.Connection.GetConfiguredCollection().FindOne(ctx, selector, &version)
+	err := m.connection.GetConfiguredCollection().FindOne(ctx, selector, &version)
 	if err != nil {
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
+		if mongodriver.IsErrNoDocumentFound(err) {
 			return nil, apierrors.ErrVersionNotFound
 		}
 		return nil, err
@@ -126,7 +96,7 @@ func (m *Mongo) CheckAreaExists(ctx context.Context, id string) error {
 	query = bson.M{
 		"_id": id,
 	}
-	count, err := m.Connection.
+	count, err := m.connection.
 		GetConfiguredCollection().
 		Find(query).
 		Count(ctx)
@@ -143,13 +113,13 @@ func (m *Mongo) CheckAreaExists(ctx context.Context, id string) error {
 // GetAreas retrieves all areas documents
 func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
 
-	findQuery := m.Connection.
+	findQuery := m.connection.
 		GetConfiguredCollection().
 		Find(bson.D{})
 	totalCount, err := findQuery.Count(ctx)
 	if err != nil {
 		log.Error(ctx, "error counting items", err)
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
+		if mongodriver.IsErrNoDocumentFound(err) {
 			return &models.AreasResults{
 				Items:      &[]models.Area{},
 				Count:      0,
@@ -170,7 +140,7 @@ func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasR
 			IterAll(ctx, &values)
 
 		if err != nil {
-			if dpMongoDriver.IsErrNoDocumentFound(err) {
+			if mongodriver.IsErrNoDocumentFound(err) {
 				return &models.AreasResults{
 					Items:      &values,
 					Count:      0,
