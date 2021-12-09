@@ -57,12 +57,10 @@ func TestGetAreaReturnsOk(t *testing.T) {
 	Convey("Given a successful request to get specific area", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:25500/areas/%s", testAreaId1), nil)
 		w := httptest.NewRecorder()
-		//cfg,err:=config.Get()
-		//So(err, ShouldBeNil)
 
 		mockedAreaStore := &mock.AreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
-				return &models.Area{ID: "W06000015", Name: "Cardiff", Version: 1}, nil
+				return &models.Area{ID: testAreaId1, Name: testAreaName1, Version: 1}, nil
 			},
 		}
 		Convey("When the request is served", func() {
