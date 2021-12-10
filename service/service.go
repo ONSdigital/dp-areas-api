@@ -52,7 +52,7 @@ func New(cfg *config.Config, serviceList *ExternalServiceList) *Service {
 func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version string, svcErrors chan error) (err error) {
 
 	// Get MongoDB client
-	svc.mongoDB, err = svc.ServiceList.GetMongoDB(ctx, svc.Config)
+	svc.mongoDB, err = svc.ServiceList.GetMongoDB(ctx, svc.Config.MongoConfig)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise mongo DB", err)
 		return err

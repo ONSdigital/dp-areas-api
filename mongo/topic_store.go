@@ -2,78 +2,65 @@ package mongo
 
 import (
 	"context"
-	"errors"
-
-	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpMongoHealth "github.com/ONSdigital/dp-mongodb/v3/health"
-	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
 	"github.com/ONSdigital/dp-topic-api/api"
 	errs "github.com/ONSdigital/dp-topic-api/apierrors"
+	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/models"
+
+	mongohealth "github.com/ONSdigital/dp-mongodb/v3/health"
+	mongodriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-const (
-	connectTimeoutInSeconds = 5
-	queryTimeoutInSeconds   = 15
-)
-
-// Mongo represents a simplistic MongoDB config, with session, health and lock clients
 type Mongo struct {
-	URI               string
-	Database          string
-	TopicsCollection  string
+	mongodriver.MongoConnectionConfig
+
+	Connection   *mongodriver.MongoConnection
+	healthClient *mongohealth.CheckMongoClient
+
 	ContentCollection string
-	Connection        *dpMongoDriver.MongoConnection
-	Username          string
-	Password          string
-	healthClient      *dpMongoHealth.CheckMongoClient
-	IsSSL             bool
 }
 
-func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
-	return &dpMongoDriver.MongoConnectionConfig{
-		TLSConnectionConfig: dpMongoDriver.TLSConnectionConfig{
-			IsSSL: m.IsSSL,
-		},
-		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
-		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
+func getConnectionConfig(cfg config.MongoConfig) mongodriver.MongoConnectionConfig {
+	return mongodriver.MongoConnectionConfig{
+		ClusterEndpoint:         cfg.BindAddr,
+		Username:                cfg.Username,
+		Password:                cfg.Password,
+		Database:                cfg.Database,
+		Collection:              cfg.TopicsCollection,
+		ConnectTimeoutInSeconds: cfg.ConnectTimeoutInSeconds,
+		QueryTimeoutInSeconds:   cfg.QueryTimeoutInSeconds,
 
-		Username:                      m.Username,
-		Password:                      m.Password,
-		ClusterEndpoint:               m.URI,
-		Database:                      m.Database,
-		Collection:                    m.TopicsCollection,
-		IsWriteConcernMajorityEnabled: shouldEnableWriteConcern,
-		IsStrongReadConcernEnabled:    shouldEnableReadConcern,
+		IsWriteConcernMajorityEnabled: cfg.IsWriteConcernMajorityEnabled,
+		IsStrongReadConcernEnabled:    cfg.IsStrongReadConcernEnabled,
+
+		TLSConnectionConfig: cfg.TLSConnectionConfig,
 	}
 }
 
-// Init creates a new mongoConnection with a strong consistency and a write mode of "majority".
-func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableWriteConcern bool) (err error) {
-	if m.Connection != nil {
-		return errors.New("Datastore Connection already exists")
-	}
-	mongoConnection, err := dpMongoDriver.Open(m.getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern))
+// NewDBConnection creates a new mongodb.MongoConnection with the given configuration
+func NewDBConnection(_ context.Context, cfg config.MongoConfig) (m *Mongo, err error) {
+	m = &Mongo{MongoConnectionConfig: getConnectionConfig(cfg), ContentCollection: cfg.ContentCollection}
+
+	m.Connection, err = mongodriver.Open(&m.MongoConnectionConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	m.Connection = mongoConnection
-	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
-	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.TopicsCollection), (dpMongoHealth.Collection)(m.ContentCollection)}
 
-	// Create health-client from session AND collections
-	m.healthClient = dpMongoHealth.NewClientWithCollections(mongoConnection, databaseCollectionBuilder)
+	databaseCollectionBuilder := make(map[mongohealth.Database][]mongohealth.Collection)
+	databaseCollectionBuilder[(mongohealth.Database)(m.Database)] = []mongohealth.Collection{(mongohealth.Collection)(m.Collection), (mongohealth.Collection)(m.ContentCollection)}
 
-	return nil
+	m.healthClient = mongohealth.NewClientWithCollections(m.Connection, databaseCollectionBuilder)
+
+	return m, nil
 }
 
 // Close closes the mongo session and returns any error
+// It is an error to call m.Close if m.Init() returned an error, and there is no open connection
 func (m *Mongo) Close(ctx context.Context) error {
-	if m.Connection == nil {
-		return errors.New("cannot close a empty connection")
-	}
 	return m.Connection.Close(ctx)
 }
 
@@ -88,7 +75,7 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse,
 
 	err := m.Connection.GetConfiguredCollection().FindOne(ctx, bson.M{"id": id}, &topic)
 	if err != nil {
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
+		if mongodriver.IsErrNoDocumentFound(err) {
 			return nil, errs.ErrTopicNotFound
 		}
 		return nil, err
@@ -105,9 +92,6 @@ func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
 		Find(bson.M{"id": id}).
 		Count(ctx)
 	if err != nil {
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
-			return errs.ErrTopicNotFound
-		}
 		return err
 	}
 
@@ -174,7 +158,7 @@ func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (
 		Select(contentSelect).
 		One(ctx, &content)
 	if err != nil {
-		if dpMongoDriver.IsErrNoDocumentFound(err) {
+		if mongodriver.IsErrNoDocumentFound(err) {
 			return nil, errs.ErrContentNotFound
 		}
 		return nil, err

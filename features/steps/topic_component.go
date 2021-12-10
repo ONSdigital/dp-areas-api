@@ -45,31 +45,17 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 	}
 
 	f.Config.ZebedeeURL = zebedeeURL
-
 	f.Config.EnablePrivateEndpoints = false // for component tests, ensure 'false' to start
-
 	f.Config.EnablePermissionsAuth = false
 
-	getMongoURI := fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
-	databaseName := utils.RandomDatabase()
+	f.Config.MongoConfig.BindAddr = fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
+	f.Config.MongoConfig.Database = utils.RandomDatabase()
+	f.Config.MongoConfig.Username, f.Config.MongoConfig.Password = createCredsInDB(f.Config.MongoConfig.BindAddr, f.Config.MongoConfig.Database)
 
-	username, password := createCredsInDB(getMongoURI, databaseName)
-
-	mongodb := &mongo.Mongo{
-		Database:          databaseName,
-		URI:               getMongoURI,
-		Username:          username,
-		Password:          password,
-		TopicsCollection:  f.Config.MongoConfig.TopicsCollection,
-		ContentCollection: f.Config.MongoConfig.ContentCollection,
-		IsSSL:             false,
-	}
-
-	if err := mongodb.Init(context.TODO(), false, true); err != nil {
+	f.MongoClient, err = mongo.NewDBConnection(context.TODO(), f.Config.MongoConfig)
+	if err != nil {
 		return nil, err
 	}
-
-	f.MongoClient = mongodb
 
 	initMock := &serviceMock.InitialiserMock{
 		DoGetMongoDBFunc:     f.DoGetMongoDB,
@@ -127,8 +113,12 @@ func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (f *TopicComponent) Reset() *TopicComponent {
-	f.MongoClient.Database = utils.RandomDatabase()
-	f.MongoClient.Init(context.TODO(), false, true)
+	f.Config.MongoConfig.Database = utils.RandomDatabase()
+	mcl, err := mongo.NewDBConnection(context.TODO(), f.Config.MongoConfig)
+	if err != nil {
+		panic("Error on TopicComponent::Reset() - " + err.Error())
+	}
+	f.MongoClient = mcl
 	f.Config.EnablePrivateEndpoints = false
 	return f
 }
@@ -164,6 +154,6 @@ func (f *TopicComponent) DoGetHTTPServer(bindAddr string, router http.Handler) s
 }
 
 // DoGetMongoDB returns a MongoDB
-func (f *TopicComponent) DoGetMongoDB(ctx context.Context, cfg *config.Config) (store.MongoDB, error) {
+func (f *TopicComponent) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (store.MongoDB, error) {
 	return f.MongoClient, nil
 }
