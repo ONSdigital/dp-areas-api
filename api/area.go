@@ -1,14 +1,21 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"regexp"
 
+	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/utils"
 
 	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
+)
+
+const (
+	acceptLanguageHeaderMatchString = "en|cy"
 )
 
 //GetArea is a handler that gets a area by its ID from MongoDB
@@ -46,6 +53,39 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Info(ctx, "getArea Handler: Successfully retrieved area", logdata)
+
+}
+
+//getBoundaryAreaData is a handler that gets a boundary data by ID - currently stubbed
+func (api *API) getAreaData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	areaID := vars["id"]
+
+	// error if accept language header not found
+	var validationErrs []error	
+	if req.Header.Get(models.AcceptLanguageHeaderName) == "" {
+		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderNotFoundDescription))
+	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); !m {
+		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderInvalidDescription))
+	}
+	if api.GeoData[areaID].Code == "" {
+		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, models.AreaDataGetErrorDescription))
+	}
+	//handle errors
+		if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
+	}
+
+	//get area from stubbed data
+	area := api.GeoData[areaID]
+	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
+	jsonResponse, err := json.Marshal(area)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.MarshallingAreaDataError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 
 }
 

@@ -7,6 +7,14 @@ import (
 // AreaType defines possible area types
 type AreaType int
 
+var (
+	AcceptLanguageHeaderName = "Accept-Language"
+	AcceptLanguageMapping = map[string]string{
+		"en": "English",
+		"cy": "Cymraeg", 
+	}
+)
+
 // possible area types
 const (
 	Country AreaType = iota
@@ -43,9 +51,21 @@ type LinkedAreas struct {
 
 // AreasResults represents a structure for a list of areas
 type AreasResults struct {
-	Items      *[]Area      `json:"items"`
+	Items      *[]Area     `json:"items"`
 	Count      int         `json:"count"`
 	Offset     int         `json:"offset"`
 	Limit      int         `json:"limit"`
 	TotalCount int         `json:"total_count"`
+}
+
+// AreasDataResults 
+type AreasDataResults struct {
+	Code          string        `json:"code"`
+	Name          string        `json:"name"`
+	ValidFrom     string        `json:"date_start"`
+	ValidTo       string        `json:"date_end"`
+	WelshName     string        `json:"name_welsh"`
+	GeometricData []map[string]map[string]interface{} `json:"features"`
+	Visible       bool          `json:"visible"`
+	AreaType      string
 }
