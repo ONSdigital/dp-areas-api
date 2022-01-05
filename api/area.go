@@ -79,13 +79,14 @@ func (api *API) getAreaData(ctx context.Context, w http.ResponseWriter, req *htt
 	//get area from stubbed data
 	area := api.GeoData[areaID]
 	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
-	jsonResponse, err := json.Marshal(area)
+
+	areaData, err := json.Marshal(area)
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.MarshallingAreaDataError, err.Error())
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 
 }
 

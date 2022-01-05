@@ -74,7 +74,6 @@ func initialiseStubbedAreaData(ctx context.Context) (map[string]models.AreasData
 	for _, geoDataFile := range fls {
 		var data models.AreasDataResults
 		json.Unmarshal([]byte(geoDataFile), &data)
-
 		geoData[data.Code] = data
 	}
 	return geoData, nil

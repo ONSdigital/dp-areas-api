@@ -65,7 +65,7 @@ type AreasDataResults struct {
 	ValidFrom     string        `json:"date_start"`
 	ValidTo       string        `json:"date_end"`
 	WelshName     string        `json:"name_welsh"`
-	GeometricData []map[string]map[string]interface{} `json:"features"`
+	GeometricData map[string]interface{} `json:"geometry"`
 	Visible       bool          `json:"visible"`
-	AreaType      string
+	AreaType      string        `json:"area_type"`
 }
