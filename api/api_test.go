@@ -2,10 +2,11 @@ package api_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-areas-api/config"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/ONSdigital/dp-areas-api/config"
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
@@ -21,7 +22,7 @@ func TestSetup(t *testing.T) {
 		ctx := context.Background()
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
-		api := api.Setup(ctx, cfg, r, mongoMock)
+		api, _ := api.Setup(ctx, cfg, r, mongoMock)
 		Convey("When created the following routes should have been added", func() {
 			So(hasRoute(api.Router, "/areas", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/areas/{id}", "GET"), ShouldBeTrue)
