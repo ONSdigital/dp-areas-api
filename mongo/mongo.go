@@ -32,7 +32,9 @@ type Mongo struct {
 
 func (m *Mongo) getConnectionConfig(shouldEnableReadConcern, shouldEnableWriteConcern bool) *dpMongoDriver.MongoConnectionConfig {
 	return &dpMongoDriver.MongoConnectionConfig{
-		IsSSL:                   m.IsSSL,
+		TLSConnectionConfig: dpMongoDriver.TLSConnectionConfig{
+			IsSSL: m.IsSSL,
+		},
 		ConnectTimeoutInSeconds: connectTimeoutInSeconds,
 		QueryTimeoutInSeconds:   queryTimeoutInSeconds,
 
@@ -59,13 +61,8 @@ func (m *Mongo) Init(ctx context.Context, shouldEnableReadConcern, shouldEnableW
 	databaseCollectionBuilder := make(map[dpMongoHealth.Database][]dpMongoHealth.Collection)
 	databaseCollectionBuilder[(dpMongoHealth.Database)(m.Database)] = []dpMongoHealth.Collection{(dpMongoHealth.Collection)(m.Collection)}
 
-	// Create client and health-client from session AND collections
-	client := dpMongoHealth.NewClientWithCollections(mongoConnection, databaseCollectionBuilder)
-
-	m.healthClient = &dpMongoHealth.CheckMongoClient{
-		Client:      *client,
-		Healthcheck: client.Healthcheck,
-	}
+	// Create health-client from session AND collections
+	m.healthClient = dpMongoHealth.NewClientWithCollections(mongoConnection, databaseCollectionBuilder)
 
 	return nil
 }

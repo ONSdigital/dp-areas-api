@@ -20,7 +20,6 @@ parameters:
     type: string
     required: true
 
-
   version:
     name: version
     description: "A version of a dataset"
@@ -111,7 +110,29 @@ paths:
           $ref: "#/responses/ResourceNotFound"
         500:
           $ref: "#/responses/InternalError"
-
+  /v1/areas/{id}:
+    get:
+      tags:
+        - "Public"
+      summary: "Returns the latest version of an area - stubbed to return data for E92000001 / W92000004 only"
+      description: "Returns an area for given id's E92000001 and W92000004 only"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: header
+          type: string
+          name: Accept-Language
+          description: "The language type - 'en' for English, 'cy' for Cymraeg"
+      responses:
+        200:
+          description: "Successfully returned an area for either E92000001 or W92000004 only"
+          schema:
+            $ref: "#/definitions/AreaData"
+        404:
+          $ref: "#/definitions/ErrorResponse"
+        500:
+          $ref: "#/definitions/ErrorResponse"
   /areas/{id}/versions:
     get:
       tags:
@@ -226,6 +247,52 @@ definitions:
         description: "The version of current area"
         example: 1
 
+  AreaData:
+    type: object
+    required: ["id"]
+    properties:
+      code:
+        type: string
+        description: "The unique code for the area"
+        example: "W92000004"
+      name:
+        type: string
+        description: "The name of the area"
+        example: "Wales"
+      date_start:
+        type: string
+        description: "The date from which the area data became active"
+        example: "Thu, 01 Jan 2009 00:00:00 GMT"
+      date_end:
+        type: string
+        description: "The date from which the area data became inactive"
+        example: "Thu, 01 Jan 2029 00:00:00 GMT"
+      name_welsh:
+        type: string
+        description: "The Welsh version of the name field"
+        example: "Cymru"
+      geometry:
+        type: object
+        properties:
+          coordinates:
+            type: array
+            items:
+              description: "coordinates for boundary code"
+              type: array
+              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+          type:
+            type: string
+            description: "coordinate type"
+            example: "MutliPolygon"
+      area_type:
+        type: string
+        description: "english or welsh label text"
+        example: "Cymraeg"
+      visible:
+        type: boolean
+        description: "whether we surface a page for this area or not"
+        example: true
+
   Linked_area:
     type: object
     required: ["id"]
@@ -272,6 +339,30 @@ definitions:
         readOnly: true
         type: integer
         example: 1
+
+  ErrorResponse:
+    description: "A list of any errors"
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorObject'
+
+  ErrorObject:
+    description: "An individual error details"
+    type: object
+    properties:
+      code:
+        type: string
+        description: "Code representing the type of error that occurred"
+        enum:
+          - "AcceptLanguageHeaderError"
+          - "AreaDataIdGetError"
+          - "MarshallingAreaDataError"
+      description:
+        type: string
+        description: "Description of the error"
 
 responses:
   ResourceNotFound:

@@ -32,7 +32,7 @@ func TestGetVersionReturnsOk(t *testing.T) {
 			},
 		}
 		Convey("When the request is served", func() {
-			apiMock := GetAPIWithMocks(mockedAreaStore)
+			apiMock, _ := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an OK response 200 is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
@@ -62,7 +62,7 @@ func TestGetVersionReturnsError(t *testing.T) {
 			},
 		}
 		Convey("When the request is served", func() {
-			apiMock := GetAPIWithMocks(mockedAreaStore)
+			apiMock, _ := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an error area not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
@@ -85,7 +85,7 @@ func TestGetVersionReturnsError(t *testing.T) {
 			},
 		}
 		Convey("When the request is served", func() {
-			apiMock := GetAPIWithMocks(mockedAreaStore)
+			apiMock, _ := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an error version not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
@@ -108,7 +108,7 @@ func TestGetVersionReturnsError(t *testing.T) {
 			},
 		}
 		Convey("When the request is served", func() {
-			apiMock := GetAPIWithMocks(mockedAreaStore)
+			apiMock, _ := GetAPIWithMocks(mockedAreaStore)
 			apiMock.Router.ServeHTTP(w, r)
 			Convey("Then an internal server error is returned", func() {
 				assertInternalServerErr(w)
