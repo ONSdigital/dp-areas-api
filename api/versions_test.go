@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -20,10 +21,10 @@ func TestGetVersionReturnsOk(t *testing.T) {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/1", nil)
 		w := httptest.NewRecorder()
 		mockedAreaStore := &mock.AreaStoreMock{
-			CheckAreaExistsFunc: func(id string) error {
-				return nil
+			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
+				return &models.Area{}, nil
 			},
-			GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
+			GetVersionFunc: func(ctx context.Context, id string, versionID int) (*models.Area, error) {
 				return &models.Area{
 					ID:      id,
 					Name:    "Cardiff",
@@ -41,9 +42,9 @@ func TestGetVersionReturnsOk(t *testing.T) {
 				err = json.Unmarshal(payload, &returnedArea)
 				So(err, ShouldBeNil)
 				So(w.Code, ShouldEqual, http.StatusOK)
-				So(mockedAreaStore.CheckAreaExistsCalls(), ShouldHaveLength, 1)
+				So(mockedAreaStore.GetAreaCalls(), ShouldHaveLength, 1)
 				So(mockedAreaStore.GetVersionCalls(), ShouldHaveLength, 1)
-				So(returnedArea, ShouldResemble, *dbArea(testAreaId1,testAreaName1))
+				So(returnedArea, ShouldResemble, *dbArea(testAreaId1, testAreaName1))
 			})
 		})
 	})
@@ -54,10 +55,10 @@ func TestGetVersionReturnsError(t *testing.T) {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W0600001/versions/1", nil)
 		w := httptest.NewRecorder()
 		mockedAreaStore := &mock.AreaStoreMock{
-			CheckAreaExistsFunc: func(id string) error {
-				return apierrors.ErrAreaNotFound
+			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
+				return nil, apierrors.ErrAreaNotFound
 			},
-			GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
+			GetVersionFunc: func(ctx context.Context, id string, versionID int) (*models.Area, error) {
 				return nil, nil
 			},
 		}
@@ -67,7 +68,7 @@ func TestGetVersionReturnsError(t *testing.T) {
 			Convey("Then an error area not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 				So(w.Body.String(), ShouldContainSubstring, apierrors.ErrAreaNotFound.Error())
-				So(mockedAreaStore.CheckAreaExistsCalls(), ShouldHaveLength, 1)
+				So(mockedAreaStore.GetAreaCalls(), ShouldHaveLength, 1)
 				So(mockedAreaStore.GetVersionCalls(), ShouldHaveLength, 0)
 			})
 		})
@@ -77,10 +78,10 @@ func TestGetVersionReturnsError(t *testing.T) {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/2", nil)
 		w := httptest.NewRecorder()
 		mockedAreaStore := &mock.AreaStoreMock{
-			CheckAreaExistsFunc: func(id string) error {
-				return nil
+			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
+				return &models.Area{}, nil
 			},
-			GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
+			GetVersionFunc: func(ctx context.Context, id string, versionID int) (*models.Area, error) {
 				return nil, apierrors.ErrVersionNotFound
 			},
 		}
@@ -90,7 +91,7 @@ func TestGetVersionReturnsError(t *testing.T) {
 			Convey("Then an error version not found is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 				So(w.Body.String(), ShouldContainSubstring, apierrors.ErrVersionNotFound.Error())
-				So(mockedAreaStore.CheckAreaExistsCalls(), ShouldHaveLength, 1)
+				So(mockedAreaStore.GetAreaCalls(), ShouldHaveLength, 1)
 				So(mockedAreaStore.GetVersionCalls(), ShouldHaveLength, 1)
 			})
 		})
@@ -100,10 +101,10 @@ func TestGetVersionReturnsError(t *testing.T) {
 		r := httptest.NewRequest("GET", "http://localhost:25500/areas/W06000015/versions/1", nil)
 		w := httptest.NewRecorder()
 		mockedAreaStore := &mock.AreaStoreMock{
-			CheckAreaExistsFunc: func(id string) error {
-				return apierrors.ErrInternalServer
+			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
+				return nil, apierrors.ErrInternalServer
 			},
-			GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
+			GetVersionFunc: func(ctx context.Context, id string, versionID int) (*models.Area, error) {
 				return nil, nil
 			},
 		}
@@ -113,12 +114,11 @@ func TestGetVersionReturnsError(t *testing.T) {
 			Convey("Then an internal server error is returned", func() {
 				assertInternalServerErr(w)
 
-				So(mockedAreaStore.CheckAreaExistsCalls(), ShouldHaveLength, 1)
+				So(mockedAreaStore.GetAreaCalls(), ShouldHaveLength, 1)
 				So(mockedAreaStore.GetVersionCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
-
 }
 
 func assertInternalServerErr(w *httptest.ResponseRecorder) {
