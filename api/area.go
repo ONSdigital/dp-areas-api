@@ -58,12 +58,12 @@ func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 }
 
 //getBoundaryAreaData is a handler that gets a boundary data by ID - currently stubbed
-func (api *API) getAreaData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
 
 	// error if accept language header not found
-	var validationErrs []error	
+	var validationErrs []error
 	if req.Header.Get(models.AcceptLanguageHeaderName) == "" {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderNotFoundDescription))
 	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); !m {
@@ -73,7 +73,7 @@ func (api *API) getAreaData(ctx context.Context, w http.ResponseWriter, req *htt
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, models.AreaDataGetErrorDescription))
 	}
 	//handle errors
-		if len(validationErrs) != 0 {
+	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
 

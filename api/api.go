@@ -47,7 +47,7 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 //Setup function sets up the api and returns an api
 func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore AreaStore) (*API, error) {
 	// initialised stubbed geo data
-	geoData, err := initialiseStubbedAreaData(ctx);
+	geoData, err := initialiseStubbedAreaData(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore Are
 	return api, nil
 }
 
-func initialiseStubbedAreaData(ctx context.Context) (map[string]models.AreasDataResults, error) {
+func initialiseStubbedAreaData(_ context.Context) (map[string]models.AreasDataResults, error) {
 	geoData := make(map[string]models.AreasDataResults, 2)
 	for _, geoDataFile := range fls {
 		var data models.AreasDataResults
