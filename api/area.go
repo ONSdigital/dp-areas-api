@@ -19,6 +19,10 @@ const (
 	acceptLanguageHeaderMatchString = "en|cy"
 )
 
+var (
+	queryStr = "select id, code, active from areas_basic where id=$1"
+)
+
 //GetArea is a handler that gets a area by its ID from MongoDB
 func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
@@ -88,7 +92,40 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	}
 
 	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
+}
 
+//getAreaRDSData test endpoint to demo rds database interaction
+//TODO: remove this handler once rds transaction endpoints get added to the service - this is just an example
+func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	areaID := vars["id"]
+
+	var (
+		validationErrs []error
+		code string
+		id int64
+		active bool
+	)
+	err := api.rds.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
+	if err != nil {
+		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, err.Error()))
+	}
+	//handle errors
+	if len(validationErrs) != 0 {
+		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
+	}
+
+	areaData, err := json.Marshal(&models.AreaDataRDS{
+		Id: id,
+		Code: code,
+		Active: active,
+	})
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.MarshallingAreaDataError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 }
 
 //GetAreas is a handler that gets all the areas from MongoDB

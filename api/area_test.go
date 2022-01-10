@@ -49,7 +49,7 @@ func GetAPIWithMocks(mockedAreaStore api.AreaStore) (*api.API, error) {
 	So(err, ShouldBeNil)
 	cfg.DefaultLimit = 0
 	cfg.DefaultOffset = 0
-	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedAreaStore)
+	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedAreaStore, nil)
 }
 
 func TestGetAreaReturnsOk(t *testing.T) {

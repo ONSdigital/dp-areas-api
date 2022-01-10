@@ -5,12 +5,20 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
+	"github.com/ONSdigital/dp-areas-api/rds"
+	"github.com/ONSdigital/dp-areas-api/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/mongo"
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
+
+	aurorards "github.com/aws/aws-sdk-go/service/rds"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -59,6 +67,21 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 	return hc, nil
 }
 
+// GetRDSClient creates aurora rds client
+func (e *ExternalServiceList) GetRDSClient(region string) rds.Client {
+	client := e.Init.DoGetRDSClient(region)
+	return client
+}
+
+// GetRDSClient creates aurora rds client
+func (e *ExternalServiceList) GetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+	pgxConn, err := e.Init.DoGetPGXPool(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return pgxConn, nil
+}
+
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
 func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := dphttp.NewServer(bindAddr, router)
@@ -85,4 +108,21 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 	}
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	return &hc, nil
+}
+
+// DoGetRDSClient creates a cognito client
+func (e *Init) DoGetRDSClient(region string) rds.Client {
+	client := aurorards.New(session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	})), &aws.Config{Region: &region})
+	return client
+}
+
+// DoGetPGXPool creates a pgx pool connector
+func (e *Init) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+	pgxConn, err := utils.GenerateTestRDSHandle(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return pgxConn, nil
 }

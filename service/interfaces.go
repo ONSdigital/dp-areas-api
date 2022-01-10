@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
+	"github.com/ONSdigital/dp-areas-api/rds"
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
@@ -17,7 +20,9 @@ import (
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error)
+	DoGetMongoDB(ctx context.Context, cfg *config.Config) (api.AreaStore, error)
+	DoGetRDSClient(region string) rds.Client
+	DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server

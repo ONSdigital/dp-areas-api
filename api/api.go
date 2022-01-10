@@ -11,6 +11,8 @@ import (
 	"github.com/ONSdigital/dp-areas-api/api/geodata"
 
 	"github.com/gorilla/mux"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var (
@@ -28,6 +30,7 @@ type API struct {
 	defaultOffset int
 	maxLimit      int
 	GeoData       map[string]models.AreasDataResults
+	rds           *pgxpool.Pool
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -45,7 +48,7 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 }
 
 //Setup function sets up the api and returns an api
-func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore AreaStore) (*API, error) {
+func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore AreaStore, rdsConn *pgxpool.Pool) (*API, error) {
 	// initialised stubbed geo data
 	geoData, err := initialiseStubbedAreaData(ctx)
 	if err != nil {
@@ -59,12 +62,14 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore Are
 		defaultOffset: cfg.DefaultOffset,
 		maxLimit:      cfg.DefaultMaxLimit,
 		GeoData:       geoData,
+		rds:           rdsConn,
 	}
 
 	r.HandleFunc("/areas", api.getAreas).Methods(http.MethodGet)
 	r.HandleFunc("/areas/{id}", api.getArea).Methods(http.MethodGet)
 	r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.getAreaData)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/areas/{id}/relations", contextAndErrors(api.getAreaRelationships)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/rds/areas/{id}", contextAndErrors(api.getAreaRDSData)).Methods(http.MethodGet)
 	r.HandleFunc("/areas/{id}/versions/{version}", api.getVersion).Methods(http.MethodGet)
 
 	return api, nil

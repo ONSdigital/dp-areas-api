@@ -3,11 +3,14 @@ package service_test
 import (
 	"context"
 	"fmt"
-	"github.com/ONSdigital/dp-areas-api/api"
 	"net/http"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-areas-api/api"
+	"github.com/ONSdigital/dp-areas-api/utils"
+	"github.com/jackc/pgx/v4/pgxpool"
 
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -18,6 +21,11 @@ import (
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
+
+	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
+	"github.com/ONSdigital/dp-areas-api/rds"
+	rdsMock "github.com/ONSdigital/dp-areas-api/rds/mock"
+	awsrds "github.com/aws/aws-sdk-go/service/rds"
 )
 
 var (
@@ -79,6 +87,19 @@ func TestRun(t *testing.T) {
 			},
 		}
 
+		rdsMock := &rdsMock.ClientMock{
+			DescribeDBInstancesFunc: func(input *awsrds.DescribeDBInstancesInput) (*awsrds.DescribeDBInstancesOutput, error) {
+				testDBName := "testDB1"
+				return &awsrds.DescribeDBInstancesOutput{
+					DBInstances: []*awsrds.DBInstance{
+						{
+							DBName: &testDBName,
+						},
+					},
+				}, nil
+			},
+		}
+
 		funcDoGetHealthcheckOk := func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 			return hcMock, nil
 		}
@@ -95,11 +116,22 @@ func TestRun(t *testing.T) {
 			return mongoMock, nil
 		}
 
+		funcDoGetRDSClient := func(region string) rds.Client {
+			return rdsMock
+		}
+
+		funcDoGetPGXPool := func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
+			p := &pgxpool.Pool{}
+			return p, nil
+		}
+
 		Convey("Given that initialising mongoDB returns an error", func() {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetMongoDBFunc:     funcDoGetMongoDBErr,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
+				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetPGXPoolFunc:     funcDoGetPGXPool,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -119,7 +151,10 @@ func TestRun(t *testing.T) {
 				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
 				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
+				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetPGXPoolFunc:     funcDoGetPGXPool,
 			}
+
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
 			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
@@ -141,7 +176,9 @@ func TestRun(t *testing.T) {
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
-			}
+				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetPGXPoolFunc:     funcDoGetPGXPool,
+			}	
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -155,8 +192,9 @@ func TestRun(t *testing.T) {
 			})
 
 			Convey("Then checkers are registered and the healthcheck and http server started", func() {
-				So(hcMock.AddCheckCalls(), ShouldHaveLength, 1)
-				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "Mongo DB")
+				So(hcMock.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
+				So(hcMock.AddCheckCalls()[1].Name, ShouldResemble, "Mongo DB")
 				So(initMock.DoGetHTTPServerCalls(), ShouldHaveLength, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25500")
 				So(initMock.DoGetMongoDBCalls()[0].Cfg.ClusterEndpoint, ShouldEqual, "localhost:27017")
@@ -186,8 +224,9 @@ func TestRun(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMockAddFail, nil
 				},
-				DoGetMongoDBFunc: funcDoGetMongoDBOk,
-				// ADD CODE: add the checkers that you want to register here
+				DoGetMongoDBFunc:    funcDoGetMongoDBOk,
+				DoGetRDSClientFunc:  funcDoGetRDSClient,
+				DoGetPGXPoolFunc:    funcDoGetPGXPool,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -198,8 +237,9 @@ func TestRun(t *testing.T) {
 				So(err.Error(), ShouldResemble, fmt.Sprintf("unable to register checkers: %s", errAddheckFail.Error()))
 				So(svcList.HealthCheck, ShouldBeTrue)
 				// ADD CODE: add code to confirm checkers exist
-				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 1)
-				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "Mongo DB") // ADD CODE: change the '0' to the number of checkers you have registered
+				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
+				So(hcMockAddFail.AddCheckCalls()[1].Name, ShouldResemble, "Mongo DB")
 			})
 			Reset(func() {
 				// This reset is run after each `Convey` at the same scope (indentation)
@@ -213,6 +253,8 @@ func TestRun(t *testing.T) {
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetHTTPServerFunc:  funcDoGetFailingHTTPServer,
 				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
+				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetPGXPoolFunc:     funcDoGetPGXPool,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -260,6 +302,22 @@ func TestClose(t *testing.T) {
 			},
 		}
 
+		rdsMock := &rdsMock.ClientMock{
+			DescribeDBInstancesFunc: func(input *awsrds.DescribeDBInstancesInput) (*awsrds.DescribeDBInstancesOutput, error) {
+				testDBName := "testDB1"
+				return &awsrds.DescribeDBInstancesOutput{
+					DBInstances: []*awsrds.DBInstance{
+						{
+							DBName: &testDBName,
+						},
+					},
+				}, nil
+			},
+		}
+
+		// open a valid db connection for testing - first time
+		pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
+
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
 			mongoMock := &apiMock.AreaStoreMock{
@@ -276,6 +334,12 @@ func TestClose(t *testing.T) {
 				},
 				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 					return mongoMock, nil
+				},
+				DoGetRDSClientFunc: func(region string) rds.Client {
+					return rdsMock
+				},
+				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
+					return pgxTestConnection, nil
 				},
 			}
 
@@ -300,6 +364,10 @@ func TestClose(t *testing.T) {
 				},
 			}
 
+			// open a valid db connection for testing - second time
+			pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
+
+
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
@@ -307,6 +375,12 @@ func TestClose(t *testing.T) {
 				},
 				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 					return mongoMockCloseErr, nil
+				},
+				DoGetRDSClientFunc: func(region string) rds.Client {
+					return rdsMock
+				},
+				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
+					return pgxTestConnection, nil
 				},
 			}
 
@@ -334,6 +408,18 @@ func TestClose(t *testing.T) {
 				},
 			}
 
+			// open a valid db connection for testing - third time
+			pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
+
+			pgxMock := &pgxMock.PGXPoolMock{
+				ConnectFunc: func(ctx context.Context, connString string) (*pgxpool.Pool, error) {
+					return pgxTestConnection, nil
+				},
+				CloseFunc: func() {},
+			}
+			
+			c, _ := pgxMock.ConnectFunc(ctx, "test")
+
 			svcList := service.NewServiceList(nil)
 			svcList.HealthCheck = true
 			svc := service.Service{
@@ -342,6 +428,7 @@ func TestClose(t *testing.T) {
 				Server:      timeoutServerMock,
 				HealthCheck: hcMock,
 				MongoDB:     mongoMock,
+				RDS:         c,
 			}
 
 			err = svc.Close(context.Background())

@@ -5,12 +5,17 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	health "github.com/ONSdigital/dp-areas-api/service/healthcheck"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// Service contains all the configs, server and clients to run the dp-topic-api API
+// Service contains all the configs, server and clients to run the dp-areas-api API
 type Service struct {
 	Config      *config.Config
 	Server      HTTPServer
@@ -19,6 +24,7 @@ type Service struct {
 	ServiceList *ExternalServiceList
 	MongoDB     api.AreaStore
 	HealthCheck HealthChecker
+	RDS         *pgxpool.Pool
 }
 
 // Run the service
@@ -33,26 +39,32 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 
-	// ADD CODE: Add other(s) to serviceList here
-
 	// Get MongoDB client
 	mongoDB, err := serviceList.GetMongoDB(ctx, cfg.MongoConfig)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise mongo db client", err)
 		return nil, err
+	} 
+
+	// generate the pgx->rds connection
+	pgxConn, err := serviceList.GetPGXPool(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, "error connecting pgx driver to rds instance instance", err)
+		return nil, err
 	}
 
 	// Setup the API
-	a, _ := api.Setup(ctx, cfg, r, mongoDB)
+	a, _ := api.Setup(ctx, cfg, r, mongoDB, pgxConn)
 
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
-
 	if err != nil {
 		log.Fatal(ctx, "could not instantiate healthcheck", err)
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, cfg, hc, mongoDB); err != nil {
+	rdsClient := serviceList.GetRDSClient(cfg.AWSRegion)
+
+	if err := registerCheckers(ctx, cfg, hc, mongoDB, rdsClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -74,6 +86,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		ServiceList: serviceList,
 		Server:      s,
 		MongoDB:     mongoDB,
+		RDS:		 pgxConn,
 	}, nil
 }
 
@@ -108,8 +121,8 @@ func (svc *Service) Close(ctx context.Context) error {
 			}
 		}
 
-		// ADD CODE HERE: Close other dependencies, in the expected order
-
+		// close RDS connection
+		svc.RDS.Close()
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
@@ -132,10 +145,14 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, _ *config.Config, hc HealthChecker, mongoDB api.AreaStore) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB api.AreaStore, rdsClient rds.Client) (err error) {
 	hasErrors := false
 
-	// ADD CODE: add other health checks here
+	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient)); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for rds client", err)
+	}
+
 	if err = hc.AddCheck("Mongo DB", mongoDB.Checker); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for mongo db client", err)
@@ -146,3 +163,4 @@ func registerCheckers(ctx context.Context, _ *config.Config, hc HealthChecker, m
 	}
 	return nil
 }
+

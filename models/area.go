@@ -75,3 +75,10 @@ type AreaRelationShips struct {
 	AreaName string `json:"area_name"`
 	Href string   `json:"href"`
 }
+
+// basic area data
+type AreaDataRDS struct {
+	Id int64    `json:"id"`
+	Code string `json:"code"`
+	Active bool `json:"active"`
+}
