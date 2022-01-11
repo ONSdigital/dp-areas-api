@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-areas-api/api/stubs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -486,7 +487,7 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 				err = json.Unmarshal(payload, &relationsShips)
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
-				So(relationsShips, ShouldBeEmpty)
+				So(relationsShips, ShouldResemble, stubs.Relationships["E92000001"])
 			})
 		})
 	})
