@@ -69,3 +69,9 @@ type AreasDataResults struct {
 	Visible       bool          `json:"visible"`
 	AreaType      string        `json:"area_type"`
 }
+
+type AreaRelationShips struct {
+	AreaCode string `json:"area_code"`
+	AreaName string `json:"area_name"`
+	Href string   `json:"href"`
+}

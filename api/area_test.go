@@ -466,3 +466,48 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 		})
 	})
 }
+
+func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
+	Convey("Given a successful request to stubbed area data - E92000001", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations", EnglandAreaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				relationsShips := []models.AreaRelationShips{}
+				err = json.Unmarshal(payload, &relationsShips)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(relationsShips, ShouldBeEmpty)
+			})
+		})
+	})
+}
+
+
+func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
+	Convey("Given a successful request to stubbed area data - invalid", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations", "InvalidAreaCode"), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an 404 response is returned", func() {
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+		})
+	})
+}

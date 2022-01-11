@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-areas-api/api/stubs"
 	"net/http"
 	"regexp"
 
@@ -165,4 +166,24 @@ func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Info(ctx, "api endpoint getAreas request successful")
+}
+
+//getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
+func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	vars := mux.Vars(req)
+	areaID := vars["id"]
+
+	//get area relationships from stubbed data
+	if relationShips, ok := stubs.Relationships[areaID]; !ok {
+		return nil, models.NewErrorResponse(http.StatusNotFound, nil)
+	} else {
+		jsonResponse, err := json.Marshal(relationShips)
+		if err != nil {
+			responseErr := models.NewError(ctx, err, models.MarshallingAreaRelationshipsError, err.Error())
+			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+		}
+
+		return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+	}
 }
