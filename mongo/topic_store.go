@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/api"
@@ -16,43 +17,27 @@ import (
 )
 
 type Mongo struct {
-	mongodriver.MongoConnectionConfig
+	mongodriver.MongoDriverConfig
 
 	Connection   *mongodriver.MongoConnection
 	healthClient *mongohealth.CheckMongoClient
-
-	ContentCollection string
 }
 
-func getConnectionConfig(cfg config.MongoConfig) mongodriver.MongoConnectionConfig {
-	return mongodriver.MongoConnectionConfig{
-		ClusterEndpoint:         cfg.BindAddr,
-		Username:                cfg.Username,
-		Password:                cfg.Password,
-		Database:                cfg.Database,
-		Collection:              cfg.TopicsCollection,
-		ConnectTimeoutInSeconds: cfg.ConnectTimeoutInSeconds,
-		QueryTimeoutInSeconds:   cfg.QueryTimeoutInSeconds,
-
-		IsWriteConcernMajorityEnabled: cfg.IsWriteConcernMajorityEnabled,
-		IsStrongReadConcernEnabled:    cfg.IsStrongReadConcernEnabled,
-
-		TLSConnectionConfig: cfg.TLSConnectionConfig,
-	}
-}
-
-// NewDBConnection creates a new mongodb.MongoConnection with the given configuration
+// NewDBConnection creates a new Mongo object encapsulating a connection to the mongo server/cluster with the given configuration,
+// and a health client to check the health of the mongo server/cluster
 func NewDBConnection(_ context.Context, cfg config.MongoConfig) (m *Mongo, err error) {
-	m = &Mongo{MongoConnectionConfig: getConnectionConfig(cfg), ContentCollection: cfg.ContentCollection}
-
-	m.Connection, err = mongodriver.Open(&m.MongoConnectionConfig)
+	m = &Mongo{MongoDriverConfig: cfg}
+	m.Connection, err = mongodriver.Open(&m.MongoDriverConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	databaseCollectionBuilder := make(map[mongohealth.Database][]mongohealth.Collection)
-	databaseCollectionBuilder[(mongohealth.Database)(m.Database)] = []mongohealth.Collection{(mongohealth.Collection)(m.Collection), (mongohealth.Collection)(m.ContentCollection)}
-
+	databaseCollectionBuilder := map[mongohealth.Database][]mongohealth.Collection{
+		mongohealth.Database(m.Database): {
+			mongohealth.Collection(m.ActualCollectionName(config.TopicsCollection)),
+			mongohealth.Collection(m.ActualCollectionName(config.ContentCollection)),
+		},
+	}
 	m.healthClient = mongohealth.NewClientWithCollections(m.Connection, databaseCollectionBuilder)
 
 	return m, nil
@@ -73,9 +58,9 @@ func (m *Mongo) Checker(ctx context.Context, state *healthcheck.CheckState) erro
 func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse, error) {
 	var topic models.TopicResponse
 
-	err := m.Connection.GetConfiguredCollection().FindOne(ctx, bson.M{"id": id}, &topic)
+	err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).FindOne(ctx, bson.M{"id": id}, &topic)
 	if err != nil {
-		if mongodriver.IsErrNoDocumentFound(err) {
+		if errors.Is(err, mongodriver.ErrNoDocumentFound) {
 			return nil, errs.ErrTopicNotFound
 		}
 		return nil, err
@@ -87,10 +72,7 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse,
 // CheckTopicExists checks that the topic exists
 func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
 
-	count, err := m.Connection.
-		GetConfiguredCollection().
-		Find(bson.M{"id": id}).
-		Count(ctx)
+	count, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Count(ctx, bson.M{"id": id})
 	if err != nil {
 		return err
 	}
@@ -152,13 +134,9 @@ func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (
 		contentSelect["current.timeseries"] = 1
 	}
 
-	err := m.Connection.
-		C(m.ContentCollection).
-		Find(bson.M{"id": id}).
-		Select(contentSelect).
-		One(ctx, &content)
+	err := m.Connection.Collection(m.ActualCollectionName(config.ContentCollection)).FindOne(ctx, bson.M{"id": id}, &content, mongodriver.Projection(contentSelect))
 	if err != nil {
-		if mongodriver.IsErrNoDocumentFound(err) {
+		if errors.Is(err, mongodriver.ErrNoDocumentFound) {
 			return nil, errs.ErrContentNotFound
 		}
 		return nil, err

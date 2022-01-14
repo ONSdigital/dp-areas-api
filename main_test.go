@@ -23,19 +23,11 @@ type ComponentTest struct {
 
 func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature := componenttest.NewAuthorizationFeature()
-	topicComponent, err := steps.NewTopicComponent(f.MongoFeature, authorizationFeature.FakeAuthService.ResolveURL(""))
+	topicComponent, err := steps.NewTopicComponent(f.MongoFeature.Server.URI(), authorizationFeature.FakeAuthService.ResolveURL(""))
 	if err != nil {
 		panic(err)
 	}
-
 	apiFeature := componenttest.NewAPIFeature(topicComponent.InitialiseService)
-
-	ctx.BeforeScenario(func(*godog.Scenario) {
-		apiFeature.Reset()
-		topicComponent.Reset()
-		f.MongoFeature.Reset()
-		authorizationFeature.Reset()
-	})
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
 		topicComponent.Close()
@@ -56,7 +48,7 @@ func (f *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	})
 }
 
-func TestMain(t *testing.T) {
+func TestComponent(t *testing.T) {
 	// *componentFlag = true // put this line in if you want to "debug test" this function in vscode IDE
 	if *componentFlag {
 		status := 0

@@ -2,8 +2,8 @@ package steps
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-component-test/utils"
@@ -29,7 +29,7 @@ type TopicComponent struct {
 	ServiceRunning bool
 }
 
-func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL string) (*TopicComponent, error) {
+func NewTopicComponent(mongoURL, zebedeeURL string) (*TopicComponent, error) {
 
 	f := &TopicComponent{
 		HTTPServer:     &http.Server{},
@@ -45,12 +45,11 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 	}
 
 	f.Config.ZebedeeURL = zebedeeURL
-	f.Config.EnablePrivateEndpoints = false // for component tests, ensure 'false' to start
-	f.Config.EnablePermissionsAuth = false
+	f.Config.EnablePrivateEndpoints = false
 
-	f.Config.MongoConfig.BindAddr = fmt.Sprintf("localhost:%d", mongoFeature.Server.Port())
+	f.Config.MongoConfig.ClusterEndpoint = mongoURL
 	f.Config.MongoConfig.Database = utils.RandomDatabase()
-	f.Config.MongoConfig.Username, f.Config.MongoConfig.Password = createCredsInDB(f.Config.MongoConfig.BindAddr, f.Config.MongoConfig.Database)
+	f.Config.MongoConfig.Username, f.Config.MongoConfig.Password = createCredsInDB(f.Config.MongoConfig.ClusterEndpoint, f.Config.MongoConfig.Database)
 
 	f.MongoClient, err = mongo.NewDBConnection(context.TODO(), f.Config.MongoConfig)
 	if err != nil {
@@ -71,12 +70,12 @@ func NewTopicComponent(mongoFeature *componenttest.MongoFeature, zebedeeURL stri
 func createCredsInDB(getMongoURI string, databaseName string) (string, string) {
 	username := "admin"
 	password, _ := uuid.NewV4()
-	mongoConnectionConfig := &dpMongoDriver.MongoConnectionConfig{
+	mongoConnectionConfig := &dpMongoDriver.MongoDriverConfig{
 		TLSConnectionConfig: dpMongoDriver.TLSConnectionConfig{
 			IsSSL: false,
 		},
-		ConnectTimeoutInSeconds: 15,
-		QueryTimeoutInSeconds:   15,
+		ConnectTimeout: 15 * time.Second,
+		QueryTimeout:   15 * time.Second,
 
 		Username:        "",
 		Password:        "",
@@ -110,17 +109,6 @@ func (f *TopicComponent) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^private endpoints are enabled$`, f.privateEndpointsAreEnabled)
 	ctx.Step(`^I have these topics:$`, f.iHaveTheseTopics)
 	ctx.Step(`^I have these contents:$`, f.iHaveTheseContents)
-}
-
-func (f *TopicComponent) Reset() *TopicComponent {
-	f.Config.MongoConfig.Database = utils.RandomDatabase()
-	mcl, err := mongo.NewDBConnection(context.TODO(), f.Config.MongoConfig)
-	if err != nil {
-		panic("Error on TopicComponent::Reset() - " + err.Error())
-	}
-	f.MongoClient = mcl
-	f.Config.EnablePrivateEndpoints = false
-	return f
 }
 
 func (f *TopicComponent) Close() error {

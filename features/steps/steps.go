@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-topic-api/config"
 	"time"
 
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
@@ -23,7 +24,7 @@ func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) erro
 	}
 
 	for _, topicsDoc := range topics {
-		if err := f.putTopicInDatabase(ctx, m.Connection, topicsDoc); err != nil {
+		if err := f.putTopicInDatabase(ctx, m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)), topicsDoc); err != nil {
 			return err
 		}
 	}
@@ -31,14 +32,14 @@ func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) erro
 	return nil
 }
 
-func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoConnection *dpMongoDriver.MongoConnection, topicDoc models.TopicWrite) error {
+func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoCollection *dpMongoDriver.Collection, topicDoc models.TopicWrite) error {
 	update := bson.M{
 		"$set": topicDoc,
 		"$setOnInsert": bson.M{
 			"last_updated": time.Now(),
 		},
 	}
-	_, err := mongoConnection.GetConfiguredCollection().UpsertById(ctx, topicDoc.ID, update)
+	_, err := mongoCollection.UpsertById(ctx, topicDoc.ID, update)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (f *TopicComponent) iHaveTheseContents(contentJson *godog.DocString) error 
 	}
 
 	for _, topicsDoc := range collection {
-		if err := f.putContentInDatabase(ctx, m.Connection, topicsDoc); err != nil {
+		if err := f.putContentInDatabase(ctx, m.Connection.Collection(m.ActualCollectionName(config.ContentCollection)), topicsDoc); err != nil {
 			return err
 		}
 	}
@@ -64,14 +65,14 @@ func (f *TopicComponent) iHaveTheseContents(contentJson *godog.DocString) error 
 	return nil
 }
 
-func (f *TopicComponent) putContentInDatabase(ctx context.Context, mongoConnection *dpMongoDriver.MongoConnection, contentDoc models.ContentResponse) error {
+func (f *TopicComponent) putContentInDatabase(ctx context.Context, mongoCollection *dpMongoDriver.Collection, contentDoc models.ContentResponse) error {
 	update := bson.M{
 		"$set": contentDoc,
 		"$setOnInsert": bson.M{
 			"last_updated": time.Now(),
 		},
 	}
-	_, err := mongoConnection.C(f.MongoClient.ContentCollection).UpsertById(ctx, contentDoc.ID, update)
+	_, err := mongoCollection.UpsertById(ctx, contentDoc.ID, update)
 	if err != nil {
 		return err
 	}
