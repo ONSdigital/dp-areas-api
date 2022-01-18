@@ -27,6 +27,8 @@ func TestSetup(t *testing.T) {
 			So(hasRoute(api.Router, "/areas", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/areas/{id}", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/areas/{id}/versions/{version}", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/areas/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/v1/areas/{id}/relations", "GET"), ShouldBeTrue)
 		})
 	})
 }

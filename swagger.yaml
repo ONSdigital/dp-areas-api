@@ -133,6 +133,25 @@ paths:
           $ref: "#/definitions/ErrorResponse"
         500:
           $ref: "#/definitions/ErrorResponse"
+  /v1/areas/{id}/relations:
+    get:
+      tags:
+        - "Public"
+      summary: "Returns the latest version of an area realtionships- stubbed to return data for E92000001 / W92000004 only"
+      description: "Returns an area for given id's E92000001 and W92000004 only"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: '#/parameters/id'
+      responses:
+        200:
+          description: "Successfully returned an area relationships for either E92000001 or W92000004 only"
+          schema:
+            $ref: "#/definitions/AreaRelations"
+        404:
+          $ref: "#/definitions/ErrorResponse"
+        500:
+          $ref: "#/definitions/ErrorResponse"
   /areas/{id}/versions:
     get:
       tags:
@@ -363,6 +382,21 @@ definitions:
       description:
         type: string
         description: "Description of the error"
+  AreaRelations:
+    type: array
+    properties:
+      area_code:
+        type: string
+        description: "The unique code for the related area"
+        example: "W92000004"
+      area_name:
+        type: string
+        description: "The relationship type"
+        example: "parent"
+      href:
+        type: string
+        description: "reference link to get related area details"
+        example: "v1/areas/W92000004"
 
 responses:
   ResourceNotFound:

@@ -5,6 +5,7 @@ const (
 	AcceptLanguageHeaderError = "ErrorAcceptLanguageHeader"
 	AreaDataIdGetError = "ErrorRetrievingAreaCode"
 	MarshallingAreaDataError = "ErrorMarshallingAreaData"
+	MarshallingAreaRelationshipsError = "ErrorMarshallingAreaRelationshipData"
 )
 
 // API error descriptions

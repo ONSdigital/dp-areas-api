@@ -64,6 +64,7 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore Are
 	r.HandleFunc("/areas", api.getAreas).Methods(http.MethodGet)
 	r.HandleFunc("/areas/{id}", api.getArea).Methods(http.MethodGet)
 	r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.getAreaData)).Methods(http.MethodGet)
+	r.HandleFunc("/v1/areas/{id}/relations", contextAndErrors(api.getAreaRelationships)).Methods(http.MethodGet)
 	r.HandleFunc("/areas/{id}/versions/{version}", api.getVersion).Methods(http.MethodGet)
 
 	return api, nil
