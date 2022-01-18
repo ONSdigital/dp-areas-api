@@ -3,9 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-areas-api/api/stubs"
 	"net/http"
 	"regexp"
+
+	"github.com/ONSdigital/dp-areas-api/api/stubs"
 
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/utils"
@@ -96,6 +97,7 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 
 //getAreaRDSData test endpoint to demo rds database interaction
 //TODO: remove this handler once rds transaction endpoints get added to the service - this is just an example
+//Note: See TestGetAreaDataRFromRDS(t *testing.T) for mocking example
 func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
@@ -106,7 +108,7 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 		id int64
 		active bool
 	)
-	err := api.rds.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
+	err := api.pgx.Pool.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
 	if err != nil {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, err.Error()))
 	}

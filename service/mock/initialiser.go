@@ -7,9 +7,10 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/dp-areas-api/service"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
 	"net/http"
 	"sync"
 )
@@ -30,10 +31,10 @@ var _ service.Initialiser = &InitialiserMock{}
 // 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 // 				panic("mock out the DoGetHealthCheck method")
 // 			},
-// 			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+// 			DoGetMongoDBFunc: func(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error) {
 // 				panic("mock out the DoGetMongoDB method")
 // 			},
-// 			DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+// 			DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
 // 				panic("mock out the DoGetPGXPool method")
 // 			},
 // 			DoGetRDSClientFunc: func(region string) rds.Client {
@@ -53,10 +54,10 @@ type InitialiserMock struct {
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
 	// DoGetMongoDBFunc mocks the DoGetMongoDB method.
-	DoGetMongoDBFunc func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error)
+	DoGetMongoDBFunc func(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error)
 
 	// DoGetPGXPoolFunc mocks the DoGetPGXPool method.
-	DoGetPGXPoolFunc func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error)
+	DoGetPGXPoolFunc func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error)
 
 	// DoGetRDSClientFunc mocks the DoGetRDSClient method.
 	DoGetRDSClientFunc func(region string) rds.Client
@@ -86,7 +87,7 @@ type InitialiserMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cfg is the cfg argument value.
-			Cfg config.MongoConfig
+			Cfg mongodb.MongoDriverConfig
 		}
 		// DoGetPGXPool holds details about calls to the DoGetPGXPool method.
 		DoGetPGXPool []struct {
@@ -187,13 +188,13 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 }
 
 // DoGetMongoDB calls DoGetMongoDBFunc.
-func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
+func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error) {
 	if mock.DoGetMongoDBFunc == nil {
 		panic("InitialiserMock.DoGetMongoDBFunc: method is nil but Initialiser.DoGetMongoDB was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
-		Cfg config.MongoConfig
+		Cfg mongodb.MongoDriverConfig
 	}{
 		Ctx: ctx,
 		Cfg: cfg,
@@ -209,11 +210,11 @@ func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg config.MongoC
 //     len(mockedInitialiser.DoGetMongoDBCalls())
 func (mock *InitialiserMock) DoGetMongoDBCalls() []struct {
 	Ctx context.Context
-	Cfg config.MongoConfig
+	Cfg mongodb.MongoDriverConfig
 } {
 	var calls []struct {
 		Ctx context.Context
-		Cfg config.MongoConfig
+		Cfg mongodb.MongoDriverConfig
 	}
 	mock.lockDoGetMongoDB.RLock()
 	calls = mock.calls.DoGetMongoDB
@@ -222,7 +223,7 @@ func (mock *InitialiserMock) DoGetMongoDBCalls() []struct {
 }
 
 // DoGetPGXPool calls DoGetPGXPoolFunc.
-func (mock *InitialiserMock) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+func (mock *InitialiserMock) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
 	if mock.DoGetPGXPoolFunc == nil {
 		panic("InitialiserMock.DoGetPGXPoolFunc: method is nil but Initialiser.DoGetPGXPool was just called")
 	}

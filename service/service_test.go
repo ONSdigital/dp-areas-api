@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/utils"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ONSdigital/dp-areas-api/pgx"
 
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -120,8 +119,8 @@ func TestRun(t *testing.T) {
 			return rdsMock
 		}
 
-		funcDoGetPGXPool := func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
-			p := &pgxpool.Pool{}
+		funcDoGetPGXPool := func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
+			p := &pgx.PGX{}
 			return p, nil
 		}
 
@@ -315,8 +314,13 @@ func TestClose(t *testing.T) {
 			},
 		}
 
-		// open a valid db connection for testing - first time
-		pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
+		mockedPGXPool := &pgxMock.PGXPoolMock{
+			CloseFunc: func() {},
+		}
+
+		pgxPoolMock := &pgx.PGX{
+			Pool: mockedPGXPool,
+		}
 
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
@@ -338,8 +342,8 @@ func TestClose(t *testing.T) {
 				DoGetRDSClientFunc: func(region string) rds.Client {
 					return rdsMock
 				},
-				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
-					return pgxTestConnection, nil
+				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
+					return  pgxPoolMock, nil
 				},
 			}
 
@@ -353,6 +357,7 @@ func TestClose(t *testing.T) {
 			So(hcMock.StopCalls(), ShouldHaveLength, 1)
 			So(mongoMock.CloseCalls(), ShouldHaveLength, 1)
 			So(serverMock.ShutdownCalls(), ShouldHaveLength, 1)
+			So(mockedPGXPool.CloseCalls(), ShouldHaveLength, 1)
 		})
 
 		Convey("If Mongo fails to Close and returns an error", func() {
@@ -363,10 +368,6 @@ func TestClose(t *testing.T) {
 					return errors.New("Closing mongo timed out")
 				},
 			}
-
-			// open a valid db connection for testing - second time
-			pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
-
 
 			initMock := &mock.InitialiserMock{
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
@@ -379,8 +380,8 @@ func TestClose(t *testing.T) {
 				DoGetRDSClientFunc: func(region string) rds.Client {
 					return rdsMock
 				},
-				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error){
-					return pgxTestConnection, nil
+				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
+					return  pgxPoolMock, nil
 				},
 			}
 
@@ -408,19 +409,7 @@ func TestClose(t *testing.T) {
 				},
 			}
 
-			// open a valid db connection for testing - third time
-			pgxTestConnection, _ := utils.GenerateTestRDSHandle(ctx, cfg)
-
-			pgxMock := &pgxMock.PGXPoolMock{
-				ConnectFunc: func(ctx context.Context, connString string) (*pgxpool.Pool, error) {
-					return pgxTestConnection, nil
-				},
-				CloseFunc: func() {},
-			}
-			
-			c, _ := pgxMock.ConnectFunc(ctx, "test")
-
-			svcList := service.NewServiceList(nil)
+			svcList := service.NewServiceList(nil)	
 			svcList.HealthCheck = true
 			svc := service.Service{
 				Config:      cfg,
@@ -428,13 +417,14 @@ func TestClose(t *testing.T) {
 				Server:      timeoutServerMock,
 				HealthCheck: hcMock,
 				MongoDB:     mongoMock,
-				RDS:         c,
+				PGX:         pgxPoolMock,
 			}
 
 			err = svc.Close(context.Background())
 			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldResemble, "context deadline exceeded")
 			So(hcMock.StopCalls(), ShouldHaveLength, 1)
+			So(timeoutServerMock.ShutdownCalls(), ShouldHaveLength, 1)
 			So(timeoutServerMock.ShutdownCalls(), ShouldHaveLength, 1)
 		})
 	})

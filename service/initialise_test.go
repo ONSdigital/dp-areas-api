@@ -2,10 +2,11 @@ package service_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-areas-api/api"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-areas-api/api"
 
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"

@@ -5,14 +5,13 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	health "github.com/ONSdigital/dp-areas-api/service/healthcheck"
-
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
@@ -24,7 +23,7 @@ type Service struct {
 	ServiceList *ExternalServiceList
 	MongoDB     api.AreaStore
 	HealthCheck HealthChecker
-	RDS         *pgxpool.Pool
+	PGX         *pgx.PGX
 }
 
 // Run the service
@@ -86,7 +85,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		ServiceList: serviceList,
 		Server:      s,
 		MongoDB:     mongoDB,
-		RDS:		 pgxConn,
+		PGX:		 pgxConn,
 	}, nil
 }
 
@@ -122,7 +121,9 @@ func (svc *Service) Close(ctx context.Context) error {
 		}
 
 		// close RDS connection
-		svc.RDS.Close()
+		if svc.PGX != nil {
+			svc.PGX.Pool.Close()
+		}
 	}()
 
 	// wait for shutdown success (via cancel) or failure (timeout)
@@ -148,7 +149,7 @@ func (svc *Service) Close(ctx context.Context) error {
 func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB api.AreaStore, rdsClient rds.Client) (err error) {
 	hasErrors := false
 
-	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient)); err != nil {
+	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient, &cfg.RDSDBInstance1)); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for rds client", err)
 	}

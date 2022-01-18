@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"time"
 
 	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
@@ -20,12 +19,15 @@ type Config struct {
 	DefaultMaxLimit            int           `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
 	DefaultLimit               int           `envconfig:"DEFAULT_LIMIT"`
 	DefaultOffset              int           `envconfig:"DEFAULT_OFFSET"`
-	MongoConfig
-	RDSDBName                  string		 `envconfig:"DBNAME"`
-	RDSDBUser                  string		 `envconfig:"DBUSER"`
-	RDSDBHost                  string        `envconfig:"DBHOST"`
-	RDSDBPort                  string        `envconfig:"DBPORT"`
-	AWSRegion                  string        `envconfig:"AWSREGION"`
+	MongoConfig                
+	RDSDBName                  string `envconfig:"DBNAME"`
+	RDSDBUser                  string `envconfig:"DBUSER"`
+	RDSDBHost                  string `envconfig:"DBHOST"`
+	RDSDBPort                  string `envconfig:"DBPORT"`
+	AWSRegion                  string `envconfig:"AWSREGION"`
+	RDSDBInstance1             string `envconfig:"RDSINSTANCE1"`
+	RDSDBInstance2             string `envconfig:"RDSINSTANCE2"`
+	RDSDBInstance3             string `envconfig:"RDSINSTANCE3"`
 }
 
 var cfg *Config
@@ -64,11 +66,6 @@ func Get() (*Config, error) {
 				IsSSL: false,
 			},
 		},
-		RDSDBName: os.Getenv("DBNAME"),
-		RDSDBUser: os.Getenv("DBUSER"),
-		RDSDBHost: os.Getenv("DBHOST"),
-		RDSDBPort: os.Getenv("DBPORT"),
-		AWSRegion: os.Getenv("AWSREGION"),
 	}
 
 	return cfg, envconfig.Process("", cfg)

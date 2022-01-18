@@ -10,15 +10,11 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-var (
-	dbInstanceName = "develop-area-profiles-postgres-one"
-)
-
 const RDSHealthy = "RDS Healthy"
 
-func RDSHealthCheck(client rds.Client) health.Checker {
+func RDSHealthCheck(client rds.Client, instance *string) health.Checker {
 	return func(ctx context.Context, state *health.CheckState) error {
-		dbInstanceRequest := models.BuildDescibeDBInstancesRequest(&dbInstanceName)
+		dbInstanceRequest := models.BuildDescibeDBInstancesRequest(instance)
 		_, err := client.DescribeDBInstances(dbInstanceRequest)
 
 		if err != nil {

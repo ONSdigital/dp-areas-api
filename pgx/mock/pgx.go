@@ -5,8 +5,8 @@ package mock
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-areas-api/pgx"
-	"github.com/jackc/pgx/v4/pgxpool"
+	pgx "github.com/ONSdigital/dp-areas-api/pgx"
+	v4 "github.com/jackc/pgx/v4"
 	"sync"
 )
 
@@ -20,11 +20,20 @@ var _ pgx.PGXPool = &PGXPoolMock{}
 //
 // 		// make and configure a mocked pgx.PGXPool
 // 		mockedPGXPool := &PGXPoolMock{
+// 			BeginFunc: func(ctx context.Context) (v4.Tx, error) {
+// 				panic("mock out the Begin method")
+// 			},
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
 // 			},
-// 			ConnectFunc: func(ctx context.Context, connString string) (*pgxpool.Pool, error) {
-// 				panic("mock out the Connect method")
+// 			PingFunc: func(ctx context.Context) error {
+// 				panic("mock out the Ping method")
+// 			},
+// 			QueryFunc: func(ctx context.Context, sql string, args ...interface{}) (v4.Rows, error) {
+// 				panic("mock out the Query method")
+// 			},
+// 			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) v4.Row {
+// 				panic("mock out the QueryRow method")
 // 			},
 // 		}
 //
@@ -33,27 +42,91 @@ var _ pgx.PGXPool = &PGXPoolMock{}
 //
 // 	}
 type PGXPoolMock struct {
+	// BeginFunc mocks the Begin method.
+	BeginFunc func(ctx context.Context) (v4.Tx, error)
+
 	// CloseFunc mocks the Close method.
 	CloseFunc func()
 
-	// ConnectFunc mocks the Connect method.
-	ConnectFunc func(ctx context.Context, connString string) (*pgxpool.Pool, error)
+	// PingFunc mocks the Ping method.
+	PingFunc func(ctx context.Context) error
+
+	// QueryFunc mocks the Query method.
+	QueryFunc func(ctx context.Context, sql string, args ...interface{}) (v4.Rows, error)
+
+	// QueryRowFunc mocks the QueryRow method.
+	QueryRowFunc func(ctx context.Context, sql string, args ...interface{}) v4.Row
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Begin holds details about calls to the Begin method.
+		Begin []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
 		}
-		// Connect holds details about calls to the Connect method.
-		Connect []struct {
+		// Ping holds details about calls to the Ping method.
+		Ping []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// ConnString is the connString argument value.
-			ConnString string
+		}
+		// Query holds details about calls to the Query method.
+		Query []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// SQL is the sql argument value.
+			SQL string
+			// Args is the args argument value.
+			Args []interface{}
+		}
+		// QueryRow holds details about calls to the QueryRow method.
+		QueryRow []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// SQL is the sql argument value.
+			SQL string
+			// Args is the args argument value.
+			Args []interface{}
 		}
 	}
-	lockClose   sync.RWMutex
-	lockConnect sync.RWMutex
+	lockBegin    sync.RWMutex
+	lockClose    sync.RWMutex
+	lockPing     sync.RWMutex
+	lockQuery    sync.RWMutex
+	lockQueryRow sync.RWMutex
+}
+
+// Begin calls BeginFunc.
+func (mock *PGXPoolMock) Begin(ctx context.Context) (v4.Tx, error) {
+	if mock.BeginFunc == nil {
+		panic("PGXPoolMock.BeginFunc: method is nil but PGXPool.Begin was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockBegin.Lock()
+	mock.calls.Begin = append(mock.calls.Begin, callInfo)
+	mock.lockBegin.Unlock()
+	return mock.BeginFunc(ctx)
+}
+
+// BeginCalls gets all the calls that were made to Begin.
+// Check the length with:
+//     len(mockedPGXPool.BeginCalls())
+func (mock *PGXPoolMock) BeginCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockBegin.RLock()
+	calls = mock.calls.Begin
+	mock.lockBegin.RUnlock()
+	return calls
 }
 
 // Close calls CloseFunc.
@@ -82,37 +155,111 @@ func (mock *PGXPoolMock) CloseCalls() []struct {
 	return calls
 }
 
-// Connect calls ConnectFunc.
-func (mock *PGXPoolMock) Connect(ctx context.Context, connString string) (*pgxpool.Pool, error) {
-	if mock.ConnectFunc == nil {
-		panic("PGXPoolMock.ConnectFunc: method is nil but PGXPool.Connect was just called")
+// Ping calls PingFunc.
+func (mock *PGXPoolMock) Ping(ctx context.Context) error {
+	if mock.PingFunc == nil {
+		panic("PGXPoolMock.PingFunc: method is nil but PGXPool.Ping was just called")
 	}
 	callInfo := struct {
-		Ctx        context.Context
-		ConnString string
+		Ctx context.Context
 	}{
-		Ctx:        ctx,
-		ConnString: connString,
+		Ctx: ctx,
 	}
-	mock.lockConnect.Lock()
-	mock.calls.Connect = append(mock.calls.Connect, callInfo)
-	mock.lockConnect.Unlock()
-	return mock.ConnectFunc(ctx, connString)
+	mock.lockPing.Lock()
+	mock.calls.Ping = append(mock.calls.Ping, callInfo)
+	mock.lockPing.Unlock()
+	return mock.PingFunc(ctx)
 }
 
-// ConnectCalls gets all the calls that were made to Connect.
+// PingCalls gets all the calls that were made to Ping.
 // Check the length with:
-//     len(mockedPGXPool.ConnectCalls())
-func (mock *PGXPoolMock) ConnectCalls() []struct {
-	Ctx        context.Context
-	ConnString string
+//     len(mockedPGXPool.PingCalls())
+func (mock *PGXPoolMock) PingCalls() []struct {
+	Ctx context.Context
 } {
 	var calls []struct {
-		Ctx        context.Context
-		ConnString string
+		Ctx context.Context
 	}
-	mock.lockConnect.RLock()
-	calls = mock.calls.Connect
-	mock.lockConnect.RUnlock()
+	mock.lockPing.RLock()
+	calls = mock.calls.Ping
+	mock.lockPing.RUnlock()
+	return calls
+}
+
+// Query calls QueryFunc.
+func (mock *PGXPoolMock) Query(ctx context.Context, sql string, args ...interface{}) (v4.Rows, error) {
+	if mock.QueryFunc == nil {
+		panic("PGXPoolMock.QueryFunc: method is nil but PGXPool.Query was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		SQL  string
+		Args []interface{}
+	}{
+		Ctx:  ctx,
+		SQL:  sql,
+		Args: args,
+	}
+	mock.lockQuery.Lock()
+	mock.calls.Query = append(mock.calls.Query, callInfo)
+	mock.lockQuery.Unlock()
+	return mock.QueryFunc(ctx, sql, args...)
+}
+
+// QueryCalls gets all the calls that were made to Query.
+// Check the length with:
+//     len(mockedPGXPool.QueryCalls())
+func (mock *PGXPoolMock) QueryCalls() []struct {
+	Ctx  context.Context
+	SQL  string
+	Args []interface{}
+} {
+	var calls []struct {
+		Ctx  context.Context
+		SQL  string
+		Args []interface{}
+	}
+	mock.lockQuery.RLock()
+	calls = mock.calls.Query
+	mock.lockQuery.RUnlock()
+	return calls
+}
+
+// QueryRow calls QueryRowFunc.
+func (mock *PGXPoolMock) QueryRow(ctx context.Context, sql string, args ...interface{}) v4.Row {
+	if mock.QueryRowFunc == nil {
+		panic("PGXPoolMock.QueryRowFunc: method is nil but PGXPool.QueryRow was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		SQL  string
+		Args []interface{}
+	}{
+		Ctx:  ctx,
+		SQL:  sql,
+		Args: args,
+	}
+	mock.lockQueryRow.Lock()
+	mock.calls.QueryRow = append(mock.calls.QueryRow, callInfo)
+	mock.lockQueryRow.Unlock()
+	return mock.QueryRowFunc(ctx, sql, args...)
+}
+
+// QueryRowCalls gets all the calls that were made to QueryRow.
+// Check the length with:
+//     len(mockedPGXPool.QueryRowCalls())
+func (mock *PGXPoolMock) QueryRowCalls() []struct {
+	Ctx  context.Context
+	SQL  string
+	Args []interface{}
+} {
+	var calls []struct {
+		Ctx  context.Context
+		SQL  string
+		Args []interface{}
+	}
+	mock.lockQueryRow.RLock()
+	calls = mock.calls.QueryRow
+	mock.lockQueryRow.RUnlock()
 	return calls
 }

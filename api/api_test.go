@@ -7,23 +7,32 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ONSdigital/dp-areas-api/pgx"
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
+
+	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
 )
 
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		os.Clearenv()
 		mongoMock := &mock.AreaStoreMock{}
+
+		pgxPoolMock := &pgx.PGX{
+			Pool: &pgxMock.PGXPoolMock{
+				CloseFunc: func() {},
+			},
+		}
+
 		r := mux.NewRouter()
 		ctx := context.Background()
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
-		api, _ := api.Setup(ctx, cfg, r, mongoMock, &pgxpool.Pool{})
+		api, _ := api.Setup(ctx, cfg, r, mongoMock, pgxPoolMock)
 		Convey("When created the following routes should have been added", func() {
 			So(hasRoute(api.Router, "/areas", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/areas/{id}", "GET"), ShouldBeTrue)

@@ -5,14 +5,13 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
+	"github.com/ONSdigital/dp-areas-api/mongo"
+	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
-	"github.com/ONSdigital/dp-areas-api/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/ONSdigital/dp-areas-api/mongo"
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -46,6 +45,16 @@ func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler
 	return s
 }
 
+// GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
+func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error) {
+	hc, err := e.Init.DoGetHealthCheck(cfg, buildTime, gitCommit, version)
+	if err != nil {
+		return nil, err
+	}
+	e.HealthCheck = true
+	return hc, nil
+}
+
 // GetMongoDB creates a mongoDB client and sets the Mongo flag to true
 func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
@@ -57,16 +66,6 @@ func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg config.MongoCo
 	return mongoDB, nil
 }
 
-// GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
-func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error) {
-	hc, err := e.Init.DoGetHealthCheck(cfg, buildTime, gitCommit, version)
-	if err != nil {
-		return nil, err
-	}
-	e.HealthCheck = true
-	return hc, nil
-}
-
 // GetRDSClient creates aurora rds client
 func (e *ExternalServiceList) GetRDSClient(region string) rds.Client {
 	client := e.Init.DoGetRDSClient(region)
@@ -74,7 +73,7 @@ func (e *ExternalServiceList) GetRDSClient(region string) rds.Client {
 }
 
 // GetRDSClient creates aurora rds client
-func (e *ExternalServiceList) GetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+func (e *ExternalServiceList) GetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
 	pgxConn, err := e.Init.DoGetPGXPool(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -87,17 +86,6 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
 	return s
-}
-
-// DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-	mongoDB, err := mongo.NewMongoStore(ctx, cfg)
-	if err != nil {
-		log.Error(ctx, "failed to intialise mongo", err)
-		return nil, err
-	}
-
-	return mongoDB, nil
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo
@@ -118,9 +106,20 @@ func (e *Init) DoGetRDSClient(region string) rds.Client {
 	return client
 }
 
+// DoGetMongoDB returns a MongoDB
+func (e *Init) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
+	mongoDB, err := mongo.NewMongoStore(ctx, cfg)
+	if err != nil {
+		log.Error(ctx, "failed to intialise mongo", err)
+		return nil, err
+	}
+
+	return mongoDB, nil
+}
+
 // DoGetPGXPool creates a pgx pool connector
-func (e *Init) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
-	pgxConn, err := utils.GenerateTestRDSHandle(ctx, cfg)
+func (e *Init) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
+	pgxConn, err := pgx.NewPGXHandler(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
