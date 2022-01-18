@@ -84,21 +84,6 @@ func (m *Mongo) GetVersion(ctx context.Context, id string, versionID int) (*mode
 	return &version, nil
 }
 
-// CheckAreaExists checks that the area exists
-func (m *Mongo) CheckAreaExists(ctx context.Context, id string) error {
-
-	count, err := m.connection.Collection(m.ActualCollectionName(config.AreasCollection)).Count(ctx, bson.M{"id": id})
-	if err != nil {
-		return err
-	}
-
-	if count == 0 {
-		return apierrors.ErrAreaNotFound
-	}
-
-	return nil
-}
-
 // GetAreas retrieves all areas documents
 func (m *Mongo) GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
 
