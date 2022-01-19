@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -29,9 +30,10 @@ func (f *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	}
 	apiFeature := componenttest.NewAPIFeature(topicComponent.InitialiseService)
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	ctx.After(func(ctx context.Context, scenario *godog.Scenario, err error) (context.Context, error) {
 		topicComponent.Close()
 		authorizationFeature.Close()
+		return ctx, nil
 	})
 
 	topicComponent.RegisterSteps(ctx)
