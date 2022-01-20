@@ -23,7 +23,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 	m := &mock.ClientMock{}
 
-	testInstance := "testinstance1"
+	instanceList := []string{"testinstance1", "testinstance2", "testinstance3"}
 
 	Convey("dp-areas-api healthchecker reports healthy", t, func() {
 
@@ -39,7 +39,7 @@ func TestGetHealthCheck(t *testing.T) {
 		}
 
 		checkState := health.NewCheckState("dp-areas-api-test")
-		checker := healthcheck.RDSHealthCheck(m, &testInstance)
+		checker := healthcheck.RDSHealthCheck(m, instanceList)
 		err := checker(ctx, checkState)
 		Convey("When GetHealthCheck is called", func() {
 			Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
@@ -62,7 +62,7 @@ func TestGetHealthCheck(t *testing.T) {
 
 			checkState := health.NewCheckState("dp-areas-api-test")
 
-			checker := healthcheck.RDSHealthCheck(m, &testInstance)
+			checker := healthcheck.RDSHealthCheck(m, instanceList)
 			err := checker(ctx, checkState)
 			Convey("When GetHealthCheck is called", func() {
 				Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {

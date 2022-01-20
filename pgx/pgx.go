@@ -17,6 +17,7 @@ import (
 
 //go:generate moq -out mock/pgx.go -pkg mock . PGXPool
 
+// PGXPool interface is abstraction of pgxpool package
 type PGXPool interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 	Ping(ctx context.Context) error

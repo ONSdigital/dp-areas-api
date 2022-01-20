@@ -149,7 +149,7 @@ func (svc *Service) Close(ctx context.Context) error {
 func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, mongoDB api.AreaStore, rdsClient rds.Client) (err error) {
 	hasErrors := false
 
-	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient, &cfg.RDSDBInstance1)); err != nil {
+	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient, []string{cfg.RDSDBInstance1, cfg.RDSDBInstance2, cfg.RDSDBInstance3})); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for rds client", err)
 	}
