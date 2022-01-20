@@ -1,8 +1,9 @@
 package utils
 
 import (
-	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"strconv"
+
+	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 )
 
 // ValidatePositiveInt obtains the positive int value of query
@@ -16,3 +17,4 @@ func ValidatePositiveInt(parameter string) (val int, err error) {
 	}
 	return val, nil
 }
+

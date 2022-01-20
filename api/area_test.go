@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-areas-api/api/stubs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,12 +11,17 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/ONSdigital/dp-areas-api/api/stubs"
+	pgxTest "github.com/ONSdigital/dp-areas-api/pgx"
+	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
+
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/gorilla/mux"
+	pgx "github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -49,7 +53,18 @@ func GetAPIWithMocks(mockedAreaStore api.AreaStore) (*api.API, error) {
 	So(err, ShouldBeNil)
 	cfg.DefaultLimit = 0
 	cfg.DefaultOffset = 0
-	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedAreaStore)
+	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedAreaStore, nil)
+}
+
+// GetAPIWithPGXMocks returns mocked API with PGX mock attached
+func GetAPIWithPGXMocks(mockedAreaStore api.AreaStore, pgxMock *pgxTest.PGX) (*api.API, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	cfg, err := config.Get()
+	So(err, ShouldBeNil)
+	cfg.DefaultLimit = 0
+	cfg.DefaultOffset = 0
+	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedAreaStore, pgxMock)
 }
 
 func TestGetAreaReturnsOk(t *testing.T) {
@@ -506,6 +521,62 @@ func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
 
 			Convey("Then an 404 response is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+		})
+	})
+}
+
+// PGX mocking types
+type mockRow struct {
+	id int64
+	code string
+	active bool
+}
+
+func (m mockRow) Scan(dest ...interface{}) error {
+	id := dest[0].(*int64)
+	code := dest[1].(*string)
+	active := dest[2].(*bool)
+
+	*id = m.id
+	*code = m.code
+	*active = m.active
+	return nil
+}
+
+func TestGetAreaDataRFromRDS(t *testing.T) {
+	Convey("Given a successful request to stubbed area data - W92000004", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/rds/areas/%d", 1), nil)
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithPGXMocks(
+			&mock.AreaStoreMock{
+				GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
+					return nil, apierrors.ErrInvalidQueryParameter
+				},
+			},
+			&pgxTest.PGX{
+				Pool: &pgxMock.PGXPoolMock{
+					QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+						return mockRow{1, "Wales", true}
+					},
+				},
+			},
+		)
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data from rds instance is served", func() {
+			
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				returnedRDSData := models.AreaDataRDS{}
+				err = json.Unmarshal(payload, &returnedRDSData)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(returnedRDSData.Code, ShouldEqual, "Wales")
+				So(returnedRDSData.Id, ShouldEqual, 1)
+				So(returnedRDSData.Active, ShouldEqual, true)
 			})
 		})
 	})
