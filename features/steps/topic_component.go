@@ -44,8 +44,13 @@ func NewTopicComponent(mongoURL, zebedeeURL string) (*TopicComponent, error) {
 		return nil, err
 	}
 
-	f.Config.ClusterEndpoint, f.Config.ZebedeeURL, f.Config.Database, f.Config.EnablePrivateEndpoints =
-		mongoURL, zebedeeURL, utils.RandomDatabase(), false
+	f.Config.ClusterEndpoint = mongoURL
+	f.Config.ZebedeeURL = zebedeeURL
+	f.Config.Database = utils.RandomDatabase()
+	f.Config.EnablePrivateEndpoints = false
+	// The following is to reset the Username and Password that have been set is Config from the previous
+	// config.Get()
+	f.Config.Username, f.Config.Password = "", ""
 	f.Config.MongoConfig.Username, f.Config.MongoConfig.Password = createCredsInDB(&f.Config.MongoConfig)
 
 	f.MongoClient, err = mongo.NewDBConnection(context.TODO(), f.Config.MongoConfig)
@@ -65,7 +70,6 @@ func NewTopicComponent(mongoURL, zebedeeURL string) (*TopicComponent, error) {
 }
 
 func createCredsInDB(mongoConfig *mongodriver.MongoDriverConfig) (string, string) {
-	mongoConfig.Username, mongoConfig.Password = "", ""
 	mongoConnection, err := mongodriver.Open(mongoConfig)
 	if err != nil {
 		panic("expected db connection to be opened")
