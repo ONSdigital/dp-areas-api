@@ -8,10 +8,11 @@ import (
 type AreaType int
 
 var (
+	AcceptLocaleHeaderName   = "LocaleCode"
 	AcceptLanguageHeaderName = "Accept-Language"
-	AcceptLanguageMapping = map[string]string{
+	AcceptLanguageMapping    = map[string]string{
 		"en": "English",
-		"cy": "Cymraeg", 
+		"cy": "Cymraeg",
 	}
 )
 
@@ -51,34 +52,34 @@ type LinkedAreas struct {
 
 // AreasResults represents a structure for a list of areas
 type AreasResults struct {
-	Items      *[]Area     `json:"items"`
-	Count      int         `json:"count"`
-	Offset     int         `json:"offset"`
-	Limit      int         `json:"limit"`
-	TotalCount int         `json:"total_count"`
+	Items      *[]Area `json:"items"`
+	Count      int     `json:"count"`
+	Offset     int     `json:"offset"`
+	Limit      int     `json:"limit"`
+	TotalCount int     `json:"total_count"`
 }
 
-// AreasDataResults 
+// AreasDataResults
 type AreasDataResults struct {
-	Code          string        `json:"code"`
-	Name          string        `json:"name"`
-	ValidFrom     string        `json:"date_start"`
-	ValidTo       string        `json:"date_end"`
-	WelshName     string        `json:"name_welsh"`
+	Code          string                 `json:"code"`
+	Name          string                 `json:"name"`
+	ValidFrom     string                 `json:"date_start"`
+	ValidTo       string                 `json:"date_end"`
+	WelshName     string                 `json:"name_welsh"`
 	GeometricData map[string]interface{} `json:"geometry"`
-	Visible       bool          `json:"visible"`
-	AreaType      string        `json:"area_type"`
+	Visible       bool                   `json:"visible"`
+	AreaType      string                 `json:"area_type"`
 }
 
 type AreaRelationShips struct {
 	AreaCode string `json:"area_code"`
 	AreaName string `json:"area_name"`
-	Href string   `json:"href"`
+	Href     string `json:"href"`
 }
 
 // basic area data
 type AreaDataRDS struct {
-	Id int64    `json:"id"`
-	Code string `json:"code"`
-	Active bool `json:"active"`
+	Id     int64  `json:"id"`
+	Code   string `json:"code"`
+	Active bool   `json:"active"`
 }

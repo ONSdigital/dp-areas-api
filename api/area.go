@@ -67,11 +67,15 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	vars := mux.Vars(req)
 	areaID := vars["id"]
 
+	acceptLanguageHeaderName := req.Header.Get(models.AcceptLanguageHeaderName)
+	acceptLocaleHeaderName := req.Header.Get(models.AcceptLocaleHeaderName)
+
 	// error if accept language header not found
 	var validationErrs []error
-	if req.Header.Get(models.AcceptLanguageHeaderName) == "" {
+	if acceptLanguageHeaderName == "" && acceptLocaleHeaderName == "" {
+		// TODO add AcceptLocaleHeaderName error
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderNotFoundDescription))
-	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); !m {
+	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); acceptLocaleHeaderName == "" && !m {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderInvalidDescription))
 	}
 	if api.GeoData[areaID].Code == "" {
@@ -81,10 +85,15 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
-
 	//get area from stubbed data
 	area := api.GeoData[areaID]
-	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
+	var languageName string
+	if acceptLocaleHeaderName == "" {
+		languageName = acceptLocaleHeaderName
+	} else {
+		languageName = acceptLocaleHeaderName
+	}
+	area.AreaType = models.AcceptLanguageMapping[languageName]
 
 	areaData, err := json.Marshal(area)
 	if err != nil {
@@ -104,9 +113,9 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 
 	var (
 		validationErrs []error
-		code string
-		id int64
-		active bool
+		code           string
+		id             int64
+		active         bool
 	)
 	err := api.pgx.Pool.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
 	if err != nil {
@@ -118,8 +127,8 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 	}
 
 	areaData, err := json.Marshal(&models.AreaDataRDS{
-		Id: id,
-		Code: code,
+		Id:     id,
+		Code:   code,
 		Active: active,
 	})
 	if err != nil {
