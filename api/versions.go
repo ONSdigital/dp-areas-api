@@ -34,7 +34,7 @@ func (api *API) getVersion(w http.ResponseWriter, r *http.Request) {
 
 	//gets version for an area from mongoDb
 	b, getVersionErr := func() ([]byte, error) {
-		if err := api.areaStore.CheckAreaExists(ctx, areaID); err != nil {
+		if _, err := api.areaStore.GetArea(ctx, areaID); err != nil {
 			log.Error(ctx, "failed to find area", err, logData)
 			return nil, err
 		}

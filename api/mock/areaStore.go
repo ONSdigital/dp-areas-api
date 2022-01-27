@@ -17,40 +17,34 @@ var _ api.AreaStore = &AreaStoreMock{}
 
 // AreaStoreMock is a mock implementation of api.AreaStore.
 //
-//     func TestSomethingThatUsesAreaStore(t *testing.T) {
+// 	func TestSomethingThatUsesAreaStore(t *testing.T) {
 //
-//         // make and configure a mocked api.AreaStore
-//         mockedAreaStore := &AreaStoreMock{
-//             CheckAreaExistsFunc: func(id string) error {
-// 	               panic("mock out the CheckAreaExists method")
-//             },
-//             CheckerFunc: func(in1 context.Context, in2 *healthcheck.CheckState) error {
-// 	               panic("mock out the Checker method")
-//             },
-//             CloseFunc: func(ctx context.Context) error {
-// 	               panic("mock out the Close method")
-//             },
-//             GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
-// 	               panic("mock out the GetArea method")
-//             },
-//             GetAreasFunc: func(ctx context.Context, offset int, limit int) (*models.AreasResults, error) {
-// 	               panic("mock out the GetAreas method")
-//             },
-//             GetVersionFunc: func(id string, versionID int) (*models.Area, error) {
-// 	               panic("mock out the GetVersion method")
-//             },
-//         }
+// 		// make and configure a mocked api.AreaStore
+// 		mockedAreaStore := &AreaStoreMock{
+// 			CheckerFunc: func(contextMoqParam context.Context, checkState *healthcheck.CheckState) error {
+// 				panic("mock out the Checker method")
+// 			},
+// 			CloseFunc: func(ctx context.Context) error {
+// 				panic("mock out the Close method")
+// 			},
+// 			GetAreaFunc: func(ctx context.Context, id string) (*models.Area, error) {
+// 				panic("mock out the GetArea method")
+// 			},
+// 			GetAreasFunc: func(ctx context.Context, offset int, limit int) (*models.AreasResults, error) {
+// 				panic("mock out the GetAreas method")
+// 			},
+// 			GetVersionFunc: func(ctx context.Context, id string, versionID int) (*models.Area, error) {
+// 				panic("mock out the GetVersion method")
+// 			},
+// 		}
 //
-//         // use mockedAreaStore in code that requires api.AreaStore
-//         // and then make assertions.
+// 		// use mockedAreaStore in code that requires api.AreaStore
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type AreaStoreMock struct {
-	// CheckAreaExistsFunc mocks the CheckAreaExists method.
-	CheckAreaExistsFunc func(id string) error
-
 	// CheckerFunc mocks the Checker method.
-	CheckerFunc func(in1 context.Context, in2 *healthcheck.CheckState) error
+	CheckerFunc func(contextMoqParam context.Context, checkState *healthcheck.CheckState) error
 
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
@@ -62,21 +56,16 @@ type AreaStoreMock struct {
 	GetAreasFunc func(ctx context.Context, offset int, limit int) (*models.AreasResults, error)
 
 	// GetVersionFunc mocks the GetVersion method.
-	GetVersionFunc func(id string, versionID int) (*models.Area, error)
+	GetVersionFunc func(ctx context.Context, id string, versionID int) (*models.Area, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// CheckAreaExists holds details about calls to the CheckAreaExists method.
-		CheckAreaExists []struct {
-			// ID is the id argument value.
-			ID string
-		}
 		// Checker holds details about calls to the Checker method.
 		Checker []struct {
-			// In1 is the in1 argument value.
-			In1 context.Context
-			// In2 is the in2 argument value.
-			In2 *healthcheck.CheckState
+			// ContextMoqParam is the contextMoqParam argument value.
+			ContextMoqParam context.Context
+			// CheckState is the checkState argument value.
+			CheckState *healthcheck.CheckState
 		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
@@ -101,79 +90,49 @@ type AreaStoreMock struct {
 		}
 		// GetVersion holds details about calls to the GetVersion method.
 		GetVersion []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 			// ID is the id argument value.
 			ID string
 			// VersionID is the versionID argument value.
 			VersionID int
 		}
 	}
-	lockCheckAreaExists sync.RWMutex
-	lockChecker         sync.RWMutex
-	lockClose           sync.RWMutex
-	lockGetArea         sync.RWMutex
-	lockGetAreas        sync.RWMutex
-	lockGetVersion      sync.RWMutex
-}
-
-// CheckAreaExists calls CheckAreaExistsFunc.
-func (mock *AreaStoreMock) CheckAreaExists(ctx context.Context, id string) error {
-	if mock.CheckAreaExistsFunc == nil {
-		panic("AreaStoreMock.CheckAreaExistsFunc: method is nil but AreaStore.CheckAreaExists was just called")
-	}
-	callInfo := struct {
-		ID string
-	}{
-		ID: id,
-	}
-	mock.lockCheckAreaExists.Lock()
-	mock.calls.CheckAreaExists = append(mock.calls.CheckAreaExists, callInfo)
-	mock.lockCheckAreaExists.Unlock()
-	return mock.CheckAreaExistsFunc(id)
-}
-
-// CheckAreaExistsCalls gets all the calls that were made to CheckAreaExists.
-// Check the length with:
-//     len(mockedAreaStore.CheckAreaExistsCalls())
-func (mock *AreaStoreMock) CheckAreaExistsCalls() []struct {
-	ID string
-} {
-	var calls []struct {
-		ID string
-	}
-	mock.lockCheckAreaExists.RLock()
-	calls = mock.calls.CheckAreaExists
-	mock.lockCheckAreaExists.RUnlock()
-	return calls
+	lockChecker    sync.RWMutex
+	lockClose      sync.RWMutex
+	lockGetArea    sync.RWMutex
+	lockGetAreas   sync.RWMutex
+	lockGetVersion sync.RWMutex
 }
 
 // Checker calls CheckerFunc.
-func (mock *AreaStoreMock) Checker(in1 context.Context, in2 *healthcheck.CheckState) error {
+func (mock *AreaStoreMock) Checker(contextMoqParam context.Context, checkState *healthcheck.CheckState) error {
 	if mock.CheckerFunc == nil {
 		panic("AreaStoreMock.CheckerFunc: method is nil but AreaStore.Checker was just called")
 	}
 	callInfo := struct {
-		In1 context.Context
-		In2 *healthcheck.CheckState
+		ContextMoqParam context.Context
+		CheckState      *healthcheck.CheckState
 	}{
-		In1: in1,
-		In2: in2,
+		ContextMoqParam: contextMoqParam,
+		CheckState:      checkState,
 	}
 	mock.lockChecker.Lock()
 	mock.calls.Checker = append(mock.calls.Checker, callInfo)
 	mock.lockChecker.Unlock()
-	return mock.CheckerFunc(in1, in2)
+	return mock.CheckerFunc(contextMoqParam, checkState)
 }
 
 // CheckerCalls gets all the calls that were made to Checker.
 // Check the length with:
 //     len(mockedAreaStore.CheckerCalls())
 func (mock *AreaStoreMock) CheckerCalls() []struct {
-	In1 context.Context
-	In2 *healthcheck.CheckState
+	ContextMoqParam context.Context
+	CheckState      *healthcheck.CheckState
 } {
 	var calls []struct {
-		In1 context.Context
-		In2 *healthcheck.CheckState
+		ContextMoqParam context.Context
+		CheckState      *healthcheck.CheckState
 	}
 	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
@@ -292,26 +251,30 @@ func (mock *AreaStoreMock) GetVersion(ctx context.Context, id string, versionID 
 		panic("AreaStoreMock.GetVersionFunc: method is nil but AreaStore.GetVersion was just called")
 	}
 	callInfo := struct {
+		Ctx       context.Context
 		ID        string
 		VersionID int
 	}{
+		Ctx:       ctx,
 		ID:        id,
 		VersionID: versionID,
 	}
 	mock.lockGetVersion.Lock()
 	mock.calls.GetVersion = append(mock.calls.GetVersion, callInfo)
 	mock.lockGetVersion.Unlock()
-	return mock.GetVersionFunc(id, versionID)
+	return mock.GetVersionFunc(ctx, id, versionID)
 }
 
 // GetVersionCalls gets all the calls that were made to GetVersion.
 // Check the length with:
 //     len(mockedAreaStore.GetVersionCalls())
 func (mock *AreaStoreMock) GetVersionCalls() []struct {
+	Ctx       context.Context
 	ID        string
 	VersionID int
 } {
 	var calls []struct {
+		Ctx       context.Context
 		ID        string
 		VersionID int
 	}

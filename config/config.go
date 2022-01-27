@@ -3,8 +3,12 @@ package config
 import (
 	"time"
 
+	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
+
 	"github.com/kelseyhightower/envconfig"
 )
+
+type MongoConfig = mongodb.MongoDriverConfig
 
 // Config represents service configuration for dp-areas-api
 type Config struct {
@@ -15,20 +19,22 @@ type Config struct {
 	DefaultMaxLimit            int           `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
 	DefaultLimit               int           `envconfig:"DEFAULT_LIMIT"`
 	DefaultOffset              int           `envconfig:"DEFAULT_OFFSET"`
-	MongoConfig                MongoConfig
-}
-
-// MongoConfig contains the config required to connect to MongoDB.
-type MongoConfig struct {
-	BindAddr   string `envconfig:"MONGODB_BIND_ADDR"   json:"-"`
-	Collection string `envconfig:"MONGODB_AREAS_COLLECTION"`
-	Database   string `envconfig:"MONGODB_AREAS_DATABASE"`
-	Username   string `envconfig:"MONGODB_USERNAME"    json:"-"`
-	Password   string `envconfig:"MONGODB_PASSWORD"    json:"-"`
-	IsSSL      bool   `envconfig:"MONGODB_IS_SSL"`
+	MongoConfig                
+	RDSDBName                  string `envconfig:"DBNAME"`
+	RDSDBUser                  string `envconfig:"DBUSER"`
+	RDSDBHost                  string `envconfig:"DBHOST"`
+	RDSDBPort                  string `envconfig:"DBPORT"`
+	AWSRegion                  string `envconfig:"AWSREGION"`
+	RDSDBInstance1             string `envconfig:"RDSINSTANCE1"`
+	RDSDBInstance2             string `envconfig:"RDSINSTANCE2"`
+	RDSDBInstance3             string `envconfig:"RDSINSTANCE3"`
 }
 
 var cfg *Config
+
+const (
+	AreasCollection = "AreasCollection"
+)
 
 // Get returns the default config with any modifications through environment
 // variables
@@ -46,12 +52,19 @@ func Get() (*Config, error) {
 		DefaultLimit:               20,
 		DefaultOffset:              0,
 		MongoConfig: MongoConfig{
-			BindAddr:   "localhost:27017",
-			Collection: "areas",
-			Database:   "areas",
-			Username:   "",
-			Password:   "",
-			IsSSL:      false,
+			ClusterEndpoint:               "localhost:27017",
+			Username:                      "",
+			Password:                      "",
+			Database:                      "areas",
+			Collections:                   map[string]string{AreasCollection: "areas"},
+			ReplicaSet:                    "",
+			IsStrongReadConcernEnabled:    false,
+			IsWriteConcernMajorityEnabled: true,
+			ConnectTimeout:                5 * time.Second,
+			QueryTimeout:                  15 * time.Second,
+			TLSConnectionConfig: mongodb.TLSConnectionConfig{
+				IsSSL: false,
+			},
 		},
 	}
 

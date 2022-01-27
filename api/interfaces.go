@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
@@ -14,6 +15,5 @@ type AreaStore interface {
 	Checker(context.Context, *healthcheck.CheckState) error
 	GetArea(ctx context.Context, id string) (*models.Area, error)
 	GetVersion(ctx context.Context, id string, versionID int) (*models.Area, error)
-	CheckAreaExists(ctx context.Context, id string) error
 	GetAreas(ctx context.Context, offset, limit int) (*models.AreasResults, error)
 }

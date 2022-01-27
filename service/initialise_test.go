@@ -2,10 +2,11 @@ package service_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-areas-api/api"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ONSdigital/dp-areas-api/api"
 
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -167,13 +168,13 @@ func TestGetMongoDB(t *testing.T) {
 		mongoMock := &apiMock.AreaStoreMock{}
 
 		newServiceMock := &mock.InitialiserMock{
-			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+			DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 				return mongoMock, nil
 			},
 		}
 		svcList := service.NewServiceList(newServiceMock)
 		Convey("When GetMongoDB is called", func() {
-			m, err := svcList.GetMongoDB(ctx, cfg)
+			m, err := svcList.GetMongoDB(ctx, cfg.MongoConfig)
 			Convey("Then the mongo flag is set to true and mongo areastore is returned", func() {
 				So(svcList.MongoDB, ShouldBeTrue)
 				So(m, ShouldEqual, mongoMock)
@@ -185,13 +186,13 @@ func TestGetMongoDB(t *testing.T) {
 
 	Convey("Given a service list that returns nil for mongo areastore", t, func() {
 		newServiceMock := &mock.InitialiserMock{
-			DoGetMongoDBFunc: func(ctx context.Context, cfg *config.Config) (api.AreaStore, error) {
+			DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 				return nil, errMongo
 			},
 		}
 		svcList := service.NewServiceList(newServiceMock)
 		Convey("When GetMongo is called", func() {
-			mong, err := svcList.GetMongoDB(ctx, cfg)
+			mong, err := svcList.GetMongoDB(ctx, cfg.MongoConfig)
 			Convey("Then the mongo flag is set to false and mongodb client is nil", func() {
 				So(mong, ShouldBeNil)
 				So(err, ShouldResemble, errMongo)
