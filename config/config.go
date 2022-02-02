@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
@@ -74,6 +75,11 @@ func Get() (*Config, error) {
 				IsSSL: false,
 			},
 		},
+		DPPostgresLocal: true,
+		DPPostgresUserName: "postgres",
+		DPPostgresUserPassword: os.Getenv("DPPOSTGRESPASSWORD"),
+		DPPostgresLocalPort: "5432",
+		DPPostgresLocalDB: "dp-areas-api",
 	}
 
 	return cfg, envconfig.Process("", cfg)

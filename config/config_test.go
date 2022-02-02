@@ -48,6 +48,10 @@ func TestConfig(t *testing.T) {
 							IsSSL: false,
 						},
 					},
+					DPPostgresLocal: true,
+					DPPostgresUserName: "postgres",
+					DPPostgresLocalPort: "5432",
+					DPPostgresLocalDB: "dp-areas-api",
 				})
 			})
 

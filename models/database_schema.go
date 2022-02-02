@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sort"
+	"strings"
 )
 
 var (
-	CreateTableQuery = "CREATE TABLE IF NOT EXISTS %s (\n\tPRIMARY KEY (%s),\n%s)"
+	CreateTableQuery = "CREATE TABLE IF NOT EXISTS %s ( PRIMARY KEY (%s), %s)"
 )
 
 // DatabaseSchema database schema model
@@ -40,19 +42,16 @@ func (db *DatabaseSchema) TableSchemaBuilder() {
 	for table := range db.Tables {
 		var (
 			schemaHandleCols = db.Tables[table]["columns"].(map[string]interface{})
-			columnData = ""
-			terminator = ","
-			columnCount = 1
+			colArray = make([]string, 0)
 		)
 		for name, data := range schemaHandleCols {
 			d := data.(map[string]interface{})
-			if columnCount == len(schemaHandleCols){
-				terminator = ""
-			}
-			columnData = columnData+fmt.Sprintf("\t%s %s %s%s\n", name, d["data_type"].(string), d["constraints"].(string), terminator)
-			db.ExecutionList[int(db.Tables[table]["creation_order"].(float64))] = fmt.Sprintf(CreateTableQuery, table, db.Tables[table]["primary_keys"], columnData)
-			columnCount++
+			colString := fmt.Sprintf("%s %s %s", name, d["data_type"].(string), d["constraints"].(string))
+			colArray = append(colArray, colString)
 		}
+		sort.Strings(colArray)
+		columnData := strings.Join(colArray, ", ")
+		db.ExecutionList[int(db.Tables[table]["creation_order"].(float64))] = fmt.Sprintf(CreateTableQuery, table, db.Tables[table]["primary_keys"], columnData)
 	}
 }
 
