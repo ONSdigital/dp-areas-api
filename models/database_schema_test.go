@@ -10,9 +10,9 @@ import (
 
 const (
 	area_query = "CREATE TABLE IF NOT EXISTS area ( PRIMARY KEY (code), active_from TIMESTAMP , active_to TIMESTAMP , area_type_id INT REFERENCES area_type(id), code VARCHAR(50) , geometric_area VARCHAR )"
-	area_type_query = "CREATE TABLE IF NOT EXISTS area_type ( PRIMARY KEY (id), id INT , name VARCHAR(50) )"
-	area_name_query = "CREATE TABLE IF NOT EXISTS area_name ( PRIMARY KEY (id), active_from TIMESTAMP , active_to TIMESTAMP , area_code VARCHAR(50) REFERENCES area(code), id INT , name VARCHAR(50) )"
-	relationship_type_query = "CREATE TABLE IF NOT EXISTS relationship_type ( PRIMARY KEY (id), id INT , name VARCHAR(50) )"
+	area_type_query = "CREATE TABLE IF NOT EXISTS area_type ( PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
+	area_name_query = "CREATE TABLE IF NOT EXISTS area_name ( PRIMARY KEY (id), active_from TIMESTAMP , active_to TIMESTAMP , area_code VARCHAR(50) REFERENCES area(code), id SERIAL , name VARCHAR(50) UNIQUE)"
+	relationship_type_query = "CREATE TABLE IF NOT EXISTS relationship_type ( PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
 	area_relationship_query = "CREATE TABLE IF NOT EXISTS area_relationship ( PRIMARY KEY (area_code,rel_area_code), area_code VARCHAR(50) REFERENCES area(code), rel_area_code VARCHAR(50) REFERENCES area(code), rel_type_id INT REFERENCES relationship_type(id))"
 )
 func TestSetup(t *testing.T) {
