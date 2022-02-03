@@ -35,7 +35,7 @@ const DBSchema = `{
                 "primary_keys": "id",
                 "columns": {
                     "id": {
-                        "data_type": "INT",
+                        "data_type": "SERIAL",
                         "constraints": ""
                     },
                     "area_code": {
@@ -44,7 +44,7 @@ const DBSchema = `{
                     },
                     "name": {
                         "data_type": "VARCHAR(50)",
-                        "constraints": ""
+                        "constraints": "UNIQUE"
                     },
                     "active_from": {
                         "data_type": "TIMESTAMP",
@@ -79,7 +79,7 @@ const DBSchema = `{
                 "primary_keys": "id",
                 "columns": {
                     "id": {
-                        "data_type": "INT",
+                        "data_type": "SERIAL",
                         "constraints": ""
                     },
                     "name": {
@@ -93,7 +93,7 @@ const DBSchema = `{
                 "primary_keys": "id",
                 "columns": {
                     "id": {
-                        "data_type": "INT",
+                        "data_type": "SERIAL",
                         "constraints": ""
                     },
                     "name": {
