@@ -33,7 +33,7 @@ Note: `<RDS_INSTANCE_ENDPOINT>` can be obtained from the AWS AURORA RDS cluster 
 
 https://eu-west-1.console.aws.amazon.com/rds/home?region=eu-west-1#database:id=develop-area-profiles-postgres;is-cluster=true
 
-1. Set the following in your environment:
+1. Set the following in your environment - remote postgres connection:
 
 ```
 export AWS_PROFILE="development"
@@ -50,6 +50,19 @@ export DBHOST="<RDS_INSTANCE_ENDPOINT>"
 export DBPORT=5432
 export AWSREGION=<AWS_REGION>
 ```
+
+for local postgres connection (relies on `dp-compose`):
+
+*Note:* set _*DPPostgresLocal*_ to _*true*_ to use *local postgres instance*
+
+```
+export DPPostgresLocal=true
+export DPPostgresUserName="postgres"`
+export DPPostgresUserPassword="<PASSWORD>"` (see docker compose)
+export DPPostgresLocalPort="5432"`
+export DPPostgresLocalDB="dp-areas-api"`
+```
+
 2. Run the dp command:
 
 ```

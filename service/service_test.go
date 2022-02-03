@@ -10,6 +10,7 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/pgx"
+	"github.com/jackc/pgconn"
 
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -38,6 +39,7 @@ var (
 var (
 	errHealthcheck = errors.New("healthCheck error")
 	errMongo       = errors.New("mongoDB error")
+	errorRDS       = errors.New("table not created successfully: error creating table")
 )
 
 var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
@@ -50,6 +52,28 @@ var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.
 
 var funcDoGetMongoDBErr = func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
 	return nil, errMongo
+}
+
+var funcDoGetPGXPool = func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
+	p := &pgx.PGX{
+		Pool: &pgxMock.PGXPoolMock{
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
+				return pgconn.CommandTag{}, nil
+			},
+		},
+	}
+	return p, nil
+}
+
+var funcDoGetPGXPoolError = func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
+	p := &pgx.PGX{
+		Pool: &pgxMock.PGXPoolMock{
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
+				return nil, errorRDS
+			},
+		},
+	}
+	return p, nil
 }
 
 func TestRun(t *testing.T) {
@@ -119,11 +143,6 @@ func TestRun(t *testing.T) {
 			return rdsMock
 		}
 
-		funcDoGetPGXPool := func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
-			p := &pgx.PGX{}
-			return p, nil
-		}
-
 		Convey("Given that initialising mongoDB returns an error", func() {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
@@ -140,6 +159,10 @@ func TestRun(t *testing.T) {
 				So(err, ShouldResemble, errMongo)
 				So(svcList.MongoDB, ShouldBeFalse)
 				So(svcList.HealthCheck, ShouldBeFalse)
+			})
+
+			Reset(func() {
+				// This reset is run after each `Convey` at the same scope (indentation)
 			})
 		})
 
@@ -271,6 +294,28 @@ func TestRun(t *testing.T) {
 				// This reset is run after each `Convey` at the same scope (indentation)
 			})
 		})
+
+		Convey("Given that building the tables returns an error", func() {
+			initMock := &serviceMock.InitialiserMock{
+				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
+				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
+				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
+				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetPGXPoolFunc:     funcDoGetPGXPoolError,
+			}
+			svcErrors := make(chan error, 1)
+			svcList := service.NewServiceList(initMock)
+			serverWg.Add(1)
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+
+			Convey("Then service Run fails with building tables error", func() {
+				So(err, ShouldResemble, errorRDS)
+			})
+
+			Reset(func() {
+				// This reset is run after each `Convey` at the same scope (indentation)
+			})
+		})
 	})
 }
 
@@ -316,6 +361,9 @@ func TestClose(t *testing.T) {
 
 		mockedPGXPool := &pgxMock.PGXPoolMock{
 			CloseFunc: func() {},
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
+				return pgconn.CommandTag{}, nil
+			},
 		}
 
 		pgxPoolMock := &pgx.PGX{
