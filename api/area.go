@@ -82,8 +82,19 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
 
+	// get ancestry data
+	ancestryData, err := api.ancestorStore.GetAncestors(areaID)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.AncestryDataGetError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
 	//get area from stubbed data
 	area := api.GeoData[areaID]
+
+	// update area data with ancestry data
+	area.Ancestors = ancestryData
+
 	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
 
 	areaData, err := json.Marshal(area)
@@ -104,9 +115,9 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 
 	var (
 		validationErrs []error
-		code string
-		id int64
-		active bool
+		code           string
+		id             int64
+		active         bool
 	)
 	err := api.pgx.Pool.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
 	if err != nil {
@@ -118,8 +129,8 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 	}
 
 	areaData, err := json.Marshal(&models.AreaDataRDS{
-		Id: id,
-		Code: code,
+		Id:     id,
+		Code:   code,
 		Active: active,
 	})
 	if err != nil {

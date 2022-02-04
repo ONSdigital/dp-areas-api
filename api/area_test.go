@@ -27,12 +27,14 @@ import (
 )
 
 const (
-	testAreaId1   = "W06000015"
-	testAreaId2   = "W02000004"
-	testAreaName1 = "Cardiff"
-	testAreaName2 = "Penylan"
-	EnglandAreaData = "E92000001"
-	WalesAreaData = "W92000004"
+	testAreaId1           = "W06000015"
+	testAreaId2           = "W02000004"
+	testAreaName1         = "Cardiff"
+	testAreaName2         = "Penylan"
+	EnglandAreaData       = "E92000001"
+	WalesAreaData         = "W92000004"
+	LancasterBuaAreaData  = "E34002743"
+	SwanseaAirportBuaData = "W37000454"
 )
 
 var mu sync.Mutex
@@ -359,15 +361,11 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-			GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-				return nil, apierrors.ErrInvalidQueryParameter
-			},
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-			
+
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -379,6 +377,7 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 				So(returnedArea.WelshName, ShouldEqual, "Lloegr")
 				So(returnedArea.Name, ShouldEqual, "England")
 				So(returnedArea.AreaType, ShouldEqual, "English")
+				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["E92000001"])
 			})
 		})
 	})
@@ -390,15 +389,11 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-			GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-				return nil, apierrors.ErrInvalidQueryParameter
-			},
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-			
+
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -410,6 +405,7 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 				So(returnedArea.WelshName, ShouldEqual, "Cymru")
 				So(returnedArea.Name, ShouldEqual, "Wales")
 				So(returnedArea.AreaType, ShouldEqual, "Cymraeg")
+				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["W92000004"])
 			})
 		})
 	})
@@ -421,15 +417,11 @@ func TestGetAreaDataReturnsValidationErrors(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "cz")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-			GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-				return nil, apierrors.ErrInvalidQueryParameter
-			},
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-			
+
 			Convey("Then validation failure details returned - 2 validation errors generated", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -446,7 +438,7 @@ func TestGetAreaDataReturnsValidationErrors(t *testing.T) {
 				So(error2["code"], ShouldEqual, models.AreaDataIdGetError)
 				So(error2["description"], ShouldEqual, models.AreaDataGetErrorDescription)
 			})
-			
+
 		})
 	})
 }
@@ -456,15 +448,11 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), nil)
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-			GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-				return nil, apierrors.ErrInvalidQueryParameter
-			},
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-			
+
 			Convey("Then validation failure details returned - 1 validation error generated", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -476,7 +464,7 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 				So(error["code"], ShouldEqual, models.AcceptLanguageHeaderError)
 				So(error["description"], ShouldEqual, models.AcceptLanguageHeaderNotFoundDescription)
 			})
-			
+
 		})
 	})
 }
@@ -487,8 +475,7 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
@@ -506,15 +493,13 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 	})
 }
 
-
 func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
 	Convey("Given a successful request to stubbed area data - invalid", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations", "InvalidAreaCode"), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{
-		})
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
@@ -526,10 +511,62 @@ func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
 	})
 }
 
+func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
+	Convey("Given a successful request to stubbed area data - empty Ancestors list", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				returnedArea := models.AreasDataResults{}
+				err = json.Unmarshal(payload, &returnedArea)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(returnedArea.Code, ShouldEqual, WalesAreaData)
+				So(returnedArea.WelshName, ShouldEqual, "Cymru")
+				So(returnedArea.Name, ShouldEqual, "Wales")
+				So(returnedArea.AreaType, ShouldEqual, "Cymraeg")
+				So(len(returnedArea.Ancestors), ShouldEqual, 0)
+			})
+		})
+	})
+}
+
+func TestGetAreaDataFailsForAncestorsDataError(t *testing.T) {
+	Convey("Given a successful request to stubbed area data - Ancestors Data Error", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", SwanseaAirportBuaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithMocks(&mock.AreaStoreMock{})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an internal server error is returned", func() {
+				payload, _ := ioutil.ReadAll(w.Body)
+				var responseBody map[string]interface{}
+				_ = json.Unmarshal(payload, &responseBody)
+				So(len(responseBody["errors"].([]interface{})), ShouldEqual, 1)
+				error := responseBody["errors"].([]interface{})[0].(map[string]interface{})
+				So(error["code"], ShouldEqual, models.AncestryDataGetError)
+				So(w.Code, ShouldEqual, http.StatusInternalServerError)
+			})
+		})
+	})
+}
+
 // PGX mocking types
 type mockRow struct {
-	id int64
-	code string
+	id     int64
+	code   string
 	active bool
 }
 
@@ -550,11 +587,7 @@ func TestGetAreaDataRFromRDS(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		areaApi, _ := GetAPIWithPGXMocks(
-			&mock.AreaStoreMock{
-				GetAreasFunc: func(ctx context.Context, offset, limit int) (*models.AreasResults, error) {
-					return nil, apierrors.ErrInvalidQueryParameter
-				},
-			},
+			&mock.AreaStoreMock{},
 			&pgxTest.PGX{
 				Pool: &pgxMock.PGXPoolMock{
 					QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row {
@@ -566,7 +599,7 @@ func TestGetAreaDataRFromRDS(t *testing.T) {
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data from rds instance is served", func() {
-			
+
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)

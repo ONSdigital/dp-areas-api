@@ -18,12 +18,15 @@ var (
 	fls = []string{
 		geodata.E92000001PropertyData,
 		geodata.W92000004PropertyData,
+		geodata.E34002743PropertyData,
+		geodata.W37000454PropertyData,
 	}
 )
 
 //API provides a struct to wrap the api around
 type API struct {
 	Router        *mux.Router
+	ancestorStore AncestorStore
 	areaStore     AreaStore
 	defaultLimit  int
 	defaultOffset int
@@ -56,6 +59,7 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, areaStore Are
 
 	api := &API{
 		Router:        r,
+		ancestorStore: Ancestry{},
 		areaStore:     areaStore,
 		defaultLimit:  cfg.DefaultLimit,
 		defaultOffset: cfg.DefaultOffset,

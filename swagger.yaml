@@ -311,6 +311,17 @@ definitions:
         type: boolean
         description: "whether we surface a page for this area or not"
         example: true
+      ancestors:
+        type: array
+        properties:
+          id:
+            type: string
+            description: "The unique code for the ancestors area"
+            example: "W92000004"
+          name:
+            type: string
+            description: "The name of the ancestors area"
+            example: "ancestor"
 
   Linked_area:
     type: object
@@ -379,6 +390,7 @@ definitions:
           - "AcceptLanguageHeaderError"
           - "AreaDataIdGetError"
           - "MarshallingAreaDataError"
+          - "AncestryDataGetError"
       description:
         type: string
         description: "Description of the error"
