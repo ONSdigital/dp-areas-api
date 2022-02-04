@@ -69,6 +69,9 @@ func TestRun(t *testing.T) {
 			InitFunc: func(ctx context.Context, cfg *config.Config) error {
 				return nil
 			},
+			BuildTablesFunc: func(ctx context.Context, executionList []string) error {
+				return nil
+			},
 		}
 
 		failingServerMock := &serviceMock.HTTPServerMock{
@@ -237,6 +240,16 @@ func TestRun(t *testing.T) {
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetRDSClientFunc:   funcDoGetRDSClient,
+				DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+					return &apiMock.RDSAreaStoreMock{
+						InitFunc: func(ctx context.Context, cfg *config.Config) error {
+							return nil
+						},
+						BuildTablesFunc: func(ctx context.Context, executionList []string) error {
+							return errorRDS
+						},
+					}, nil
+				},
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -298,6 +311,9 @@ func TestClose(t *testing.T) {
 
 			rdsDBMock := &apiMock.RDSAreaStoreMock{
 				InitFunc: func(ctx context.Context, cfg *config.Config) error {
+					return nil
+				},
+				BuildTablesFunc: func(ctx context.Context, executionList []string) error {
 					return nil
 				},
 				CloseFunc: func() {},

@@ -17,6 +17,7 @@ type RDSAreaStore interface {
 	GetRelationships(areaCode string) ([]*models.AreaBasicData, error)
 	ValidateArea(code string) error
 	GetArea(areaId string) (*models.AreaDataRDS, error)
+	BuildTables(ctx context.Context, executionList []string) error
 }
 
 // Ancestors defines a method to lookup ancestors from an areaID

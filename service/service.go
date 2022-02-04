@@ -53,16 +53,9 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	// generate the pgx->rds connection
-	pgxConn, err := serviceList.GetPGXPool(ctx, cfg)
-	if err != nil {
-		log.Fatal(ctx, "error connecting pgx driver to rds instance instance", err)
-		return nil, err
-	}
-
 	// rds table schema builder
 	rdsSchema := &models.DatabaseSchema{
-		DBName: databaseName,
+		DBName:       databaseName,
 		SchemaString: DBRelationalSchema.DBSchema,
 	}
 	err = rdsSchema.BuildDatabaseSchemaModel()
@@ -75,7 +68,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		log.Fatal(ctx, "error building database table schema", err)
 		return nil, err
 	}
-	err = buildDBTables(ctx, pgxConn, rdsSchema.ExecutionList)
+	err = rds.BuildTables(ctx, rdsSchema.ExecutionList)
 	if err != nil {
 		log.Fatal(ctx, "error building database schema target", err)
 		return nil, err
@@ -176,19 +169,6 @@ func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker,
 
 	if hasErrors {
 		return errors.New("Error(s) registering checkers for healthcheck")
-	}
-	return nil
-}
-
-//BuildDBTables builds db schema model
-func buildDBTables(ctx context.Context, pgxConn *pgx.PGX, executionList []string) error {
-	for index := range executionList {
-		logData := log.Data{"Exceuting Create Table Query": executionList[index]}
-		_, err := pgxConn.Pool.Exec(ctx, executionList[index])
-		if err != nil {
-			return err
-		}
-		log.Info(ctx, "table created successfully:", logData)
 	}
 	return nil
 }

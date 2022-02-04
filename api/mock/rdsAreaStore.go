@@ -21,6 +21,9 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 //
 // 		// make and configure a mocked api.RDSAreaStore
 // 		mockedRDSAreaStore := &RDSAreaStoreMock{
+// 			BuildTablesFunc: func(ctx context.Context, executionList []string) error {
+// 				panic("mock out the BuildTables method")
+// 			},
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
 // 			},
@@ -43,6 +46,9 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 //
 // 	}
 type RDSAreaStoreMock struct {
+	// BuildTablesFunc mocks the BuildTables method.
+	BuildTablesFunc func(ctx context.Context, executionList []string) error
+
 	// CloseFunc mocks the Close method.
 	CloseFunc func()
 
@@ -60,6 +66,13 @@ type RDSAreaStoreMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// BuildTables holds details about calls to the BuildTables method.
+		BuildTables []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ExecutionList is the executionList argument value.
+			ExecutionList []string
+		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
 		}
@@ -86,11 +99,47 @@ type RDSAreaStoreMock struct {
 			Code string
 		}
 	}
+	lockBuildTables      sync.RWMutex
 	lockClose            sync.RWMutex
 	lockGetArea          sync.RWMutex
 	lockGetRelationships sync.RWMutex
 	lockInit             sync.RWMutex
 	lockValidateArea     sync.RWMutex
+}
+
+// BuildTables calls BuildTablesFunc.
+func (mock *RDSAreaStoreMock) BuildTables(ctx context.Context, executionList []string) error {
+	if mock.BuildTablesFunc == nil {
+		panic("RDSAreaStoreMock.BuildTablesFunc: method is nil but RDSAreaStore.BuildTables was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ExecutionList []string
+	}{
+		Ctx:           ctx,
+		ExecutionList: executionList,
+	}
+	mock.lockBuildTables.Lock()
+	mock.calls.BuildTables = append(mock.calls.BuildTables, callInfo)
+	mock.lockBuildTables.Unlock()
+	return mock.BuildTablesFunc(ctx, executionList)
+}
+
+// BuildTablesCalls gets all the calls that were made to BuildTables.
+// Check the length with:
+//     len(mockedRDSAreaStore.BuildTablesCalls())
+func (mock *RDSAreaStoreMock) BuildTablesCalls() []struct {
+	Ctx           context.Context
+	ExecutionList []string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ExecutionList []string
+	}
+	mock.lockBuildTables.RLock()
+	calls = mock.calls.BuildTables
+	mock.lockBuildTables.RUnlock()
+	return calls
 }
 
 // Close calls CloseFunc.
