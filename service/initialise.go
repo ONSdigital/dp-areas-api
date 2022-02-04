@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/mongo"
-	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,7 +23,7 @@ import (
 type ExternalServiceList struct {
 	HealthCheck bool
 	Init        Initialiser
-	MongoDB     bool
+	RDS         bool
 }
 
 // NewServiceList creates a new service list with the provided initialiser
@@ -32,7 +31,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck: false,
 		Init:        initialiser,
-		MongoDB:     false,
+		RDS:         false,
 	}
 }
 
@@ -55,30 +54,19 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 	return hc, nil
 }
 
-// GetMongoDB creates a mongoDB client and sets the Mongo flag to true
-func (e *ExternalServiceList) GetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-	mongoDB, err := e.Init.DoGetMongoDB(ctx, cfg)
-	if err != nil {
-		log.Error(ctx, "failed to create mongodb client", err)
-		return nil, err
-	}
-	e.MongoDB = true
-	return mongoDB, nil
-}
-
 // GetRDSClient creates aurora rds client
 func (e *ExternalServiceList) GetRDSClient(region string) rds.Client {
 	client := e.Init.DoGetRDSClient(region)
 	return client
 }
 
-// GetRDSClient creates aurora rds client
-func (e *ExternalServiceList) GetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
-	pgxConn, err := e.Init.DoGetPGXPool(ctx, cfg)
+func (e *ExternalServiceList) getRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+	rds, err := e.Init.DoGetRDSDB(ctx, cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create rds client: %+v", err)
 	}
-	return pgxConn, nil
+	e.RDS = true
+	return rds, nil
 }
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
@@ -86,6 +74,17 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 	s := dphttp.NewServer(bindAddr, router)
 	s.HandleOSSignals = false
 	return s
+}
+
+// DoGetRDSDB returns a RDSClient
+func (e *Init) DoGetRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+	rds := &rds.RDS{}
+	err := rds.Init(ctx, cfg)
+	if err != nil {
+		log.Error(ctx, "failed to initialise rds", err)
+		return nil, err
+	}
+	return rds, nil
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo
@@ -104,24 +103,4 @@ func (e *Init) DoGetRDSClient(region string) rds.Client {
 		SharedConfigState: session.SharedConfigEnable,
 	})), &aws.Config{Region: &region})
 	return client
-}
-
-// DoGetMongoDB returns a MongoDB
-func (e *Init) DoGetMongoDB(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-	mongoDB, err := mongo.NewMongoStore(ctx, cfg)
-	if err != nil {
-		log.Error(ctx, "failed to intialise mongo", err)
-		return nil, err
-	}
-
-	return mongoDB, nil
-}
-
-// DoGetPGXPool creates a pgx pool connector
-func (e *Init) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
-	pgxConn, err := pgx.NewPGXHandler(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return pgxConn, nil
 }

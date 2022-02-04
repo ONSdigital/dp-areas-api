@@ -7,6 +7,7 @@ const (
 	AncestryDataGetError              = "ErrorRetrievingAncestryData"
 	MarshallingAreaDataError          = "ErrorMarshallingAreaData"
 	MarshallingAreaRelationshipsError = "ErrorMarshallingAreaRelationshipData"
+	InvalidAreaCodeError = "InvalidAreaCode"
 )
 
 // API error descriptions

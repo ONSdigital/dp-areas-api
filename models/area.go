@@ -77,11 +77,19 @@ type AreasAncestors struct {
 	Name string `json:"name"`
 }
 
+// AreaRelationShips represents the related areas with self ref
 type AreaRelationShips struct {
 	AreaCode string `json:"area_code"`
 	AreaName string `json:"area_name"`
 	Href     string `json:"href"`
 }
+
+// AreaRelationShips represents the related areas with self ref
+type AreaBasicData struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 
 // basic area data
 type AreaDataRDS struct {
