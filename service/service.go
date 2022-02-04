@@ -53,25 +53,28 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	// rds table schema builder
-	rdsSchema := &models.DatabaseSchema{
-		DBName:       databaseName,
-		SchemaString: DBRelationalSchema.DBSchema,
-	}
-	err = rdsSchema.BuildDatabaseSchemaModel()
-	if err != nil {
-		log.Fatal(ctx, "error building database schema model", err)
-		return nil, err
-	}
-	rdsSchema.TableSchemaBuilder()
-	if err != nil {
-		log.Fatal(ctx, "error building database table schema", err)
-		return nil, err
-	}
-	err = rds.BuildTables(ctx, rdsSchema.ExecutionList)
-	if err != nil {
-		log.Fatal(ctx, "error building database schema target", err)
-		return nil, err
+	// only run publishing user
+	if cfg.RDSDBUser == "dp-areas-api-publishing" || cfg.DPPostgresLocal {
+		// rds table schema builder
+		rdsSchema := &models.DatabaseSchema{
+			DBName:       databaseName,
+			SchemaString: DBRelationalSchema.DBSchema,
+		}
+		err = rdsSchema.BuildDatabaseSchemaModel()
+		if err != nil {
+			log.Fatal(ctx, "error building database schema model", err)
+			return nil, err
+		}
+		rdsSchema.TableSchemaBuilder()
+		if err != nil {
+			log.Fatal(ctx, "error building database table schema", err)
+			return nil, err
+		}
+		err = rds.BuildTables(ctx, rdsSchema.ExecutionList)
+		if err != nil {
+			log.Fatal(ctx, "error building database schema target", err)
+			return nil, err
+		}
 	}
 
 	// Setup the API
