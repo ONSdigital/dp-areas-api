@@ -2,7 +2,6 @@ package rds
 
 import (
 	"context"
-	"fmt"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/pgx"
@@ -17,21 +16,21 @@ type RDS struct {
 }
 
 func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
-	authToken, err := rdsutils.BuildAuthToken(
-		cfg.GetRDSEndpoint(),
-		cfg.AWSRegion, cfg.RDSDBUser,
-		credentials.NewEnvCredentials(),
-	)
-	if err != nil {
-		return err
+	var connectionString string
+	if cfg.DPPostgresLocal {
+		connectionString = cfg.GetLocalDBConnectionString()
+	} else {
+		authToken, err := rdsutils.BuildAuthToken(cfg.GetDBEndpoint(), cfg.AWSRegion, cfg.RDSDBUser, credentials.NewEnvCredentials())
+		if err != nil {
+			log.Error(ctx, "error building auth token for rds connection", err)
+			return err
+		}
+		connectionString = cfg.GetRemoteDBConnectionString(authToken)
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-		cfg.RDSDBHost, cfg.RDSDBPort, cfg.RDSDBUser, authToken, cfg.RDSDBName,
-	)
-
-	rdsConn, err := pgxpool.Connect(ctx, connStr)
+	rdsConn, err := pgxpool.Connect(ctx, connectionString)
 	if err != nil {
+		log.Error(ctx, "error connecting to rds instance", err)
 		return err
 	}
 
