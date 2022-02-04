@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	pgx "github.com/ONSdigital/dp-areas-api/pgx"
+	"github.com/jackc/pgconn"
 	v4 "github.com/jackc/pgx/v4"
 	"sync"
 )
@@ -25,6 +26,9 @@ var _ pgx.PGXPool = &PGXPoolMock{}
 // 			},
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
+// 			},
+// 			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+// 				panic("mock out the Exec method")
 // 			},
 // 			PingFunc: func(ctx context.Context) error {
 // 				panic("mock out the Ping method")
@@ -48,6 +52,9 @@ type PGXPoolMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func()
 
+	// ExecFunc mocks the Exec method.
+	ExecFunc func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+
 	// PingFunc mocks the Ping method.
 	PingFunc func(ctx context.Context) error
 
@@ -66,6 +73,15 @@ type PGXPoolMock struct {
 		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
+		}
+		// Exec holds details about calls to the Exec method.
+		Exec []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// SQL is the sql argument value.
+			SQL string
+			// Arguments is the arguments argument value.
+			Arguments []interface{}
 		}
 		// Ping holds details about calls to the Ping method.
 		Ping []struct {
@@ -93,6 +109,7 @@ type PGXPoolMock struct {
 	}
 	lockBegin    sync.RWMutex
 	lockClose    sync.RWMutex
+	lockExec     sync.RWMutex
 	lockPing     sync.RWMutex
 	lockQuery    sync.RWMutex
 	lockQueryRow sync.RWMutex
@@ -152,6 +169,45 @@ func (mock *PGXPoolMock) CloseCalls() []struct {
 	mock.lockClose.RLock()
 	calls = mock.calls.Close
 	mock.lockClose.RUnlock()
+	return calls
+}
+
+// Exec calls ExecFunc.
+func (mock *PGXPoolMock) Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+	if mock.ExecFunc == nil {
+		panic("PGXPoolMock.ExecFunc: method is nil but PGXPool.Exec was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		SQL       string
+		Arguments []interface{}
+	}{
+		Ctx:       ctx,
+		SQL:       sql,
+		Arguments: arguments,
+	}
+	mock.lockExec.Lock()
+	mock.calls.Exec = append(mock.calls.Exec, callInfo)
+	mock.lockExec.Unlock()
+	return mock.ExecFunc(ctx, sql, arguments...)
+}
+
+// ExecCalls gets all the calls that were made to Exec.
+// Check the length with:
+//     len(mockedPGXPool.ExecCalls())
+func (mock *PGXPoolMock) ExecCalls() []struct {
+	Ctx       context.Context
+	SQL       string
+	Arguments []interface{}
+} {
+	var calls []struct {
+		Ctx       context.Context
+		SQL       string
+		Arguments []interface{}
+	}
+	mock.lockExec.RLock()
+	calls = mock.calls.Exec
+	mock.lockExec.RUnlock()
 	return calls
 }
 

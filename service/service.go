@@ -5,6 +5,9 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/models"
+	"github.com/ONSdigital/dp-areas-api/models/DBRelationalSchema"
+
 	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -12,6 +15,10 @@ import (
 	"github.com/pkg/errors"
 
 	health "github.com/ONSdigital/dp-areas-api/service/healthcheck"
+)
+
+const (
+	databaseName = "dp-areas-api"
 )
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
@@ -49,6 +56,27 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	pgxConn, err := serviceList.GetPGXPool(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "error connecting pgx driver to rds instance instance", err)
+		return nil, err
+	}
+
+	// rds table schema builder
+	rdsSchema := &models.DatabaseSchema{
+		DBName: databaseName,
+		SchemaString: DBRelationalSchema.DBSchema,
+	}
+	err = rdsSchema.BuildDatabaseSchemaModel()
+	if err != nil {
+		log.Fatal(ctx, "error building database schema model", err)
+		return nil, err
+	}
+	rdsSchema.TableSchemaBuilder()
+	if err != nil {
+		log.Fatal(ctx, "error building database table schema", err)
+		return nil, err
+	}
+	err = buildDBTables(ctx, pgxConn, rdsSchema.ExecutionList)
+	if err != nil {
+		log.Fatal(ctx, "error building database schema target", err)
 		return nil, err
 	}
 
@@ -165,3 +193,15 @@ func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker,
 	return nil
 }
 
+//BuildDBTables builds db schema model
+func buildDBTables(ctx context.Context, pgxConn *pgx.PGX, executionList []string) error {
+	for index := range executionList {
+		logData := log.Data{"Exceuting Create Table Query": executionList[index]}
+		_, err := pgxConn.Pool.Exec(ctx, executionList[index])
+		if err != nil {
+			return err
+		}
+		log.Info(ctx, "table created successfully:", logData)
+	}
+	return nil
+}
