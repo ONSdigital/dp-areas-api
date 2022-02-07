@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
-
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -33,21 +31,6 @@ func TestConfig(t *testing.T) {
 					DefaultMaxLimit:            1000,
 					DefaultLimit:               20,
 					DefaultOffset:              0,
-					MongoConfig: MongoConfig{
-						ClusterEndpoint:               "localhost:27017",
-						Username:                      "",
-						Password:                      "",
-						Database:                      "areas",
-						Collections:                   map[string]string{AreasCollection: "areas"},
-						ReplicaSet:                    "",
-						IsStrongReadConcernEnabled:    false,
-						IsWriteConcernMajorityEnabled: true,
-						ConnectTimeout:                5 * time.Second,
-						QueryTimeout:                  15 * time.Second,
-						TLSConnectionConfig: mongodb.TLSConnectionConfig{
-							IsSSL: false,
-						},
-					},
 					DPPostgresLocal: true,
 					DPPostgresUserName: "postgres",
 					DPPostgresLocalPort: "5432",

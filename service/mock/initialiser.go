@@ -7,10 +7,8 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/ONSdigital/dp-areas-api/pgx"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/dp-areas-api/service"
-	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
 	"net/http"
 	"sync"
 )
@@ -31,14 +29,11 @@ var _ service.Initialiser = &InitialiserMock{}
 // 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 // 				panic("mock out the DoGetHealthCheck method")
 // 			},
-// 			DoGetMongoDBFunc: func(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error) {
-// 				panic("mock out the DoGetMongoDB method")
-// 			},
-// 			DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
-// 				panic("mock out the DoGetPGXPool method")
-// 			},
 // 			DoGetRDSClientFunc: func(region string) rds.Client {
 // 				panic("mock out the DoGetRDSClient method")
+// 			},
+// 			DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+// 				panic("mock out the DoGetRDSDB method")
 // 			},
 // 		}
 //
@@ -53,14 +48,11 @@ type InitialiserMock struct {
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
-	// DoGetMongoDBFunc mocks the DoGetMongoDB method.
-	DoGetMongoDBFunc func(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error)
-
-	// DoGetPGXPoolFunc mocks the DoGetPGXPool method.
-	DoGetPGXPoolFunc func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error)
-
 	// DoGetRDSClientFunc mocks the DoGetRDSClient method.
 	DoGetRDSClientFunc func(region string) rds.Client
+
+	// DoGetRDSDBFunc mocks the DoGetRDSDB method.
+	DoGetRDSDBFunc func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -82,31 +74,23 @@ type InitialiserMock struct {
 			// Version is the version argument value.
 			Version string
 		}
-		// DoGetMongoDB holds details about calls to the DoGetMongoDB method.
-		DoGetMongoDB []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Cfg is the cfg argument value.
-			Cfg mongodb.MongoDriverConfig
-		}
-		// DoGetPGXPool holds details about calls to the DoGetPGXPool method.
-		DoGetPGXPool []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Cfg is the cfg argument value.
-			Cfg *config.Config
-		}
 		// DoGetRDSClient holds details about calls to the DoGetRDSClient method.
 		DoGetRDSClient []struct {
 			// Region is the region argument value.
 			Region string
 		}
+		// DoGetRDSDB holds details about calls to the DoGetRDSDB method.
+		DoGetRDSDB []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
+		}
 	}
 	lockDoGetHTTPServer  sync.RWMutex
 	lockDoGetHealthCheck sync.RWMutex
-	lockDoGetMongoDB     sync.RWMutex
-	lockDoGetPGXPool     sync.RWMutex
 	lockDoGetRDSClient   sync.RWMutex
+	lockDoGetRDSDB       sync.RWMutex
 }
 
 // DoGetHTTPServer calls DoGetHTTPServerFunc.
@@ -187,76 +171,6 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	return calls
 }
 
-// DoGetMongoDB calls DoGetMongoDBFunc.
-func (mock *InitialiserMock) DoGetMongoDB(ctx context.Context, cfg mongodb.MongoDriverConfig) (api.AreaStore, error) {
-	if mock.DoGetMongoDBFunc == nil {
-		panic("InitialiserMock.DoGetMongoDBFunc: method is nil but Initialiser.DoGetMongoDB was just called")
-	}
-	callInfo := struct {
-		Ctx context.Context
-		Cfg mongodb.MongoDriverConfig
-	}{
-		Ctx: ctx,
-		Cfg: cfg,
-	}
-	mock.lockDoGetMongoDB.Lock()
-	mock.calls.DoGetMongoDB = append(mock.calls.DoGetMongoDB, callInfo)
-	mock.lockDoGetMongoDB.Unlock()
-	return mock.DoGetMongoDBFunc(ctx, cfg)
-}
-
-// DoGetMongoDBCalls gets all the calls that were made to DoGetMongoDB.
-// Check the length with:
-//     len(mockedInitialiser.DoGetMongoDBCalls())
-func (mock *InitialiserMock) DoGetMongoDBCalls() []struct {
-	Ctx context.Context
-	Cfg mongodb.MongoDriverConfig
-} {
-	var calls []struct {
-		Ctx context.Context
-		Cfg mongodb.MongoDriverConfig
-	}
-	mock.lockDoGetMongoDB.RLock()
-	calls = mock.calls.DoGetMongoDB
-	mock.lockDoGetMongoDB.RUnlock()
-	return calls
-}
-
-// DoGetPGXPool calls DoGetPGXPoolFunc.
-func (mock *InitialiserMock) DoGetPGXPool(ctx context.Context, cfg *config.Config) (*pgx.PGX, error) {
-	if mock.DoGetPGXPoolFunc == nil {
-		panic("InitialiserMock.DoGetPGXPoolFunc: method is nil but Initialiser.DoGetPGXPool was just called")
-	}
-	callInfo := struct {
-		Ctx context.Context
-		Cfg *config.Config
-	}{
-		Ctx: ctx,
-		Cfg: cfg,
-	}
-	mock.lockDoGetPGXPool.Lock()
-	mock.calls.DoGetPGXPool = append(mock.calls.DoGetPGXPool, callInfo)
-	mock.lockDoGetPGXPool.Unlock()
-	return mock.DoGetPGXPoolFunc(ctx, cfg)
-}
-
-// DoGetPGXPoolCalls gets all the calls that were made to DoGetPGXPool.
-// Check the length with:
-//     len(mockedInitialiser.DoGetPGXPoolCalls())
-func (mock *InitialiserMock) DoGetPGXPoolCalls() []struct {
-	Ctx context.Context
-	Cfg *config.Config
-} {
-	var calls []struct {
-		Ctx context.Context
-		Cfg *config.Config
-	}
-	mock.lockDoGetPGXPool.RLock()
-	calls = mock.calls.DoGetPGXPool
-	mock.lockDoGetPGXPool.RUnlock()
-	return calls
-}
-
 // DoGetRDSClient calls DoGetRDSClientFunc.
 func (mock *InitialiserMock) DoGetRDSClient(region string) rds.Client {
 	if mock.DoGetRDSClientFunc == nil {
@@ -285,5 +199,40 @@ func (mock *InitialiserMock) DoGetRDSClientCalls() []struct {
 	mock.lockDoGetRDSClient.RLock()
 	calls = mock.calls.DoGetRDSClient
 	mock.lockDoGetRDSClient.RUnlock()
+	return calls
+}
+
+// DoGetRDSDB calls DoGetRDSDBFunc.
+func (mock *InitialiserMock) DoGetRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+	if mock.DoGetRDSDBFunc == nil {
+		panic("InitialiserMock.DoGetRDSDBFunc: method is nil but Initialiser.DoGetRDSDB was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}{
+		Ctx: ctx,
+		Cfg: cfg,
+	}
+	mock.lockDoGetRDSDB.Lock()
+	mock.calls.DoGetRDSDB = append(mock.calls.DoGetRDSDB, callInfo)
+	mock.lockDoGetRDSDB.Unlock()
+	return mock.DoGetRDSDBFunc(ctx, cfg)
+}
+
+// DoGetRDSDBCalls gets all the calls that were made to DoGetRDSDB.
+// Check the length with:
+//     len(mockedInitialiser.DoGetRDSDBCalls())
+func (mock *InitialiserMock) DoGetRDSDBCalls() []struct {
+	Ctx context.Context
+	Cfg *config.Config
+} {
+	var calls []struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}
+	mock.lockDoGetRDSDB.RLock()
+	calls = mock.calls.DoGetRDSDB
+	mock.lockDoGetRDSDB.RUnlock()
 	return calls
 }

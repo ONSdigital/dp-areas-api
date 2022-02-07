@@ -5,12 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ONSdigital/dp-mongodb/v3/mongodb"
-
 	"github.com/kelseyhightower/envconfig"
 )
-
-type MongoConfig = mongodb.MongoDriverConfig
 
 // Config represents service configuration for dp-areas-api
 type Config struct {
@@ -21,7 +17,6 @@ type Config struct {
 	DefaultMaxLimit            int           `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
 	DefaultLimit               int           `envconfig:"DEFAULT_LIMIT"`
 	DefaultOffset              int           `envconfig:"DEFAULT_OFFSET"`
-	MongoConfig                
 	RDSDBName                  string `envconfig:"DBNAME"`
 	RDSDBUser                  string `envconfig:"DBUSER"`
 	RDSDBHost                  string `envconfig:"DBHOST"`
@@ -36,7 +31,10 @@ type Config struct {
 	DPPostgresUserPassword     string `envconfig:"DPPOSTGRESPASSWORD"`
 	DPPostgresLocalPort        string `envconfig:"DPPOSTGRESPORT"`
 	DPPostgresLocalDB          string `envconfig:"USEPOSTGRESDB"`
+}
 
+func (c Config) GetRDSEndpoint() string {
+	return fmt.Sprintf("%s:%s", cfg.RDSDBHost, cfg.RDSDBPort)
 }
 
 var cfg *Config
@@ -60,21 +58,6 @@ func Get() (*Config, error) {
 		DefaultMaxLimit:            1000,
 		DefaultLimit:               20,
 		DefaultOffset:              0,
-		MongoConfig: MongoConfig{
-			ClusterEndpoint:               "localhost:27017",
-			Username:                      "",
-			Password:                      "",
-			Database:                      "areas",
-			Collections:                   map[string]string{AreasCollection: "areas"},
-			ReplicaSet:                    "",
-			IsStrongReadConcernEnabled:    false,
-			IsWriteConcernMajorityEnabled: true,
-			ConnectTimeout:                5 * time.Second,
-			QueryTimeout:                  15 * time.Second,
-			TLSConnectionConfig: mongodb.TLSConnectionConfig{
-				IsSSL: false,
-			},
-		},
 		DPPostgresLocal: true,
 		DPPostgresUserName: "postgres",
 		DPPostgresUserPassword: os.Getenv("DPPOSTGRESPASSWORD"),

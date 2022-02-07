@@ -9,9 +9,6 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/pgx"
-	"github.com/jackc/pgconn"
-
 	apiMock "github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/service"
@@ -22,7 +19,6 @@ import (
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 
-	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
 	"github.com/ONSdigital/dp-areas-api/rds"
 	rdsMock "github.com/ONSdigital/dp-areas-api/rds/mock"
 	awsrds "github.com/aws/aws-sdk-go/service/rds"
@@ -38,7 +34,6 @@ var (
 
 var (
 	errHealthcheck = errors.New("healthCheck error")
-	errMongo       = errors.New("mongoDB error")
 	errorRDS       = errors.New("table not created successfully: error creating table")
 )
 
@@ -48,32 +43,6 @@ var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitComm
 
 var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
 	return nil
-}
-
-var funcDoGetMongoDBErr = func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-	return nil, errMongo
-}
-
-var funcDoGetPGXPool = func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
-	p := &pgx.PGX{
-		Pool: &pgxMock.PGXPoolMock{
-			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
-				return pgconn.CommandTag{}, nil
-			},
-		},
-	}
-	return p, nil
-}
-
-var funcDoGetPGXPoolError = func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
-	p := &pgx.PGX{
-		Pool: &pgxMock.PGXPoolMock{
-			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
-				return nil, errorRDS
-			},
-		},
-	}
-	return p, nil
 }
 
 func TestRun(t *testing.T) {
@@ -96,9 +65,11 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		mongoMock := &apiMock.AreaStoreMock{
-			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			CloseFunc: func(ctx context.Context) error {
+		rdsDBMock := &apiMock.RDSAreaStoreMock{
+			InitFunc: func(ctx context.Context, cfg *config.Config) error {
+				return nil
+			},
+			BuildTablesFunc: func(ctx context.Context, executionList []string) error {
 				return nil
 			},
 		}
@@ -135,36 +106,13 @@ func TestRun(t *testing.T) {
 			return failingServerMock
 		}
 
-		funcDoGetMongoDBOk := func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-			return mongoMock, nil
+		funcDoGetRDSDBOk := func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+			return rdsDBMock, nil
 		}
 
 		funcDoGetRDSClient := func(region string) rds.Client {
 			return rdsMock
 		}
-
-		Convey("Given that initialising mongoDB returns an error", func() {
-			initMock := &serviceMock.InitialiserMock{
-				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
-				DoGetMongoDBFunc:     funcDoGetMongoDBErr,
-				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetRDSClientFunc:   funcDoGetRDSClient,
-				DoGetPGXPoolFunc:     funcDoGetPGXPool,
-			}
-			svcErrors := make(chan error, 1)
-			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
-
-			Convey("Then service Run fails with the same error and the flag is not set", func() {
-				So(err, ShouldResemble, errMongo)
-				So(svcList.MongoDB, ShouldBeFalse)
-				So(svcList.HealthCheck, ShouldBeFalse)
-			})
-
-			Reset(func() {
-				// This reset is run after each `Convey` at the same scope (indentation)
-			})
-		})
 
 		Convey("Given that initialising healthcheck returns an error", func() {
 
@@ -172,9 +120,8 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
-				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
 				DoGetRDSClientFunc:   funcDoGetRDSClient,
-				DoGetPGXPoolFunc:     funcDoGetPGXPool,
+				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
 			}
 
 			svcErrors := make(chan error, 1)
@@ -197,10 +144,9 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
 				DoGetRDSClientFunc:   funcDoGetRDSClient,
-				DoGetPGXPoolFunc:     funcDoGetPGXPool,
-			}	
+				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
+			}
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -210,16 +156,13 @@ func TestRun(t *testing.T) {
 			Convey("When service Run succeeds and all the flags are set", func() {
 				So(err, ShouldBeNil)
 				So(svcList.HealthCheck, ShouldBeTrue)
-				So(svcList.MongoDB, ShouldBeTrue)
 			})
 
 			Convey("Then checkers are registered and the healthcheck and http server started", func() {
-				So(hcMock.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMock.AddCheckCalls(), ShouldHaveLength, 1)
 				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
-				So(hcMock.AddCheckCalls()[1].Name, ShouldResemble, "Mongo DB")
 				So(initMock.DoGetHTTPServerCalls(), ShouldHaveLength, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25500")
-				So(initMock.DoGetMongoDBCalls()[0].Cfg.ClusterEndpoint, ShouldEqual, "localhost:27017")
 				So(hcMock.StartCalls(), ShouldHaveLength, 1)
 				//!!! a call needed to stop the server, maybe ?
 				serverWg.Wait() // Wait for HTTP server go-routine to finish
@@ -246,9 +189,8 @@ func TestRun(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMockAddFail, nil
 				},
-				DoGetMongoDBFunc:    funcDoGetMongoDBOk,
-				DoGetRDSClientFunc:  funcDoGetRDSClient,
-				DoGetPGXPoolFunc:    funcDoGetPGXPool,
+				DoGetRDSClientFunc: funcDoGetRDSClient,
+				DoGetRDSDBFunc:     funcDoGetRDSDBOk,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -259,9 +201,8 @@ func TestRun(t *testing.T) {
 				So(err.Error(), ShouldResemble, fmt.Sprintf("unable to register checkers: %s", errAddheckFail.Error()))
 				So(svcList.HealthCheck, ShouldBeTrue)
 				// ADD CODE: add code to confirm checkers exist
-				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 1)
 				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
-				So(hcMockAddFail.AddCheckCalls()[1].Name, ShouldResemble, "Mongo DB")
 			})
 			Reset(func() {
 				// This reset is run after each `Convey` at the same scope (indentation)
@@ -274,9 +215,8 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetHTTPServerFunc:  funcDoGetFailingHTTPServer,
-				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
 				DoGetRDSClientFunc:   funcDoGetRDSClient,
-				DoGetPGXPoolFunc:     funcDoGetPGXPool,
+				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -299,9 +239,17 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetMongoDBFunc:     funcDoGetMongoDBOk,
 				DoGetRDSClientFunc:   funcDoGetRDSClient,
-				DoGetPGXPoolFunc:     funcDoGetPGXPoolError,
+				DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+					return &apiMock.RDSAreaStoreMock{
+						InitFunc: func(ctx context.Context, cfg *config.Config) error {
+							return nil
+						},
+						BuildTablesFunc: func(ctx context.Context, executionList []string) error {
+							return errorRDS
+						},
+					}, nil
+				},
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
@@ -359,24 +307,16 @@ func TestClose(t *testing.T) {
 			},
 		}
 
-		mockedPGXPool := &pgxMock.PGXPoolMock{
-			CloseFunc: func() {},
-			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error){
-				return pgconn.CommandTag{}, nil
-			},
-		}
-
-		pgxPoolMock := &pgx.PGX{
-			Pool: mockedPGXPool,
-		}
-
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
-			mongoMock := &apiMock.AreaStoreMock{
-				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-				CloseFunc: func(ctx context.Context) error {
+			rdsDBMock := &apiMock.RDSAreaStoreMock{
+				InitFunc: func(ctx context.Context, cfg *config.Config) error {
 					return nil
 				},
+				BuildTablesFunc: func(ctx context.Context, executionList []string) error {
+					return nil
+				},
+				CloseFunc: func() {},
 			}
 
 			initMock := &mock.InitialiserMock{
@@ -384,14 +324,11 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-					return mongoMock, nil
-				},
 				DoGetRDSClientFunc: func(region string) rds.Client {
 					return rdsMock
 				},
-				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
-					return  pgxPoolMock, nil
+				DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
+					return rdsDBMock, nil
 				},
 			}
 
@@ -403,51 +340,11 @@ func TestClose(t *testing.T) {
 			err = svc.Close(context.Background())
 			So(err, ShouldBeNil)
 			So(hcMock.StopCalls(), ShouldHaveLength, 1)
-			So(mongoMock.CloseCalls(), ShouldHaveLength, 1)
 			So(serverMock.ShutdownCalls(), ShouldHaveLength, 1)
-			So(mockedPGXPool.CloseCalls(), ShouldHaveLength, 1)
-		})
-
-		Convey("If Mongo fails to Close and returns an error", func() {
-
-			mongoMockCloseErr := &apiMock.AreaStoreMock{
-				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-				CloseFunc: func(ctx context.Context) error {
-					return errors.New("Closing mongo timed out")
-				},
-			}
-
-			initMock := &mock.InitialiserMock{
-				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
-				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-					return hcMock, nil
-				},
-				DoGetMongoDBFunc: func(ctx context.Context, cfg config.MongoConfig) (api.AreaStore, error) {
-					return mongoMockCloseErr, nil
-				},
-				DoGetRDSClientFunc: func(region string) rds.Client {
-					return rdsMock
-				},
-				DoGetPGXPoolFunc: func(ctx context.Context, cfg *config.Config) (*pgx.PGX, error){
-					return  pgxPoolMock, nil
-				},
-			}
-
-			svcErrors := make(chan error, 1)
-			svcList := service.NewServiceList(initMock)
-			svc, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
-
-			err = svc.Close(context.Background())
-			So(err, ShouldBeError, "failed to shutdown gracefully")
-			So(svc.ServiceList.MongoDB, ShouldBeTrue)
+			So(rdsDBMock.CloseCalls(), ShouldHaveLength, 1)
 		})
 
 		Convey("If service times out while shutting down, the Close operation fails with the expected error", func() {
-			mongoMock := &apiMock.AreaStoreMock{
-				CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-				CloseFunc:   func(ctx context.Context) error { return nil },
-			}
-
 			cfg.GracefulShutdownTimeout = 100 * time.Millisecond
 			timeoutServerMock := &mock.HTTPServerMock{
 				ListenAndServeFunc: func() error { return nil },
@@ -457,15 +354,13 @@ func TestClose(t *testing.T) {
 				},
 			}
 
-			svcList := service.NewServiceList(nil)	
+			svcList := service.NewServiceList(nil)
 			svcList.HealthCheck = true
 			svc := service.Service{
 				Config:      cfg,
 				ServiceList: svcList,
 				Server:      timeoutServerMock,
 				HealthCheck: hcMock,
-				MongoDB:     mongoMock,
-				PGX:         pgxPoolMock,
 			}
 
 			err = svc.Close(context.Background())

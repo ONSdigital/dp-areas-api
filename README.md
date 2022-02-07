@@ -18,11 +18,6 @@ Digital Publishing areas API used to navigate profiles for different geographica
 | GRACEFUL_SHUTDOWN_TIMEOUT    | 5s        | The graceful shutdown timeout in seconds (`time.Duration` format)
 | HEALTHCHECK_INTERVAL         | 30s       | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s       | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
-| MONGODB_AREAS_DATABASE       | areas     | The MongoDB areas database
-| MONGODB_AREAS_COLLECTION     | areas     | The MongoDB areas collection
-| MONGODB_USERNAME             | test      | The MongoDB Username
-| MONGODB_PASSWORD             | test      | The MongoDB Password
-| MONGODB_IS_SSL               | false     | is SSL enabled for mongo server
 | DEFAULT_LIMIT                | 20        | Default limit for pagination
 | DEFAULT_OFFSET               | 0         | Default offset for pagination
 | DEFAULT_MAXIMUM_LIMIT        | 1000      | Default maximum limit for pagination
@@ -33,7 +28,13 @@ Note: `<RDS_INSTANCE_ENDPOINT>` can be obtained from the AWS AURORA RDS cluster 
 
 https://eu-west-1.console.aws.amazon.com/rds/home?region=eu-west-1#database:id=develop-area-profiles-postgres;is-cluster=true
 
-1. Set the following in your environment - remote postgres connection:
+1. Add DB host to /etc/hosts:
+
+`
+127.0.0.1 <RDS_INSTANCE_ENDPOINT>
+`
+
+2. Set the following in your environment - remote postgres connection:
 
 ```
 export AWS_PROFILE="development"
@@ -63,25 +64,25 @@ export DPPostgresLocalPort="5432"`
 export DPPostgresLocalDB="dp-areas-api"`
 ```
 
-2. Run the dp command:
+3. Run the dp command:
 
 ```
 dp remote allow develop
 ```
 
-3. Open a port forwarding connection from your localhost:5432 to the AWS AURORA RDS instance endpoint by running:
+4. Open a port forwarding connection from your localhost:5432 to the AWS AURORA RDS instance endpoint by running:
 
 ```
 dp ssh develop publishing 3 -v -- -L 5432:<RDS_INSTANCE_ENDPOINT>:5432
 ```
 
-4. Get the required certificate by running:
+5. Get the required certificate by running:
 
 ```
 wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
 ```
 
-5. Finally, execute the sql command to open a tunnel to the AWS AURORA RDS instance:
+6. Finally, execute the sql command to open a tunnel to the AWS AURORA RDS instance:
 
 ```
 psql -h <RDS_INSTANCE_ENDPOINT> -p 5432 "sslmode=verify-full sslrootcert=<PATH_TO_PEM_FILE> dbname=dp-areas-api user=dp-areas-api-publishing"

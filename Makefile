@@ -28,5 +28,5 @@ test:
 
 .PHONY: convey
 convey:
-	goconvey ./...
+	goconvey -excludedDirs="ci,build" ./...
 

@@ -3,16 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 
-	"github.com/ONSdigital/dp-areas-api/api/stubs"
-
-	"github.com/ONSdigital/dp-areas-api/models"
-	"github.com/ONSdigital/dp-areas-api/utils"
-
 	errs "github.com/ONSdigital/dp-areas-api/apierrors"
-	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/gorilla/mux"
 )
 
@@ -23,44 +19,6 @@ const (
 var (
 	queryStr = "select id, code, active from areas_basic where id=$1"
 )
-
-//GetArea is a handler that gets a area by its ID from MongoDB
-func (api *API) getArea(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	vars := mux.Vars(req)
-	areaID := vars["id"]
-	logdata := log.Data{"area-id": areaID}
-
-	//get area from mongoDB by id
-	area, err := api.areaStore.GetArea(ctx, areaID)
-	if err != nil {
-		log.Error(ctx, "getArea Handler: retrieving area from mongoDB returned an error", err, logdata)
-		if err == errs.ErrAreaNotFound {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	b, err := json.Marshal(area)
-	if err != nil {
-		log.Error(ctx, "getArea Handler: failed to marshal area resource into bytes", err, logdata)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	//Set headers
-	setJSONContentType(w)
-
-	if _, err := w.Write(b); err != nil {
-		log.Error(ctx, "getArea Handler: error writing bytes to response", err, logdata)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.Info(ctx, "getArea Handler: Successfully retrieved area", logdata)
-
-}
 
 //getBoundaryAreaData is a handler that gets a boundary data by ID - currently stubbed
 func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
@@ -82,8 +40,19 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
 
+	// get ancestry data
+	ancestryData, err := api.ancestorStore.GetAncestors(areaID)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.AncestryDataGetError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
 	//get area from stubbed data
 	area := api.GeoData[areaID]
+
+	// update area data with ancestry data
+	area.Ancestors = ancestryData
+
 	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
 
 	areaData, err := json.Marshal(area)
@@ -101,27 +70,15 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
+	var validationErrs []error
 
-	var (
-		validationErrs []error
-		code string
-		id int64
-		active bool
-	)
-	err := api.pgx.Pool.QueryRow(context.Background(), queryStr, areaID).Scan(&id, &code, &active)
+	area, err := api.rdsAreaStore.GetArea(areaID)
 	if err != nil {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, err.Error()))
-	}
-	//handle errors
-	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
 
-	areaData, err := json.Marshal(&models.AreaDataRDS{
-		Id: id,
-		Code: code,
-		Active: active,
-	})
+	areaData, err := json.Marshal(area)
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.MarshallingAreaDataError, err.Error())
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -130,99 +87,42 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 }
 
-//GetAreas is a handler that gets all the areas from MongoDB
-func (api *API) getAreas(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	logData := log.Data{}
-
-	offsetParameter := req.URL.Query().Get("offset")
-	limitParameter := req.URL.Query().Get("limit")
-
-	offset := api.defaultOffset
-	limit := api.defaultLimit
-
-	var err error
-
-	if limitParameter != "" {
-		logData["limit"] = limitParameter
-		limit, err = utils.ValidatePositiveInt(limitParameter)
-		if err != nil {
-			log.Error(ctx, "invalid query parameter: limit", err, logData)
-			err = errs.ErrInvalidQueryParameter
-			handleAPIErr(ctx, err, w, nil)
-			return
-		}
-	}
-
-	if limit > api.maxLimit {
-		logData["max_limit"] = api.maxLimit
-		err = errs.ErrQueryParamLimitExceedMax
-		log.Error(ctx, "limit is greater than the maximum allowed", err, logData)
-		handleAPIErr(ctx, err, w, nil)
-		return
-	}
-
-	if offsetParameter != "" {
-		logData["offset"] = offsetParameter
-		offset, err = utils.ValidatePositiveInt(offsetParameter)
-		if err != nil {
-			log.Error(ctx, "invalid query parameter: offset", err, logData)
-			err = errs.ErrInvalidQueryParameter
-			handleAPIErr(ctx, err, w, nil)
-			return
-		}
-	}
-
-	b, err := func() ([]byte, error) {
-
-		logData := log.Data{}
-
-		areasResult, err := api.areaStore.GetAreas(ctx, offset, limit)
-		if err != nil {
-			log.Error(ctx, "api endpoint getAreas returned an error", err)
-			return nil, err
-		}
-
-		b, err := json.Marshal(areasResult)
-
-		if err != nil {
-			log.Error(ctx, "api endpoint getAreas failed to marshal resource into bytes", err, logData)
-			return nil, err
-		}
-
-		return b, nil
-	}()
-
-	if err != nil {
-		handleAPIErr(ctx, err, w, nil)
-		return
-	}
-
-	setJSONContentType(w)
-	if _, err = w.Write(b); err != nil {
-		log.Error(ctx, "api endpoint getAreas error writing response body", err)
-		handleAPIErr(ctx, err, w, nil)
-		return
-	}
-	log.Info(ctx, "api endpoint getAreas request successful")
-}
-
 //getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
 func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
 
-	//get area relationships from stubbed data
-	if relationShips, ok := stubs.Relationships[areaID]; !ok {
-		return nil, models.NewErrorResponse(http.StatusNotFound, nil)
-	} else {
-		jsonResponse, err := json.Marshal(relationShips)
-		if err != nil {
-			responseErr := models.NewError(ctx, err, models.MarshallingAreaRelationshipsError, err.Error())
-			return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	err := api.rdsAreaStore.ValidateArea(areaID)
+
+	if err != nil {
+		if err.Error() == errs.ErrNoRows.Error() {
+			responseErr := models.NewError(ctx, err, models.InvalidAreaCodeError, err.Error())
+			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
 		}
-
-		return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
+		responseErr := models.NewError(ctx, err, models.AreaDataIdGetError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
+
+	relatedAreaDetails, err := api.rdsAreaStore.GetRelationships(areaID)
+	if err != nil {
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
+	}
+
+	relationShips := make([]*models.AreaRelationShips, 0)
+	for _, area := range relatedAreaDetails {
+		relationShips = append(relationShips, &models.AreaRelationShips{
+			AreaCode: area.Code,
+			AreaName: area.Name,
+			Href:     fmt.Sprintf("/v1/area/%s", area.Code),
+		})
+	}
+
+	jsonResponse, err := json.Marshal(relationShips)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.MarshallingAreaRelationshipsError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
 }
