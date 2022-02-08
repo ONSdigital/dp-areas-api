@@ -25,9 +25,6 @@ var (
 type API struct {
 	Router        *mux.Router
 	ancestorStore AncestorStore
-	defaultLimit  int
-	defaultOffset int
-	maxLimit      int
 	GeoData       map[string]models.AreasDataResults
 	rdsAreaStore  RDSAreaStore
 }
@@ -57,9 +54,6 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSA
 	api := &API{
 		Router:        r,
 		ancestorStore: Ancestry{},
-		defaultLimit:  cfg.DefaultLimit,
-		defaultOffset: cfg.DefaultOffset,
-		maxLimit:      cfg.DefaultMaxLimit,
 		GeoData:       geoData,
 		rdsAreaStore:  rdsStore,
 	}

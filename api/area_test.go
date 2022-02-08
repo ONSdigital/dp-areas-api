@@ -4,6 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"sync"
+	"testing"
+
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
 	"github.com/ONSdigital/dp-areas-api/api/stubs"
@@ -12,11 +18,6 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"sync"
-	"testing"
 )
 
 const (
@@ -32,21 +33,11 @@ const (
 
 var mu sync.Mutex
 
-func dbArea(id string, name string) *models.Area {
-	return &models.Area{
-		ID:      id,
-		Name:    name,
-		Version: 1,
-	}
-}
-
 func GetAPIWithRDSMocks(mockedRDSStore api.RDSAreaStore) (*api.API, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	cfg, err := config.Get()
 	So(err, ShouldBeNil)
-	cfg.DefaultLimit = 0
-	cfg.DefaultOffset = 0
 	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedRDSStore)
 }
 
