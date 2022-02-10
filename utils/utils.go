@@ -17,4 +17,3 @@ func ValidatePositiveInt(parameter string) (val int, err error) {
 	}
 	return val, nil
 }
-

@@ -49,3 +49,13 @@ type AreaDataRDS struct {
 	Code   string `json:"code"`
 	Active bool   `json:"active"`
 }
+
+// Struct for seeding area_type table with test data
+type AreaTypeSeeding struct {
+	AreaTypes map[string]map[string]interface{}
+}
+
+// Struct for seeding area table with test data
+type AreaSeeding struct {
+	Areas map[string]interface{}
+}
