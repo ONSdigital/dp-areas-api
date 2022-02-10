@@ -53,7 +53,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	// only run publishing user
+	// only run publishing user or if pointing at local postgres instance
 	if cfg.RDSDBUser == "dp-areas-api-publishing" || cfg.DPPostgresLocal {
 		// rds table schema builder
 		rdsSchema := &models.DatabaseSchema{

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	CreateTableQuery = "CREATE TABLE IF NOT EXISTS %s ( PRIMARY KEY (%s), %s)"
+	CreateTableQuery = "CREATE TABLE IF NOT EXISTS %s (PRIMARY KEY (%s), %s)"
 )
 
 // DatabaseSchema database schema model
@@ -23,7 +23,7 @@ type DatabaseSchema struct {
 // BuildDatabaseSchemaModel build db schema model
 func (db *DatabaseSchema) BuildDatabaseSchemaModel() error {
 	dbSchemaData := make(map[string]DatabaseSchema, 1)
-	str, err := db.CleanSchemaString(db.SchemaString)
+	str, err := cleanString(db.SchemaString)
 	if err != nil {
 		return err
 	}
@@ -55,12 +55,13 @@ func (db *DatabaseSchema) TableSchemaBuilder() {
 	}
 }
 
-// cleanSchemaString cleans db schema string
-func (db *DatabaseSchema) CleanSchemaString(schemaString string) (*string, error) {
+// cleanString cleans strings of unwanted chars matched in localised char set
+func cleanString(str string) (*string, error) {
 	reg, err := regexp.Compile("[\n\t]")
 	if err != nil {
 		return nil, err
 	}
-	cleanSchemaString := reg.ReplaceAllString(schemaString, "")
+	cleanSchemaString := reg.ReplaceAllString(str, "")
 	return &cleanSchemaString, nil
 }
+
