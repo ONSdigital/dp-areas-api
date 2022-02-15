@@ -19,9 +19,9 @@ type Config struct {
 	RDSDBHost                  string        `envconfig:"DBHOST"`
 	RDSDBPort                  string        `envconfig:"DBPORT"`
 	AWSRegion                  string        `envconfig:"AWSREGION"`
-	RDSDBInstance1             string        `envconfig:"RDSINSTANCE1"`
-	RDSDBInstance2             string        `envconfig:"RDSINSTANCE2"`
-	RDSDBInstance3             string        `envconfig:"RDSINSTANCE3"`
+	RDSDBConnectionTTL         time.Duration `envconfig:"RDSCONNECTIONTTL"`
+	RDSDBMaxConnections        int           `envconfig:"RDSMAXCONNECTIONS"`
+	RDSDBMinConnections        int           `envconfig:"RDSMINCONNECTIONS"`
 	// flag to use local postres instace provided by dp-compose
 	DPPostgresLocal        bool   `envconfig:"USEPOSTGRESLOCAL"`
 	DPPostgresUserName     string `envconfig:"DPPOSTGRESUSERNAME"`
@@ -57,6 +57,9 @@ func Get() (*Config, error) {
 		DPPostgresUserPassword:     os.Getenv("DPPOSTGRESPASSWORD"),
 		DPPostgresLocalPort:        "5432",
 		DPPostgresLocalDB:          "dp-areas-api",
+		RDSDBConnectionTTL:         24 * time.Hour,
+		RDSDBMaxConnections:        4,
+		RDSDBMinConnections:        1,
 	}
 
 	return cfg, envconfig.Process("", cfg)
@@ -74,5 +77,5 @@ func (c Config) GetLocalDBConnectionString() string {
 
 // GetRemoteDBConnectionString returns remote connection string
 func (c Config) GetRemoteDBConnectionString(authToken string) string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", c.RDSDBHost, c.RDSDBPort, c.RDSDBUser, authToken, c.RDSDBName)
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s pool_max_conns=%d pool_min_conns=%d pool_max_conn_lifetime=%s", c.RDSDBHost, c.RDSDBPort, c.RDSDBUser, authToken, c.RDSDBName, c.RDSDBMaxConnections, c.RDSDBMinConnections, c.RDSDBConnectionTTL)
 }

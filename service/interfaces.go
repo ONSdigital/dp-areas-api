@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/rds"
 
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -19,7 +18,6 @@ import (
 type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
-	DoGetRDSClient(region string) rds.Client
 	DoGetRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error)
 }
 

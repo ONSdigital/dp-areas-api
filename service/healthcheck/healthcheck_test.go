@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-areas-api/rds/mock"
-
-	servicerds "github.com/aws/aws-sdk-go/service/rds"
+	"github.com/ONSdigital/dp-areas-api/api/mock"
+	"github.com/ONSdigital/dp-areas-api/config"
 
 	healthcheck "github.com/ONSdigital/dp-areas-api/service/healthcheck"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -21,25 +20,18 @@ import (
 func TestGetHealthCheck(t *testing.T) {
 	ctx := context.Background()
 
-	m := &mock.ClientMock{}
+	m := &mock.RDSAreaStoreMock{}
 
-	instanceList := []string{"testinstance1", "testinstance2", "testinstance3"}
+	cfg, _ := config.Get()
 
 	Convey("dp-areas-api healthchecker reports healthy", t, func() {
 
-		m.DescribeDBInstancesFunc = func(input *servicerds.DescribeDBInstancesInput) (*servicerds.DescribeDBInstancesOutput, error) {
-			testDBName := "testDB1"
-			return &servicerds.DescribeDBInstancesOutput{
-				DBInstances: []*servicerds.DBInstance{
-					{
-						DBName: &testDBName,
-					},
-				},
-			}, nil
+		m.PingFunc = func(ctx context.Context) error {
+			return nil
 		}
 
 		checkState := health.NewCheckState("dp-areas-api-test")
-		checker := healthcheck.RDSHealthCheck(m, instanceList)
+		checker := healthcheck.RDSHealthCheck(context.Background(), cfg, m)
 		err := checker(ctx, checkState)
 		Convey("When GetHealthCheck is called", func() {
 			Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
@@ -51,22 +43,22 @@ func TestGetHealthCheck(t *testing.T) {
 	})
 
 	Convey("dp-areas-api healthchecker reports critical", t, func() {
-		Convey("When the user pool can't be found", func() {
-			m.DescribeDBInstancesFunc = func(input *servicerds.DescribeDBInstancesInput) (*servicerds.DescribeDBInstancesOutput, error) {
+		Convey("When the rds instance cannot be successfully pinged", func() {
+			m.PingFunc = func(ctx context.Context) error {
 				awsErrCode := "ResourceNotFoundException"
 				awsErrMessage := "Group not found."
 				awsOrigErr := errors.New(awsErrCode)
 				awsErr := awserr.New(awsErrCode, awsErrMessage, awsOrigErr)
-				return nil, awsErr
+				return awsErr
 			}
 
 			checkState := health.NewCheckState("dp-areas-api-test")
 
-			checker := healthcheck.RDSHealthCheck(m, instanceList)
+			checker := healthcheck.RDSHealthCheck(context.Background(), cfg, m)
 			err := checker(ctx, checkState)
 			Convey("When GetHealthCheck is called", func() {
 				Convey("Then the HealthCheck flag is set to true and HealthCheck is returned", func() {
-					So(checkState.StatusCode(), ShouldEqual, http.StatusTooManyRequests)
+					So(checkState.StatusCode(), ShouldEqual, http.StatusBadGateway)
 					So(checkState.Status(), ShouldEqual, health.StatusCritical)
 					So(err, ShouldNotBeNil)
 				})

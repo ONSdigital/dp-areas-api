@@ -32,6 +32,9 @@ func TestConfig(t *testing.T) {
 					DPPostgresUserName:         "postgres",
 					DPPostgresLocalPort:        "5432",
 					DPPostgresLocalDB:          "dp-areas-api",
+					RDSDBConnectionTTL:         24 * time.Hour,
+					RDSDBMaxConnections:        4,
+					RDSDBMinConnections:        1,
 				})
 			})
 

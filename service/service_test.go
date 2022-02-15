@@ -18,10 +18,6 @@ import (
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/ONSdigital/dp-areas-api/rds"
-	rdsMock "github.com/ONSdigital/dp-areas-api/rds/mock"
-	awsrds "github.com/aws/aws-sdk-go/service/rds"
 )
 
 var (
@@ -81,19 +77,6 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		rdsMock := &rdsMock.ClientMock{
-			DescribeDBInstancesFunc: func(input *awsrds.DescribeDBInstancesInput) (*awsrds.DescribeDBInstancesOutput, error) {
-				testDBName := "testDB1"
-				return &awsrds.DescribeDBInstancesOutput{
-					DBInstances: []*awsrds.DBInstance{
-						{
-							DBName: &testDBName,
-						},
-					},
-				}, nil
-			},
-		}
-
 		funcDoGetHealthcheckOk := func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 			return hcMock, nil
 		}
@@ -110,17 +93,12 @@ func TestRun(t *testing.T) {
 			return rdsDBMock, nil
 		}
 
-		funcDoGetRDSClient := func(region string) rds.Client {
-			return rdsMock
-		}
-
 		Convey("Given that initialising healthcheck returns an error", func() {
 
 			// setup (run before each `Convey` at this scope / indentation):
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServerNil,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckErr,
-				DoGetRDSClientFunc:   funcDoGetRDSClient,
 				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
 			}
 
@@ -144,7 +122,6 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetRDSClientFunc:   funcDoGetRDSClient,
 				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
 			}
 
@@ -189,7 +166,6 @@ func TestRun(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMockAddFail, nil
 				},
-				DoGetRDSClientFunc: funcDoGetRDSClient,
 				DoGetRDSDBFunc:     funcDoGetRDSDBOk,
 			}
 			svcErrors := make(chan error, 1)
@@ -215,7 +191,6 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
 				DoGetHTTPServerFunc:  funcDoGetFailingHTTPServer,
-				DoGetRDSClientFunc:   funcDoGetRDSClient,
 				DoGetRDSDBFunc:       funcDoGetRDSDBOk,
 			}
 			svcErrors := make(chan error, 1)
@@ -239,7 +214,6 @@ func TestRun(t *testing.T) {
 			initMock := &serviceMock.InitialiserMock{
 				DoGetHTTPServerFunc:  funcDoGetHTTPServer,
 				DoGetHealthCheckFunc: funcDoGetHealthcheckOk,
-				DoGetRDSClientFunc:   funcDoGetRDSClient,
 				DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
 					return &apiMock.RDSAreaStoreMock{
 						InitFunc: func(ctx context.Context, cfg *config.Config) error {
@@ -294,19 +268,6 @@ func TestClose(t *testing.T) {
 			},
 		}
 
-		rdsMock := &rdsMock.ClientMock{
-			DescribeDBInstancesFunc: func(input *awsrds.DescribeDBInstancesInput) (*awsrds.DescribeDBInstancesOutput, error) {
-				testDBName := "testDB1"
-				return &awsrds.DescribeDBInstancesOutput{
-					DBInstances: []*awsrds.DBInstance{
-						{
-							DBName: &testDBName,
-						},
-					},
-				}, nil
-			},
-		}
-
 		Convey("Closing the service results in all the dependencies being closed in the expected order", func() {
 
 			rdsDBMock := &apiMock.RDSAreaStoreMock{
@@ -323,9 +284,6 @@ func TestClose(t *testing.T) {
 				DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer { return serverMock },
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
-				},
-				DoGetRDSClientFunc: func(region string) rds.Client {
-					return rdsMock
 				},
 				DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
 					return rdsDBMock, nil
