@@ -91,6 +91,7 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
+	relationshipParameter := req.URL.Query().Get("relationship")
 
 	err := api.rdsAreaStore.ValidateArea(areaID)
 
@@ -103,7 +104,7 @@ func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter,
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	relatedAreaDetails, err := api.rdsAreaStore.GetRelationships(areaID)
+	relatedAreaDetails, err := api.rdsAreaStore.GetRelationships(areaID, relationshipParameter)
 	if err != nil {
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, err)
 	}

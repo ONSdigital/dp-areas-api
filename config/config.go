@@ -52,7 +52,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		DPPostgresLocal:            true,
+		DPPostgresLocal:            false,
 		DPPostgresUserName:         "postgres",
 		DPPostgresUserPassword:     os.Getenv("DPPOSTGRESPASSWORD"),
 		DPPostgresLocalPort:        "5432",

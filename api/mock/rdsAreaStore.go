@@ -30,7 +30,7 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			GetAreaFunc: func(areaId string) (*models.AreaDataRDS, error) {
 // 				panic("mock out the GetArea method")
 // 			},
-// 			GetRelationshipsFunc: func(areaCode string) ([]*models.AreaBasicData, error) {
+// 			GetRelationshipsFunc: func(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 // 				panic("mock out the GetRelationships method")
 // 			},
 // 			InitFunc: func(ctx context.Context, cfg *config.Config) error {
@@ -56,7 +56,7 @@ type RDSAreaStoreMock struct {
 	GetAreaFunc func(areaId string) (*models.AreaDataRDS, error)
 
 	// GetRelationshipsFunc mocks the GetRelationships method.
-	GetRelationshipsFunc func(areaCode string) ([]*models.AreaBasicData, error)
+	GetRelationshipsFunc func(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error)
 
 	// InitFunc mocks the Init method.
 	InitFunc func(ctx context.Context, cfg *config.Config) error
@@ -85,6 +85,8 @@ type RDSAreaStoreMock struct {
 		GetRelationships []struct {
 			// AreaCode is the areaCode argument value.
 			AreaCode string
+			// RelationshipParameter is the relationshipParameter argument value.
+			RelationshipParameter string
 		}
 		// Init holds details about calls to the Init method.
 		Init []struct {
@@ -200,29 +202,33 @@ func (mock *RDSAreaStoreMock) GetAreaCalls() []struct {
 }
 
 // GetRelationships calls GetRelationshipsFunc.
-func (mock *RDSAreaStoreMock) GetRelationships(areaCode string) ([]*models.AreaBasicData, error) {
+func (mock *RDSAreaStoreMock) GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 	if mock.GetRelationshipsFunc == nil {
 		panic("RDSAreaStoreMock.GetRelationshipsFunc: method is nil but RDSAreaStore.GetRelationships was just called")
 	}
 	callInfo := struct {
-		AreaCode string
+		AreaCode              string
+		RelationshipParameter string
 	}{
-		AreaCode: areaCode,
+		AreaCode:              areaCode,
+		RelationshipParameter: relationshipParameter,
 	}
 	mock.lockGetRelationships.Lock()
 	mock.calls.GetRelationships = append(mock.calls.GetRelationships, callInfo)
 	mock.lockGetRelationships.Unlock()
-	return mock.GetRelationshipsFunc(areaCode)
+	return mock.GetRelationshipsFunc(areaCode, relationshipParameter)
 }
 
 // GetRelationshipsCalls gets all the calls that were made to GetRelationships.
 // Check the length with:
 //     len(mockedRDSAreaStore.GetRelationshipsCalls())
 func (mock *RDSAreaStoreMock) GetRelationshipsCalls() []struct {
-	AreaCode string
+	AreaCode              string
+	RelationshipParameter string
 } {
 	var calls []struct {
-		AreaCode string
+		AreaCode              string
+		RelationshipParameter string
 	}
 	mock.lockGetRelationships.RLock()
 	calls = mock.calls.GetRelationships

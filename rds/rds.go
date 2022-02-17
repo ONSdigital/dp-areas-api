@@ -14,32 +14,37 @@ import (
 )
 
 type RDS struct {
-	conn pgx.PGXPool
+	conn             pgx.PGXPool
 	useLocalPostgres bool
 }
 
 func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
-	var connectionString string
+	var err error
 	if cfg.DPPostgresLocal {
-		connectionString = cfg.GetLocalDBConnectionString()
-		r.useLocalPostgres = true
+		r.conn, err = pgxpool.Connect(ctx, cfg.GetLocalDBConnectionString())
+		if err != nil {
+			log.Error(ctx, "error connecting to rds instance", err)
+			return err
+		}
 	} else {
 		authToken, err := rdsutils.BuildAuthToken(cfg.GetDBEndpoint(), cfg.AWSRegion, cfg.RDSDBUser, credentials.NewEnvCredentials())
 		if err != nil {
 			log.Error(ctx, "error building auth token for rds connection", err)
 			return err
 		}
-		connectionString = cfg.GetRemoteDBConnectionString(authToken)
-		r.useLocalPostgres = false
-	}
 
-	rdsConn, err := pgxpool.Connect(ctx, connectionString)
-	if err != nil {
-		log.Error(ctx, "error connecting to rds instance", err)
-		return err
-	}
+		poolConfig, _ := pgxpool.ParseConfig(cfg.GetRemoteDBConnectionString(authToken))
+		if err != nil {
+			log.Error(ctx, "error building pool configuration", err)
+			return err
+		}
 
-	r.conn = rdsConn
+		r.conn, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
+		if err != nil {
+			log.Error(ctx, "error connecting to aws rds instance", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -66,18 +71,34 @@ func (r *RDS) GetArea(areaId string) (*models.AreaDataRDS, error) {
 	return &models.AreaDataRDS{Id: id, Code: code, Active: active}, nil
 }
 
-func (r *RDS) GetRelationships(areaCode string) ([]*models.AreaBasicData, error) {
+func (r *RDS) GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 	var relationships []*models.AreaBasicData
-	rows, err := r.conn.Query(context.Background(), getRelationShipAreas, areaCode)
-	if err != nil {
-		return nil, err
+
+	if relationshipParameter == "" {
+
+		rows, err := r.conn.Query(context.Background(), getRelationShipAreas, areaCode)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var rs models.AreaBasicData
+			rows.Scan(&rs.Code, &rs.Name)
+			relationships = append(relationships, &rs)
+		}
+	} else {
+		rows, err := r.conn.Query(context.Background(), getRelationShipAreasWithParameter, areaCode, relationshipParameter)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var rs models.AreaBasicData
+			rows.Scan(&rs.Code, &rs.Name)
+			relationships = append(relationships, &rs)
+		}
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var rs models.AreaBasicData
-		rows.Scan(&rs.Code, &rs.Name)
-		relationships = append(relationships, &rs)
-	}
+
 	return relationships, nil
 }
 

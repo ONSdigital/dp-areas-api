@@ -15,7 +15,7 @@ import (
 type RDSAreaStore interface {
 	Init(ctx context.Context, cfg *config.Config) error
 	Close()
-	GetRelationships(areaCode string) ([]*models.AreaBasicData, error)
+	GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error)
 	ValidateArea(code string) error
 	GetArea(areaId string) (*models.AreaDataRDS, error)
 	BuildTables(ctx context.Context, executionList []string) error
