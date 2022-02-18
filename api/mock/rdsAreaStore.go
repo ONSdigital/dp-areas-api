@@ -36,6 +36,9 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			InitFunc: func(ctx context.Context, cfg *config.Config) error {
 // 				panic("mock out the Init method")
 // 			},
+// 			PingFunc: func(ctx context.Context) error {
+// 				panic("mock out the Ping method")
+// 			},
 // 			ValidateAreaFunc: func(code string) error {
 // 				panic("mock out the ValidateArea method")
 // 			},
@@ -60,6 +63,9 @@ type RDSAreaStoreMock struct {
 
 	// InitFunc mocks the Init method.
 	InitFunc func(ctx context.Context, cfg *config.Config) error
+
+	// PingFunc mocks the Ping method.
+	PingFunc func(ctx context.Context) error
 
 	// ValidateAreaFunc mocks the ValidateArea method.
 	ValidateAreaFunc func(code string) error
@@ -93,6 +99,11 @@ type RDSAreaStoreMock struct {
 			// Cfg is the cfg argument value.
 			Cfg *config.Config
 		}
+		// Ping holds details about calls to the Ping method.
+		Ping []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// ValidateArea holds details about calls to the ValidateArea method.
 		ValidateArea []struct {
 			// Code is the code argument value.
@@ -104,6 +115,7 @@ type RDSAreaStoreMock struct {
 	lockGetArea          sync.RWMutex
 	lockGetRelationships sync.RWMutex
 	lockInit             sync.RWMutex
+	lockPing             sync.RWMutex
 	lockValidateArea     sync.RWMutex
 }
 
@@ -262,6 +274,37 @@ func (mock *RDSAreaStoreMock) InitCalls() []struct {
 	mock.lockInit.RLock()
 	calls = mock.calls.Init
 	mock.lockInit.RUnlock()
+	return calls
+}
+
+// Ping calls PingFunc.
+func (mock *RDSAreaStoreMock) Ping(ctx context.Context) error {
+	if mock.PingFunc == nil {
+		panic("RDSAreaStoreMock.PingFunc: method is nil but RDSAreaStore.Ping was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockPing.Lock()
+	mock.calls.Ping = append(mock.calls.Ping, callInfo)
+	mock.lockPing.Unlock()
+	return mock.PingFunc(ctx)
+}
+
+// PingCalls gets all the calls that were made to Ping.
+// Check the length with:
+//     len(mockedRDSAreaStore.PingCalls())
+func (mock *RDSAreaStoreMock) PingCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockPing.RLock()
+	calls = mock.calls.Ping
+	mock.lockPing.RUnlock()
 	return calls
 }
 

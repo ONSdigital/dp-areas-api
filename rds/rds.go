@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/pgx"
@@ -16,25 +17,33 @@ type RDS struct {
 }
 
 func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
-	var connectionString string
+	var err error
+
 	if cfg.DPPostgresLocal {
-		connectionString = cfg.GetLocalDBConnectionString()
+		r.conn, err = pgxpool.Connect(ctx, cfg.GetLocalDBConnectionString())
+		if err != nil {
+			log.Error(ctx, "error connecting to rds instance", err)
+			return err
+		}
 	} else {
 		authToken, err := rdsutils.BuildAuthToken(cfg.GetDBEndpoint(), cfg.AWSRegion, cfg.RDSDBUser, credentials.NewEnvCredentials())
 		if err != nil {
 			log.Error(ctx, "error building auth token for rds connection", err)
 			return err
 		}
-		connectionString = cfg.GetRemoteDBConnectionString(authToken)
-	}
 
-	rdsConn, err := pgxpool.Connect(ctx, connectionString)
-	if err != nil {
-		log.Error(ctx, "error connecting to rds instance", err)
-		return err
-	}
+		poolConfig, _ := pgxpool.ParseConfig(cfg.GetRemoteDBConnectionString(authToken))
+		if err != nil {
+			log.Error(ctx, "error building pool configuration", err)
+			return err
+		}
 
-	r.conn = rdsConn
+		r.conn, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
+		if err != nil {
+			log.Error(ctx, "error connecting to aws rds instance", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -78,12 +87,16 @@ func (r *RDS) GetRelationships(areaCode string) ([]*models.AreaBasicData, error)
 
 func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {
 	for index := range executionList {
-		logData := log.Data{"Exceuting Create Table Query": executionList[index]}
-		_, err := r.conn.Exec(ctx, executionList[index])
+		log.Info(ctx, "BuildTables: exec query:", log.Data{"Exceuting Create Table Query": executionList[index]})
+		execResult, err := r.conn.Exec(ctx, executionList[index])
 		if err != nil {
 			return err
 		}
-		log.Info(ctx, "table created successfully:", logData)
+		log.Info(ctx, "BuildTables: exec query result:", log.Data{"Exceuting Create Table Query": string(execResult)})
 	}
 	return nil
+}
+
+func (r *RDS) Ping(ctx context.Context) error {
+	return r.conn.Ping(ctx)
 }

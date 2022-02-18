@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/dp-areas-api/service"
 	"net/http"
 	"sync"
@@ -29,9 +28,6 @@ var _ service.Initialiser = &InitialiserMock{}
 // 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 // 				panic("mock out the DoGetHealthCheck method")
 // 			},
-// 			DoGetRDSClientFunc: func(region string) rds.Client {
-// 				panic("mock out the DoGetRDSClient method")
-// 			},
 // 			DoGetRDSDBFunc: func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
 // 				panic("mock out the DoGetRDSDB method")
 // 			},
@@ -47,9 +43,6 @@ type InitialiserMock struct {
 
 	// DoGetHealthCheckFunc mocks the DoGetHealthCheck method.
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
-
-	// DoGetRDSClientFunc mocks the DoGetRDSClient method.
-	DoGetRDSClientFunc func(region string) rds.Client
 
 	// DoGetRDSDBFunc mocks the DoGetRDSDB method.
 	DoGetRDSDBFunc func(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error)
@@ -74,11 +67,6 @@ type InitialiserMock struct {
 			// Version is the version argument value.
 			Version string
 		}
-		// DoGetRDSClient holds details about calls to the DoGetRDSClient method.
-		DoGetRDSClient []struct {
-			// Region is the region argument value.
-			Region string
-		}
 		// DoGetRDSDB holds details about calls to the DoGetRDSDB method.
 		DoGetRDSDB []struct {
 			// Ctx is the ctx argument value.
@@ -89,7 +77,6 @@ type InitialiserMock struct {
 	}
 	lockDoGetHTTPServer  sync.RWMutex
 	lockDoGetHealthCheck sync.RWMutex
-	lockDoGetRDSClient   sync.RWMutex
 	lockDoGetRDSDB       sync.RWMutex
 }
 
@@ -168,37 +155,6 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 	mock.lockDoGetHealthCheck.RLock()
 	calls = mock.calls.DoGetHealthCheck
 	mock.lockDoGetHealthCheck.RUnlock()
-	return calls
-}
-
-// DoGetRDSClient calls DoGetRDSClientFunc.
-func (mock *InitialiserMock) DoGetRDSClient(region string) rds.Client {
-	if mock.DoGetRDSClientFunc == nil {
-		panic("InitialiserMock.DoGetRDSClientFunc: method is nil but Initialiser.DoGetRDSClient was just called")
-	}
-	callInfo := struct {
-		Region string
-	}{
-		Region: region,
-	}
-	mock.lockDoGetRDSClient.Lock()
-	mock.calls.DoGetRDSClient = append(mock.calls.DoGetRDSClient, callInfo)
-	mock.lockDoGetRDSClient.Unlock()
-	return mock.DoGetRDSClientFunc(region)
-}
-
-// DoGetRDSClientCalls gets all the calls that were made to DoGetRDSClient.
-// Check the length with:
-//     len(mockedInitialiser.DoGetRDSClientCalls())
-func (mock *InitialiserMock) DoGetRDSClientCalls() []struct {
-	Region string
-} {
-	var calls []struct {
-		Region string
-	}
-	mock.lockDoGetRDSClient.RLock()
-	calls = mock.calls.DoGetRDSClient
-	mock.lockDoGetRDSClient.RUnlock()
 	return calls
 }
 
