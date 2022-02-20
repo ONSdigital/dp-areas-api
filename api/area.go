@@ -41,7 +41,7 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	}
 
 	// get ancestry data
-	ancestryData, err := api.ancestorStore.GetAncestors(areaID)
+	ancestryData, err := api.rdsAreaStore.GetAncestors(areaID)
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.AncestryDataGetError, err.Error())
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
@@ -49,9 +49,14 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 
 	//get area from stubbed data
 	area := api.GeoData[areaID]
-
+	var a []models.AreasAncestors
 	// update area data with ancestry data
-	area.Ancestors = ancestryData
+	for _, data := range ancestryData {
+		a = append(a, *data)
+	}
+
+	area.Ancestors = a
+	//	fmt.Println(ancestryData)
 
 	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
 

@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
@@ -100,6 +101,24 @@ func (r *RDS) GetRelationships(areaCode string, relationshipParameter string) ([
 	}
 
 	return relationships, nil
+}
+
+func (r *RDS) GetAncestors(areaCode string) ([]*models.AreasAncestors, error) {
+	var ancestors []*models.AreasAncestors
+
+	rows, err := r.conn.Query(context.Background(), getAncestors, areaCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var rs models.AreasAncestors
+		rows.Scan(&rs.Id, &rs.Name)
+		fmt.Println(rs)
+		ancestors = append(ancestors, &rs)
+	}
+
+	return ancestors, nil
 }
 
 func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {

@@ -16,7 +16,8 @@ var (
 	fls = []string{
 		geodata.E92000001PropertyData,
 		geodata.W92000004PropertyData,
-		geodata.E34002743PropertyData,
+		geodata.E12000003PropertyData,
+		geodata.E60000059PropertyData,
 		geodata.W37000454PropertyData,
 	}
 )
@@ -24,7 +25,7 @@ var (
 //API provides a struct to wrap the api around
 type API struct {
 	Router        *mux.Router
-	ancestorStore AncestorStore
+	ancestorStore RDSAreaStore
 	GeoData       map[string]models.AreasDataResults
 	rdsAreaStore  RDSAreaStore
 }
@@ -53,7 +54,7 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSA
 
 	api := &API{
 		Router:        r,
-		ancestorStore: Ancestry{},
+		ancestorStore: rdsStore,
 		GeoData:       geoData,
 		rdsAreaStore:  rdsStore,
 	}

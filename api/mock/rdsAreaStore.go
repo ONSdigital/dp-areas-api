@@ -27,6 +27,9 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
 // 			},
+// 			GetAncestorsFunc: func(areaID string) ([]*models.AreasAncestors, error) {
+// 				panic("mock out the GetAncestors method")
+// 			},
 // 			GetAreaFunc: func(areaId string) (*models.AreaDataRDS, error) {
 // 				panic("mock out the GetArea method")
 // 			},
@@ -52,6 +55,9 @@ type RDSAreaStoreMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func()
 
+	// GetAncestorsFunc mocks the GetAncestors method.
+	GetAncestorsFunc func(areaID string) ([]*models.AreasAncestors, error)
+
 	// GetAreaFunc mocks the GetArea method.
 	GetAreaFunc func(areaId string) (*models.AreaDataRDS, error)
 
@@ -75,6 +81,11 @@ type RDSAreaStoreMock struct {
 		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
+		}
+		// GetAncestors holds details about calls to the GetAncestors method.
+		GetAncestors []struct {
+			// AreaID is the areaID argument value.
+			AreaID string
 		}
 		// GetArea holds details about calls to the GetArea method.
 		GetArea []struct {
@@ -103,6 +114,7 @@ type RDSAreaStoreMock struct {
 	}
 	lockBuildTables      sync.RWMutex
 	lockClose            sync.RWMutex
+	lockGetAncestors     sync.RWMutex
 	lockGetArea          sync.RWMutex
 	lockGetRelationships sync.RWMutex
 	lockInit             sync.RWMutex
@@ -167,6 +179,37 @@ func (mock *RDSAreaStoreMock) CloseCalls() []struct {
 	mock.lockClose.RLock()
 	calls = mock.calls.Close
 	mock.lockClose.RUnlock()
+	return calls
+}
+
+// GetAncestors calls GetAncestorsFunc.
+func (mock *RDSAreaStoreMock) GetAncestors(areaID string) ([]*models.AreasAncestors, error) {
+	if mock.GetAncestorsFunc == nil {
+		panic("RDSAreaStoreMock.GetAncestorsFunc: method is nil but RDSAreaStore.GetAncestors was just called")
+	}
+	callInfo := struct {
+		AreaID string
+	}{
+		AreaID: areaID,
+	}
+	mock.lockGetAncestors.Lock()
+	mock.calls.GetAncestors = append(mock.calls.GetAncestors, callInfo)
+	mock.lockGetAncestors.Unlock()
+	return mock.GetAncestorsFunc(areaID)
+}
+
+// GetAncestorsCalls gets all the calls that were made to GetAncestors.
+// Check the length with:
+//     len(mockedRDSAreaStore.GetAncestorsCalls())
+func (mock *RDSAreaStoreMock) GetAncestorsCalls() []struct {
+	AreaID string
+} {
+	var calls []struct {
+		AreaID string
+	}
+	mock.lockGetAncestors.RLock()
+	calls = mock.calls.GetAncestors
+	mock.lockGetAncestors.RUnlock()
 	return calls
 }
 

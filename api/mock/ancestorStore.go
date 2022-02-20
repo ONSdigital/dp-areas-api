@@ -19,7 +19,7 @@ var _ api.AncestorStore = &AncestorStoreMock{}
 //
 // 		// make and configure a mocked api.AncestorStore
 // 		mockedAncestorStore := &AncestorStoreMock{
-// 			GetAncestorsFunc: func(areaID string) ([]models.AreasAncestors, error) {
+// 			GetAncestorsFunc: func(areaID string) ([]*models.AreasAncestors, error) {
 // 				panic("mock out the GetAncestors method")
 // 			},
 // 		}
@@ -30,7 +30,7 @@ var _ api.AncestorStore = &AncestorStoreMock{}
 // 	}
 type AncestorStoreMock struct {
 	// GetAncestorsFunc mocks the GetAncestors method.
-	GetAncestorsFunc func(areaID string) ([]models.AreasAncestors, error)
+	GetAncestorsFunc func(areaID string) ([]*models.AreasAncestors, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -44,7 +44,7 @@ type AncestorStoreMock struct {
 }
 
 // GetAncestors calls GetAncestorsFunc.
-func (mock *AncestorStoreMock) GetAncestors(areaID string) ([]models.AreasAncestors, error) {
+func (mock *AncestorStoreMock) GetAncestors(areaID string) ([]*models.AreasAncestors, error) {
 	if mock.GetAncestorsFunc == nil {
 		panic("AncestorStoreMock.GetAncestorsFunc: method is nil but AncestorStore.GetAncestors was just called")
 	}
