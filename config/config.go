@@ -28,6 +28,8 @@ type Config struct {
 	DPPostgresUserPassword string `envconfig:"DPPOSTGRESPASSWORD"`
 	DPPostgresLocalPort    string `envconfig:"DPPOSTGRESPORT"`
 	DPPostgresLocalDB      string `envconfig:"USEPOSTGRESDB"`
+
+	EnablePrivateEndpoints bool `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 }
 
 func (c Config) GetRDSEndpoint() string {
@@ -60,6 +62,7 @@ func Get() (*Config, error) {
 		RDSDBConnectionTTL:         24 * time.Hour,
 		RDSDBMaxConnections:        4,
 		RDSDBMinConnections:        1,
+		EnablePrivateEndpoints:     true,
 	}
 
 	return cfg, envconfig.Process("", cfg)

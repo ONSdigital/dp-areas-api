@@ -20,6 +20,7 @@ type RDSAreaStore interface {
 	GetArea(areaId string) (*models.AreaDataRDS, error)
 	BuildTables(ctx context.Context, executionList []string) error
 	Ping(ctx context.Context) error
+	UpsertArea(ctx context.Context, area models.AreaParams) (bool ,error)
 }
 
 // Ancestors defines a method to lookup ancestors from an areaID

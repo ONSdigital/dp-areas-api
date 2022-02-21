@@ -45,6 +45,30 @@ paths:
           $ref: "#/definitions/ErrorResponse"
         500:
           $ref: "#/definitions/ErrorResponse"
+    put:
+      tags:
+        - "Public"
+      summary: "Upserts a given area details"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: header
+          type: string
+          name: Accept-Language
+          description: "The language type - 'en' for English, 'cy' for Cymraeg"
+        - in: body
+          name: area
+          description: "The name details, geometry of area"
+          schema:
+            $ref: "#/definitions/Area"
+      responses:
+        200:
+          description: "Successfully updated an existing area"
+        201:
+          description: "Successfully created an new area"
+        500:
+          $ref: "#/definitions/ErrorResponse"
 
   /v1/areas/{id}/relations:
     get:
@@ -69,7 +93,7 @@ paths:
 definitions:
   AreaData:
     type: object
-    required: ["id"]
+    required: [ "id" ]
     properties:
       code:
         type: string
@@ -150,16 +174,45 @@ definitions:
         description: "Description of the error"
   AreaRelations:
     type: array
+    items:
+      properties:
+        area_code:
+          type: string
+          description: "The unique code for the related area"
+          example: "W92000004"
+        area_name:
+          type: string
+          description: "The relationship type"
+          example: "parent"
+        href:
+          type: string
+          description: "reference link to get related area details"
+          example: "v1/areas/W92000004"
+  Area:
+    type: object
+    required: [ "code", "area_name" ]
     properties:
-      area_code:
+      code:
         type: string
-        description: "The unique code for the related area"
+        description: "The unique code for the area"
         example: "W92000004"
       area_name:
+        type: object
+        description: "Details of the area name"
+        properties:
+          name:
+            type: string
+            description: "The name of the area"
+            example: "England"
+          active_from:
+            type: string
+            description: "The date from which the area data became active"
+            example: "2022-01-01T00:00:00Z05:00"
+          active_to:
+            type: string
+            description: "The date from which the area data became inactive"
+            example: "2022-01-01T00:00:00Z05:00"
+      geometry:
         type: string
-        description: "The relationship type"
-        example: "parent"
-      href:
-        type: string
-        description: "reference link to get related area details"
-        example: "v1/areas/W92000004"
+        description: "The details of geometry coordinates"
+        example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"

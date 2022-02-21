@@ -118,7 +118,7 @@ type PGXPoolMock struct {
 // Begin calls BeginFunc.
 func (mock *PGXPoolMock) Begin(ctx context.Context) (v4.Tx, error) {
 	if mock.BeginFunc == nil {
-		panic("PGXPoolMock.BeginFunc: method is nil but PGXPool.Begin was just called")
+		panic("PGXPoolMock.BeginMock: method is nil but PGXPool.Begin was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context

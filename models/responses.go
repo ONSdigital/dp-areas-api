@@ -1,5 +1,10 @@
 package models
 
+import (
+	"context"
+	"net/http"
+)
+
 type ErrorResponse struct {
 	Errors  []error           `json:"errors"`
 	Status  int               `json:"-"`
@@ -12,6 +17,20 @@ func NewErrorResponse(statusCode int, headers map[string]string, errors ...error
 		Status:  statusCode,
 		Headers: headers,
 	}
+}
+
+func NewBodyReadError(ctx context.Context, err error) *ErrorResponse {
+	return NewErrorResponse(http.StatusInternalServerError,
+		nil,
+		NewError(ctx, err, BodyReadError, BodyReadFailedDescription),
+	)
+}
+
+func NewBodyUnmarshalError(ctx context.Context, err error) *ErrorResponse {
+	return NewErrorResponse(http.StatusInternalServerError,
+		nil,
+		NewError(ctx, err, JSONUnmarshalError, ErrorUnmarshalFailedDescription),
+	)
 }
 
 type SuccessResponse struct {

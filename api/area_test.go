@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 
@@ -299,6 +300,86 @@ func TestGetAreaDataRFromRDS(t *testing.T) {
 				So(returnedRDSData.Id, ShouldEqual, 1)
 				So(returnedRDSData.Active, ShouldEqual, true)
 			})
+		})
+	})
+}
+
+func TestUpdateAreaData(t *testing.T) {
+	Convey("Given a request to update a new area data - W92000004", t, func() {
+		reader := strings.NewReader(`{"area_name": {"name": "Wales", "active_from": "2022-01-01T00:00:00Z", "active_to": "2022-02-01T00:00:00Z"}}`)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:2200/v1/areas/%s", "W92000004"), reader)
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			UpsertAreaFunc: func(ctx context.Context, area models.AreaParams) (*models.UpsertResult, error) {
+				return &models.UpsertResult{Inserted: true}, nil
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data from rds instance is served", func() {
+
+			Convey("Then an 201 response is returned", func() {
+				So(w.Code, ShouldEqual, http.StatusCreated)
+			})
+		})
+	})
+}
+
+func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
+	Convey("Given a request without area details area name details", t, func() {
+		reader := strings.NewReader(`{}`)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), reader)
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When update area is served", func() {
+
+			Convey("Then validation errors are returned", func() {
+				payload, _ := ioutil.ReadAll(w.Body)
+				var responseBody map[string]interface{}
+				_ = json.Unmarshal(payload, &responseBody)
+				So(len(responseBody["errors"].([]interface{})), ShouldEqual, 1)
+
+				error := responseBody["errors"].([]interface{})[0].(map[string]interface{})
+				So(error["code"], ShouldEqual, models.AreaNameDetailsNotProvidedError)
+				So(error["description"], ShouldEqual, models.AreaNameDetailsNotProvidedErrorDescription)
+			})
+
+		})
+	})
+
+	Convey("Given invalid area name details", t, func() {
+		reader := strings.NewReader(`{"area_name":{}}`)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), reader)
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When update area is served", func() {
+
+			Convey("Then validation errors are returned", func() {
+				payload, _ := ioutil.ReadAll(w.Body)
+				var responseBody map[string]interface{}
+				_ = json.Unmarshal(payload, &responseBody)
+				So(len(responseBody["errors"].([]interface{})), ShouldEqual, 3)
+
+				nameError := responseBody["errors"].([]interface{})[0].(map[string]interface{})
+				So(nameError["code"], ShouldEqual, models.AreaNameNotProvidedError)
+				So(nameError["description"], ShouldEqual, models.AreaNameNotProvidedErrorDescription)
+
+				validFromError := responseBody["errors"].([]interface{})[1].(map[string]interface{})
+				So(validFromError["code"], ShouldEqual, models.AreaNameActiveFromNotProvidedError)
+				So(validFromError["description"], ShouldEqual, models.AreaNameActiveFromNotProvidedErrorDescription)
+
+				validToError := responseBody["errors"].([]interface{})[2].(map[string]interface{})
+				So(validToError["code"], ShouldEqual, models.AreaNameActiveToNotProvidedError)
+				So(validToError["description"], ShouldEqual, models.AreaNameActiveToNotProvidedErrorDescription)
+			})
+
 		})
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 
@@ -124,5 +125,47 @@ func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter,
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+
+}
+
+func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			_ = models.NewError(ctx, err, models.BodyCloseError, models.BodyClosedFailedDescription)
+		}
+	}()
+
+	vars := mux.Vars(req)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, models.NewBodyReadError(ctx, err)
+	}
+
+	area := models.AreaParams{}
+
+	err = json.Unmarshal(body, &area)
+	if err != nil {
+		return nil, models.NewBodyUnmarshalError(ctx, err)
+	}
+	area.Code = vars["id"]
+	area.SetAreaType(ctx)
+	validationErrors := area.ValidateAreaRequest(ctx)
+
+	if len(validationErrors) != 0 {
+		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrors...)
+	}
+
+	upsertAreaResult, err := api.rdsAreaStore.UpsertArea(ctx, area)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.AreaDataIdGetError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	if upsertAreaResult.Updated {
+		return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
+	} else {
+		return models.NewSuccessResponse(nil, http.StatusCreated, nil), nil
+	}
 
 }

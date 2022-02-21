@@ -3,6 +3,7 @@ package rds
 import (
 	"context"
 
+	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
@@ -169,4 +170,47 @@ func (r *RDS) upsertAreaTestData(ctx context.Context) error {
 
 func (r *RDS) Ping(ctx context.Context) error {
 	return r.conn.Ping(ctx)
+}
+
+func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (upsertResult models.UpsertResult, err error) {
+	var areaTypeId int
+	tx, err := r.conn.Begin(ctx)
+	if err != nil {
+		return
+	}
+
+	err = tx.QueryRow(ctx, getAreaType, area.AreaType).Scan(&areaTypeId)
+	if err != nil {
+		return
+	}
+	validationError := r.ValidateArea(area.Code)
+	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId}
+
+	if validationError != nil && validationError.Error() == errs.ErrNoRows.Error() {
+		_, err = tx.Exec(ctx, insertArea, areaDetails...)
+		upsertResult.Inserted = true
+	} else {
+		_, err = tx.Exec(ctx, updateArea, areaDetails...)
+		upsertResult.Updated = true
+	}
+
+	if err != nil {
+		tx.Rollback(ctx)
+		return
+	}
+
+	_, err = tx.Exec(ctx, upsertAreaName, area.Code, area.AreaName.Name, area.AreaName.ActiveFrom, area.AreaName.ActiveTo)
+
+	if err != nil {
+		tx.Rollback(ctx)
+		return
+	}
+
+	err = tx.Commit(ctx)
+
+	if err != nil {
+		tx.Rollback(ctx)
+		return
+	}
+	return
 }
