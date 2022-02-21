@@ -18,7 +18,7 @@ import (
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
 const (
-	databaseName = "dp-areas-api"
+	databaseName     = "dp-areas-api"
 	dpPublishingUser = "dp-areas-api-publishing"
 )
 
@@ -53,7 +53,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	// only run publishing user (rw permissions) or local postgres
+	// only run publishing user or if pointing at local postgres instance
 	if cfg.RDSDBUser == dpPublishingUser || cfg.DPPostgresLocal {
 		// rds table schema builder
 		rdsSchema := &models.DatabaseSchema{
