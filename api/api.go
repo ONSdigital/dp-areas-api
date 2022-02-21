@@ -24,10 +24,9 @@ var (
 
 //API provides a struct to wrap the api around
 type API struct {
-	Router        *mux.Router
-	ancestorStore RDSAreaStore
-	GeoData       map[string]models.AreasDataResults
-	rdsAreaStore  RDSAreaStore
+	Router       *mux.Router
+	GeoData      map[string]models.AreasDataResults
+	rdsAreaStore RDSAreaStore
 }
 
 type baseHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (*models.SuccessResponse, *models.ErrorResponse)
@@ -53,10 +52,9 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSA
 	}
 
 	api := &API{
-		Router:        r,
-		ancestorStore: rdsStore,
-		GeoData:       geoData,
-		rdsAreaStore:  rdsStore,
+		Router:       r,
+		GeoData:      geoData,
+		rdsAreaStore: rdsStore,
 	}
 
 	r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.getAreaData)).Methods(http.MethodGet)
