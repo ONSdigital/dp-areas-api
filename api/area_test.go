@@ -311,9 +311,7 @@ func TestUpdateAreaData(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
-			UpsertAreaFunc: func(ctx context.Context, area models.AreaParams) (*models.UpsertResult, error) {
-				return &models.UpsertResult{Inserted: true}, nil
-			},
+			UpsertAreaFunc: func(ctx context.Context, area models.AreaParams) (bool, error) { return true, nil },
 		})
 		areaApi.Router.ServeHTTP(w, r)
 
@@ -326,7 +324,8 @@ func TestUpdateAreaData(t *testing.T) {
 	})
 }
 
-func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
+func
+TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 	Convey("Given a request without area details area name details", t, func() {
 		reader := strings.NewReader(`{}`)
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), reader)

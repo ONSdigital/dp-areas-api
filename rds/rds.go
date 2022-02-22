@@ -3,7 +3,6 @@ package rds
 import (
 	"context"
 
-	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
@@ -172,7 +171,7 @@ func (r *RDS) Ping(ctx context.Context) error {
 	return r.conn.Ping(ctx)
 }
 
-func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (upsertResult models.UpsertResult, err error) {
+func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (isInserted bool, err error) {
 	var areaTypeId int
 	tx, err := r.conn.Begin(ctx)
 	if err != nil {
@@ -183,16 +182,9 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (upsertRes
 	if err != nil {
 		return
 	}
-	validationError := r.ValidateArea(area.Code)
 	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId}
 
-	if validationError != nil && validationError.Error() == errs.ErrNoRows.Error() {
-		_, err = tx.Exec(ctx, insertArea, areaDetails...)
-		upsertResult.Inserted = true
-	} else {
-		_, err = tx.Exec(ctx, updateArea, areaDetails...)
-		upsertResult.Updated = true
-	}
+	err = tx.QueryRow(ctx, upsertArea, areaDetails...).Scan(&isInserted)
 
 	if err != nil {
 		tx.Rollback(ctx)

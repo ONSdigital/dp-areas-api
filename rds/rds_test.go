@@ -2,7 +2,6 @@ package rds
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/models"
 	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
 	"github.com/jackc/pgconn"
@@ -225,39 +224,35 @@ func TestRDS_GetRelationships(t *testing.T) {
 }
 
 func TestRDS_UpsertArea(t *testing.T) {
-	areaTypeMock := &pgxMock.PGXRowsMock{
-		CloseFunc: func() {},
-		NextFunc:  func() bool { return true },
-		ScanFunc: func(dest ...interface{}) error {
-			areaType := dest[0].(*int)
-			*areaType = 1
-			return nil
-		},
-	}
-
-	successTransactionMock := &pgxMock.PGXTransactionMock{
-		QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return areaTypeMock },
-		ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
-		CommitFunc:   func(ctx context.Context) error { return nil },
-	}
 
 	Convey("Given an area details for existing area", t, func() {
 		areaCode := "E92000001"
 
-		areaCodeMock := &pgxMock.PGXRowsMock{
+		count := 0
+		queryRowMock := &pgxMock.PGXRowsMock{
 			CloseFunc: func() {},
-			NextFunc:  func() bool { return false },
+			NextFunc:  func() bool { return true },
 			ScanFunc: func(dest ...interface{}) error {
-				code := dest[0].(*string)
-				*code = areaCode
+				if count < 1 {
+					areaType := dest[0].(*int)
+					*areaType = 1
+				} else {
+					isInserted := dest[0].(*bool)
+					*isInserted = false
+				}
+				count += 1
 				return nil
 			},
 		}
 
+		transactionMock := &pgxMock.PGXTransactionMock{
+			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
+			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
+			CommitFunc:   func(ctx context.Context) error { return nil },
+		}
+
 		rds := RDS{conn: &pgxMock.PGXPoolMock{
-			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return areaCodeMock },
-			QueryFunc:    func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) { return areaTypeMock, nil },
-			BeginFunc:    func(ctx context.Context) (pgx.Tx, error) { return successTransactionMock, nil },
+			BeginFunc: func(ctx context.Context) (pgx.Tx, error) { return transactionMock, nil },
 		}}
 
 		Convey("When area is upserted in rds", func() {
@@ -265,27 +260,38 @@ func TestRDS_UpsertArea(t *testing.T) {
 
 			Convey("Then area details are updated to the existing area", func() {
 				So(err, ShouldBeNil)
-				So(upsertResult.Inserted, ShouldEqual, false)
-				So(upsertResult.Updated, ShouldEqual, true)
+				So(upsertResult, ShouldEqual, false)
 			})
 		})
 	})
 
 	Convey("Given a new area details", t, func() {
 		areaCode := "E92000001"
-
-		areaCodeMock := &pgxMock.PGXRowsMock{
+		count := 0
+		queryRowMock := &pgxMock.PGXRowsMock{
 			CloseFunc: func() {},
-			NextFunc:  func() bool { return false },
+			NextFunc:  func() bool { return true },
 			ScanFunc: func(dest ...interface{}) error {
-				return apierrors.ErrNoRows
+				if count < 1 {
+					areaType := dest[0].(*int)
+					*areaType = 1
+				} else {
+					isInserted := dest[0].(*bool)
+					*isInserted = true
+				}
+				count += 1
+				return nil
 			},
 		}
 
+		transactionMock := &pgxMock.PGXTransactionMock{
+			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
+			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
+			CommitFunc:   func(ctx context.Context) error { return nil },
+		}
+
 		rds := RDS{conn: &pgxMock.PGXPoolMock{
-			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return areaCodeMock },
-			QueryFunc:    func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) { return areaTypeMock, nil },
-			BeginFunc:    func(ctx context.Context) (pgx.Tx, error) { return successTransactionMock, nil },
+			BeginFunc: func(ctx context.Context) (pgx.Tx, error) { return transactionMock, nil },
 		}}
 
 		Convey("When area is upserted in rds", func() {
@@ -293,34 +299,39 @@ func TestRDS_UpsertArea(t *testing.T) {
 
 			Convey("Then new area detail and area name details should be inserted to DB", func() {
 				So(err, ShouldBeNil)
-				So(upsertResult.Inserted, ShouldEqual, true)
-				So(upsertResult.Updated, ShouldEqual, false)
+				So(upsertResult, ShouldEqual, true)
 			})
 		})
 	})
 
 	Convey("Given area details", t, func() {
 		areaCode := "E92000001"
-
-		areaCodeMock := &pgxMock.PGXRowsMock{
+		count := 0
+		queryRowMock := &pgxMock.PGXRowsMock{
 			CloseFunc: func() {},
-			NextFunc:  func() bool { return false },
+			NextFunc:  func() bool { return true },
 			ScanFunc: func(dest ...interface{}) error {
-				return apierrors.ErrNoRows
+				if count < 1 {
+					areaType := dest[0].(*int)
+					*areaType = 1
+				} else {
+					isInserted := dest[0].(*bool)
+					*isInserted = true
+				}
+				count += 1
+				return nil
 			},
 		}
 
 		transactionMock := &pgxMock.PGXTransactionMock{
-			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return areaTypeMock },
+			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
 			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
 			CommitFunc:   func(ctx context.Context) error { return errors.New("failed to commit") },
 			RollbackFunc: func(ctx context.Context) error { return nil },
 		}
 
 		rds := RDS{conn: &pgxMock.PGXPoolMock{
-			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return areaCodeMock },
-			QueryFunc:    func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) { return areaTypeMock, nil },
-			BeginFunc:    func(ctx context.Context) (pgx.Tx, error) { return transactionMock, nil },
+			BeginFunc: func(ctx context.Context) (pgx.Tx, error) { return transactionMock, nil },
 		}}
 
 		Convey("When an error occurs while upserting area data", func() {

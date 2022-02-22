@@ -39,6 +39,9 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			PingFunc: func(ctx context.Context) error {
 // 				panic("mock out the Ping method")
 // 			},
+// 			UpsertAreaFunc: func(ctx context.Context, area models.AreaParams) (bool, error) {
+// 				panic("mock out the UpsertArea method")
+// 			},
 // 			ValidateAreaFunc: func(code string) error {
 // 				panic("mock out the ValidateArea method")
 // 			},
@@ -66,6 +69,9 @@ type RDSAreaStoreMock struct {
 
 	// PingFunc mocks the Ping method.
 	PingFunc func(ctx context.Context) error
+
+	// UpsertAreaFunc mocks the UpsertArea method.
+	UpsertAreaFunc func(ctx context.Context, area models.AreaParams) (bool, error)
 
 	// ValidateAreaFunc mocks the ValidateArea method.
 	ValidateAreaFunc func(code string) error
@@ -104,6 +110,13 @@ type RDSAreaStoreMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
+		// UpsertArea holds details about calls to the UpsertArea method.
+		UpsertArea []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Area is the area argument value.
+			Area models.AreaParams
+		}
 		// ValidateArea holds details about calls to the ValidateArea method.
 		ValidateArea []struct {
 			// Code is the code argument value.
@@ -116,6 +129,7 @@ type RDSAreaStoreMock struct {
 	lockGetRelationships sync.RWMutex
 	lockInit             sync.RWMutex
 	lockPing             sync.RWMutex
+	lockUpsertArea       sync.RWMutex
 	lockValidateArea     sync.RWMutex
 }
 
@@ -305,6 +319,41 @@ func (mock *RDSAreaStoreMock) PingCalls() []struct {
 	mock.lockPing.RLock()
 	calls = mock.calls.Ping
 	mock.lockPing.RUnlock()
+	return calls
+}
+
+// UpsertArea calls UpsertAreaFunc.
+func (mock *RDSAreaStoreMock) UpsertArea(ctx context.Context, area models.AreaParams) (bool, error) {
+	if mock.UpsertAreaFunc == nil {
+		panic("RDSAreaStoreMock.UpsertAreaFunc: method is nil but RDSAreaStore.UpsertArea was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Area models.AreaParams
+	}{
+		Ctx:  ctx,
+		Area: area,
+	}
+	mock.lockUpsertArea.Lock()
+	mock.calls.UpsertArea = append(mock.calls.UpsertArea, callInfo)
+	mock.lockUpsertArea.Unlock()
+	return mock.UpsertAreaFunc(ctx, area)
+}
+
+// UpsertAreaCalls gets all the calls that were made to UpsertArea.
+// Check the length with:
+//     len(mockedRDSAreaStore.UpsertAreaCalls())
+func (mock *RDSAreaStoreMock) UpsertAreaCalls() []struct {
+	Ctx  context.Context
+	Area models.AreaParams
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Area models.AreaParams
+	}
+	mock.lockUpsertArea.RLock()
+	calls = mock.calls.UpsertArea
+	mock.lockUpsertArea.RUnlock()
 	return calls
 }
 

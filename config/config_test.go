@@ -35,6 +35,7 @@ func TestConfig(t *testing.T) {
 					RDSDBConnectionTTL:         24 * time.Hour,
 					RDSDBMaxConnections:        4,
 					RDSDBMinConnections:        1,
+					EnablePrivateEndpoints: true,
 				})
 			})
 

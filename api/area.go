@@ -156,16 +156,16 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrors...)
 	}
 
-	upsertAreaResult, err := api.rdsAreaStore.UpsertArea(ctx, area)
+	isInserted, err := api.rdsAreaStore.UpsertArea(ctx, area)
 	if err != nil {
 		responseErr := models.NewError(ctx, err, models.AreaDataIdGetError, err.Error())
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	if upsertAreaResult.Updated {
-		return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
-	} else {
+	if isInserted {
 		return models.NewSuccessResponse(nil, http.StatusCreated, nil), nil
+	} else {
+		return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
 	}
 
 }
