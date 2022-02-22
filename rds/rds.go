@@ -2,7 +2,7 @@ package rds
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
@@ -171,38 +171,39 @@ func (r *RDS) Ping(ctx context.Context) error {
 	return r.conn.Ping(ctx)
 }
 
-func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (isInserted bool, err error) {
+func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, error) {
 	var areaTypeId int
+	var isInserted bool
 	tx, err := r.conn.Begin(ctx)
 	if err != nil {
-		return
+		return isInserted, fmt.Errorf("failed to start transaction: %+v", err)
 	}
 
 	err = tx.QueryRow(ctx, getAreaType, area.AreaType).Scan(&areaTypeId)
 	if err != nil {
-		return
+		return isInserted, fmt.Errorf("failed to get area type: %+v", err)
 	}
-	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId}
+	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId, area.Visible}
 
 	err = tx.QueryRow(ctx, upsertArea, areaDetails...).Scan(&isInserted)
 
 	if err != nil {
 		tx.Rollback(ctx)
-		return
+		return isInserted, fmt.Errorf("failed to upsert into area: %+v", err)
 	}
 
 	_, err = tx.Exec(ctx, upsertAreaName, area.Code, area.AreaName.Name, area.AreaName.ActiveFrom, area.AreaName.ActiveTo)
 
 	if err != nil {
 		tx.Rollback(ctx)
-		return
+		return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
 	}
 
 	err = tx.Commit(ctx)
 
 	if err != nil {
 		tx.Rollback(ctx)
-		return
+		return isInserted, fmt.Errorf("failed to commit: %+v", err)
 	}
-	return
+	return isInserted, nil
 }

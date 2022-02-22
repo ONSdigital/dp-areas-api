@@ -7,9 +7,9 @@ import (
 
 var areaTypeAndCode = map[string]string{
 	"E92": "Country",
+	"E06": "Unitary Authorities",
 	"W92": "Country",
 	"E12": "Region",
-	"E06": "Unitary Authorities",
 	"W06": "Unitary Authorities",
 	"E47": "Combined Authorities",
 	"E11": "Metropolitan Counties",
@@ -46,6 +46,7 @@ type AreaParams struct {
 	GeometricData string     `json:"geometry"`
 	ActiveFrom    *time.Time `json:"active_from"`
 	ActiveTo      *time.Time `json:"active_to"`
+	Visible       *bool      `json:"visible"`
 	AreaType      string
 }
 

@@ -4,6 +4,7 @@ package models
 const (
 	AcceptLanguageHeaderError          = "ErrorAcceptLanguageHeader"
 	AreaDataIdGetError                 = "ErrorRetrievingAreaCode"
+	AreaDataIdUpsertError              = "AreaDataIdUpsertError"
 	AncestryDataGetError               = "ErrorRetrievingAncestryData"
 	MarshallingAreaDataError           = "ErrorMarshallingAreaData"
 	MarshallingAreaRelationshipsError  = "ErrorMarshallingAreaRelationshipData"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/log.go/v2/log"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -136,6 +137,9 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 	}()
 
 	vars := mux.Vars(req)
+	areaCode := vars["id"]
+	logData := log.Data{"area code": areaCode}
+	log.Info(ctx, "received request to upsert area", logData)
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -148,7 +152,7 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 	if err != nil {
 		return nil, models.NewBodyUnmarshalError(ctx, err)
 	}
-	area.Code = vars["id"]
+	area.Code = areaCode
 	area.SetAreaType(ctx)
 	validationErrors := area.ValidateAreaRequest(ctx)
 
@@ -158,7 +162,7 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 
 	isInserted, err := api.rdsAreaStore.UpsertArea(ctx, area)
 	if err != nil {
-		responseErr := models.NewError(ctx, err, models.AreaDataIdGetError, err.Error())
+		responseErr := models.NewError(ctx, err, models.AreaDataIdUpsertError, err.Error())
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
