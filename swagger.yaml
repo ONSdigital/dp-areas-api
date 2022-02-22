@@ -216,3 +216,15 @@ definitions:
         type: string
         description: "The details of geometry coordinates"
         example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+      active_from:
+        type: string
+        description: "The date from which the area data became active"
+        example: "2022-01-01T00:00:00Z05:00"
+      active_to:
+        type: string
+        description: "The date from which the area data became inactive"
+        example: "2022-01-01T00:00:00Z05:00"
+      visible:
+        type: boolean
+        description: "whether we surface a page for this area or not"
+        example: true
