@@ -1,16 +1,15 @@
 package rds
 
 import (
+	"context"
 	"errors"
+	"testing"
+
 	"github.com/ONSdigital/dp-areas-api/models"
 	pgxMock "github.com/ONSdigital/dp-areas-api/pgx/mock"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"testing"
-)
 
-import (
-	"context"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -247,8 +246,10 @@ func TestRDS_UpsertArea(t *testing.T) {
 
 		transactionMock := &pgxMock.PGXTransactionMock{
 			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
-			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
-			CommitFunc:   func(ctx context.Context) error { return nil },
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+				return nil, nil
+			},
+			CommitFunc: func(ctx context.Context) error { return nil },
 		}
 
 		rds := RDS{conn: &pgxMock.PGXPoolMock{
@@ -286,8 +287,10 @@ func TestRDS_UpsertArea(t *testing.T) {
 
 		transactionMock := &pgxMock.PGXTransactionMock{
 			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
-			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
-			CommitFunc:   func(ctx context.Context) error { return nil },
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+				return nil, nil
+			},
+			CommitFunc: func(ctx context.Context) error { return nil },
 		}
 
 		rds := RDS{conn: &pgxMock.PGXPoolMock{
@@ -325,7 +328,9 @@ func TestRDS_UpsertArea(t *testing.T) {
 
 		transactionMock := &pgxMock.PGXTransactionMock{
 			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row { return queryRowMock },
-			ExecFunc:     func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) { return nil, nil },
+			ExecFunc: func(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+				return nil, nil
+			},
 			CommitFunc:   func(ctx context.Context) error { return errors.New("failed to commit") },
 			RollbackFunc: func(ctx context.Context) error { return nil },
 		}
