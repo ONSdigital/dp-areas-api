@@ -272,38 +272,6 @@ func TestGetAreaDataFailsForAncestorsDataError(t *testing.T) {
 	})
 }
 
-func TestGetAreaDataRFromRDS(t *testing.T) {
-	Convey("Given a successful request to stubbed area data - W92000004", t, func() {
-		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/rds/areas/%d", 1), nil)
-		w := httptest.NewRecorder()
-
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
-			ValidateAreaFunc: func(areaCode string) error {
-				return nil
-			},
-			GetAreaFunc: func(areaId string) (*models.AreaDataRDS, error) {
-				return &models.AreaDataRDS{Id: 1, Code: "Wales", Active: true}, nil
-			},
-		})
-		areaApi.Router.ServeHTTP(w, r)
-
-		Convey("When request area data from rds instance is served", func() {
-
-			Convey("Then an OK response is returned", func() {
-				payload, err := ioutil.ReadAll(w.Body)
-				So(err, ShouldBeNil)
-				returnedRDSData := models.AreaDataRDS{}
-				err = json.Unmarshal(payload, &returnedRDSData)
-				So(w.Code, ShouldEqual, http.StatusOK)
-				So(err, ShouldBeNil)
-				So(returnedRDSData.Code, ShouldEqual, "Wales")
-				So(returnedRDSData.Id, ShouldEqual, 1)
-				So(returnedRDSData.Active, ShouldEqual, true)
-			})
-		})
-	})
-}
-
 func TestUpdateAreaData(t *testing.T) {
 	Convey("Given a request to update a new area data - W92000004", t, func() {
 		reader := strings.NewReader(`{"area_name": {"name": "Wales", "active_from": "2022-01-01T00:00:00Z", "active_to": "2022-02-01T00:00:00Z"}}`)

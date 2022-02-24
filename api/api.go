@@ -60,7 +60,6 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSA
 
 	r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.getAreaData)).Methods(http.MethodGet)
 	r.HandleFunc("/v1/areas/{id}/relations", contextAndErrors(api.getAreaRelationships)).Methods(http.MethodGet)
-	r.HandleFunc("/v1/rds/areas/{id}", contextAndErrors(api.getAreaRDSData)).Methods(http.MethodGet)
 
 	if cfg.EnablePrivateEndpoints {
 		r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.updateArea)).Methods(http.MethodPut)

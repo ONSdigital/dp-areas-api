@@ -67,30 +67,7 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 }
 
-//getAreaRDSData test endpoint to demo rds database interaction
-//TODO: remove this handler once rds transaction endpoints get added to the service - this is just an example
-//Note: See TestGetAreaDataRFromRDS(t *testing.T) for mocking example
-func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
-	vars := mux.Vars(req)
-	areaID := vars["id"]
-	var validationErrs []error
-
-	area, err := api.rdsAreaStore.GetArea(areaID)
-	if err != nil {
-		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, err.Error()))
-		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
-	}
-
-	areaData, err := json.Marshal(area)
-	if err != nil {
-		responseErr := models.NewError(ctx, err, models.MarshallingAreaDataError, err.Error())
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
-	}
-
-	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
-}
-
-//getAreaRelationships is a handler that gets area relationship by ID
+//getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
 func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]

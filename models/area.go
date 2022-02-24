@@ -121,13 +121,6 @@ type AreaBasicData struct {
 	Name string `json:"name"`
 }
 
-// basic area data
-type AreaDataRDS struct {
-	Id     int64  `json:"id"`
-	Code   string `json:"code"`
-	Active bool   `json:"active"`
-}
-
 // Struct for seeding area_type table with test data
 type AreaTypeSeeding struct {
 	AreaTypes map[string]map[string]interface{}
