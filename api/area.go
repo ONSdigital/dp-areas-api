@@ -23,7 +23,7 @@ var (
 	queryStr = "select id, code, active from areas_basic where id=$1"
 )
 
-//getBoundaryAreaData is a handler that gets a boundary data by ID - currently stubbed
+//getBoundaryAreaData is a handler that gets a boundary data by ID
 func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
@@ -34,9 +34,6 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderNotFoundDescription))
 	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); !m {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderInvalidDescription))
-	}
-	if api.GeoData[areaID].Code == "" {
-		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AreaDataIdGetError, models.AreaDataGetErrorDescription))
 	}
 	//handle errors
 	if len(validationErrs) != 0 {
@@ -50,13 +47,14 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
 	}
 
-	//get area from stubbed data
-	area := api.GeoData[areaID]
+	area, err := api.rdsAreaStore.GetArea(ctx, areaID)
+
+	if err != nil {
+		return nil, models.NewDBReadError(ctx, err)
+	}
 
 	// update area data with ancestry data
 	area.Ancestors = ancestryData
-
-	area.AreaType = models.AcceptLanguageMapping[req.Header.Get(models.AcceptLanguageHeaderName)]
 
 	areaData, err := json.Marshal(area)
 	if err != nil {
@@ -75,12 +73,7 @@ func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter,
 	err := api.rdsAreaStore.ValidateArea(areaID)
 
 	if err != nil {
-		if err.Error() == errs.ErrNoRows.Error() {
-			responseErr := models.NewError(ctx, err, models.InvalidAreaCodeError, err.Error())
-			return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
-		}
-		responseErr := models.NewError(ctx, err, models.AreaDataIdGetError, err.Error())
-		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+		return nil, models.NewDBReadError(ctx, err)
 	}
 
 	relatedAreaDetails, err := api.rdsAreaStore.GetRelationships(areaID)

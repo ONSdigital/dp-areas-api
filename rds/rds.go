@@ -54,17 +54,13 @@ func (r *RDS) ValidateArea(areaCode string) error {
 	return err
 }
 
-func (r *RDS) GetArea(areaId string) (*models.AreaDataRDS, error) {
-	var (
-		code   string
-		id     int64
-		active bool
-	)
-	err := r.conn.QueryRow(context.Background(), getBasicArea, areaId).Scan(&id, &code, &active)
+func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+	area := models.AreasDataResults{}
+	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &area.GeometricData, &area.Visible, &area.AreaType)
 	if err != nil {
 		return nil, err
 	}
-	return &models.AreaDataRDS{Id: id, Code: code, Active: active}, nil
+	return &area, nil
 }
 
 func (r *RDS) GetRelationships(areaCode string) ([]*models.AreaBasicData, error) {

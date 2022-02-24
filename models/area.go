@@ -91,15 +91,12 @@ func (a *AreaParams) SetAreaType(ctx context.Context) {
 
 // AreasDataResults represents the structure for an area in api v1.
 type AreasDataResults struct {
-	Code          string                 `json:"code"`
-	Name          string                 `json:"name"`
-	ValidFrom     string                 `json:"date_start"`
-	ValidTo       string                 `json:"date_end"`
-	WelshName     string                 `json:"name_welsh"`
-	GeometricData map[string]interface{} `json:"geometry"`
-	Visible       bool                   `json:"visible"`
-	AreaType      string                 `json:"area_type"`
-	Ancestors     []AreasAncestors       `json:"ancestors"`
+	Code          string           `json:"code"`
+	Name          *string          `json:"name"`
+	GeometricData *string          `json:"geometry"`
+	Visible       *bool            `json:"visible"`
+	AreaType      *string          `json:"area_type"`
+	Ancestors     []AreasAncestors `json:"ancestors"`
 }
 
 // AreasAncestors represents the Ancestry structure.

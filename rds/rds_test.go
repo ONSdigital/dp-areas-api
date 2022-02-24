@@ -18,13 +18,14 @@ func TestRDS_GetArea(t *testing.T) {
 
 		rowMock := &pgxMock.PGXRowMock{
 			ScanFunc: func(dest ...interface{}) error {
-				id := dest[0].(*int64)
-				code := dest[1].(*string)
-				active := dest[2].(*bool)
-
-				*id = 1
-				*code = "Wales"
-				*active = true
+				walesName := "Wales"
+				isVisible := true
+				countryType := "Country"
+				*dest[0].(*string) = "W92000004"
+				*(dest[1].(**string)) = &walesName
+				*dest[2].(**string) = nil
+				*dest[3].(**bool) = &isVisible
+				*dest[4].(**string) = &countryType
 				return nil
 			},
 		}
@@ -35,15 +36,17 @@ func TestRDS_GetArea(t *testing.T) {
 					return rowMock
 				},
 			}}
-		area, err := rds.GetArea("W92000004")
+		area, err := rds.GetArea(context.Background(), "W92000004")
 
 		Convey("When GetArea is invoked", func() {
 
 			Convey("Then area details are returned", func() {
 				So(err, ShouldBeNil)
-				So(area.Code, ShouldEqual, "Wales")
-				So(area.Id, ShouldEqual, 1)
-				So(area.Active, ShouldEqual, true)
+				So(area.Code, ShouldEqual, "W92000004")
+				So(*area.Name, ShouldEqual, "Wales")
+				So(area.GeometricData, ShouldBeNil)
+				So(*area.Visible, ShouldEqual, true)
+				So(*area.AreaType, ShouldEqual, "Country")
 			})
 		})
 	})
@@ -62,7 +65,7 @@ func TestRDS_GetArea(t *testing.T) {
 					return rowMock
 				},
 			}}
-		area, err := rds.GetArea("123")
+		area, err := rds.GetArea(context.Background(), "123")
 
 		Convey("When GetArea is invoked", func() {
 

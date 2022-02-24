@@ -22,14 +22,16 @@ import (
 )
 
 const (
-	testAreaId1           = "W06000015"
-	testAreaId2           = "W02000004"
-	testAreaName1         = "Cardiff"
-	testAreaName2         = "Penylan"
 	EnglandAreaData       = "E92000001"
 	WalesAreaData         = "W92000004"
-	LancasterBuaAreaData  = "E34002743"
 	SwanseaAirportBuaData = "W37000454"
+)
+
+var (
+	EnglandName     = "England"
+	WalesName       = "Wales"
+	isVisible       = true
+	countryAreaType = "Country"
 )
 
 var mu sync.Mutex
@@ -43,12 +45,16 @@ func GetAPIWithRDSMocks(mockedRDSStore api.RDSAreaStore) (*api.API, error) {
 }
 
 func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
-	Convey("Given a successful request to stubbed area data - E92000001", t, func() {
+	Convey("Given a successful request - E92000001", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", EnglandAreaData), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, Visible: &isVisible, AreaType: &countryAreaType}, nil
+			},
+		})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
@@ -61,9 +67,9 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
 				So(returnedArea.Code, ShouldEqual, EnglandAreaData)
-				So(returnedArea.WelshName, ShouldEqual, "Lloegr")
-				So(returnedArea.Name, ShouldEqual, "England")
-				So(returnedArea.AreaType, ShouldEqual, "English")
+				So(*returnedArea.Name, ShouldEqual, "England")
+				So(*returnedArea.AreaType, ShouldEqual, "Country")
+				So(*returnedArea.Visible, ShouldEqual, true)
 				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["E92000001"])
 			})
 		})
@@ -71,12 +77,16 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 }
 
 func TestGetAreaDataReturnsOkForWales(t *testing.T) {
-	Convey("Given a successful request to stubbed area data - W92000004", t, func() {
+	Convey("Given a successful request for - W92000004", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: "W92000004", Name: &WalesName, Visible: &isVisible, AreaType: &countryAreaType}, nil
+			},
+		})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
@@ -89,9 +99,8 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
 				So(returnedArea.Code, ShouldEqual, WalesAreaData)
-				So(returnedArea.WelshName, ShouldEqual, "Cymru")
-				So(returnedArea.Name, ShouldEqual, "Wales")
-				So(returnedArea.AreaType, ShouldEqual, "Cymraeg")
+				So(*returnedArea.Name, ShouldEqual, "Wales")
+				So(*returnedArea.AreaType, ShouldEqual, "Country")
 				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["W92000004"])
 			})
 		})
@@ -99,31 +108,22 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 }
 
 func TestGetAreaDataReturnsValidationErrors(t *testing.T) {
-	Convey("Given a request to stubbed area data - validation errors returned", t, func() {
+	Convey("Given a request with invalid area code", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData+"z"), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "cz")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return nil, apierrors.ErrNoRows
+			},
+		})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
 
-			Convey("Then validation failure details returned - 2 validation errors generated", func() {
-				payload, _ := ioutil.ReadAll(w.Body)
-				var responseBody map[string]interface{}
-				_ = json.Unmarshal(payload, &responseBody)
-				So(len(responseBody["errors"].([]interface{})), ShouldEqual, 2)
-
-				// error #1 - accept language header problem
-				error1 := responseBody["errors"].([]interface{})[0].(map[string]interface{})
-				So(error1["code"], ShouldEqual, models.AcceptLanguageHeaderError)
-				So(error1["description"], ShouldEqual, models.AcceptLanguageHeaderInvalidDescription)
-
-				// error #2 - are code not found
-				error2 := responseBody["errors"].([]interface{})[1].(map[string]interface{})
-				So(error2["code"], ShouldEqual, models.AreaDataIdGetError)
-				So(error2["description"], ShouldEqual, models.AreaDataGetErrorDescription)
+			Convey("Then 404 http status should be returned", func() {
+				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
 
 		})
@@ -226,7 +226,11 @@ func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: WalesAreaData, Name: &WalesName, AreaType: &countryAreaType}, nil
+			},
+		})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
@@ -239,9 +243,8 @@ func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
 				So(returnedArea.Code, ShouldEqual, WalesAreaData)
-				So(returnedArea.WelshName, ShouldEqual, "Cymru")
-				So(returnedArea.Name, ShouldEqual, "Wales")
-				So(returnedArea.AreaType, ShouldEqual, "Cymraeg")
+				So(*returnedArea.Name, ShouldEqual, "Wales")
+				So(*returnedArea.AreaType, ShouldEqual, "Country")
 				So(len(returnedArea.Ancestors), ShouldEqual, 0)
 			})
 		})

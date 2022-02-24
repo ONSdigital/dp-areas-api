@@ -27,7 +27,7 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
 // 			},
-// 			GetAreaFunc: func(areaId string) (*models.AreaDataRDS, error) {
+// 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 // 				panic("mock out the GetArea method")
 // 			},
 // 			GetRelationshipsFunc: func(areaCode string) ([]*models.AreaBasicData, error) {
@@ -59,7 +59,7 @@ type RDSAreaStoreMock struct {
 	CloseFunc func()
 
 	// GetAreaFunc mocks the GetArea method.
-	GetAreaFunc func(areaId string) (*models.AreaDataRDS, error)
+	GetAreaFunc func(ctx context.Context, areaId string) (*models.AreasDataResults, error)
 
 	// GetRelationshipsFunc mocks the GetRelationships method.
 	GetRelationshipsFunc func(areaCode string) ([]*models.AreaBasicData, error)
@@ -90,6 +90,8 @@ type RDSAreaStoreMock struct {
 		}
 		// GetArea holds details about calls to the GetArea method.
 		GetArea []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 			// AreaId is the areaId argument value.
 			AreaId string
 		}
@@ -195,28 +197,32 @@ func (mock *RDSAreaStoreMock) CloseCalls() []struct {
 }
 
 // GetArea calls GetAreaFunc.
-func (mock *RDSAreaStoreMock) GetArea(areaId string) (*models.AreaDataRDS, error) {
+func (mock *RDSAreaStoreMock) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	if mock.GetAreaFunc == nil {
 		panic("RDSAreaStoreMock.GetAreaFunc: method is nil but RDSAreaStore.GetArea was just called")
 	}
 	callInfo := struct {
+		Ctx    context.Context
 		AreaId string
 	}{
+		Ctx:    ctx,
 		AreaId: areaId,
 	}
 	mock.lockGetArea.Lock()
 	mock.calls.GetArea = append(mock.calls.GetArea, callInfo)
 	mock.lockGetArea.Unlock()
-	return mock.GetAreaFunc(areaId)
+	return mock.GetAreaFunc(ctx, areaId)
 }
 
 // GetAreaCalls gets all the calls that were made to GetArea.
 // Check the length with:
 //     len(mockedRDSAreaStore.GetAreaCalls())
 func (mock *RDSAreaStoreMock) GetAreaCalls() []struct {
+	Ctx    context.Context
 	AreaId string
 } {
 	var calls []struct {
+		Ctx    context.Context
 		AreaId string
 	}
 	mock.lockGetArea.RLock()

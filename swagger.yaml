@@ -103,35 +103,14 @@ definitions:
         type: string
         description: "The name of the area"
         example: "Wales"
-      date_start:
-        type: string
-        description: "The date from which the area data became active"
-        example: "Thu, 01 Jan 2009 00:00:00 GMT"
-      date_end:
-        type: string
-        description: "The date from which the area data became inactive"
-        example: "Thu, 01 Jan 2029 00:00:00 GMT"
-      name_welsh:
-        type: string
-        description: "The Welsh version of the name field"
-        example: "Cymru"
       geometry:
-        type: object
-        properties:
-          coordinates:
-            type: array
-            items:
-              description: "coordinates for boundary code"
-              type: array
-              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
-          type:
-            type: string
-            description: "coordinate type"
-            example: "MutliPolygon"
+        type: string
+        description: "coordinates for boundary code"
+        example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
       area_type:
         type: string
-        description: "english or welsh label text"
-        example: "Cymraeg"
+        description: "Country or Region"
+        example: "Country"
       visible:
         type: boolean
         description: "whether we surface a page for this area or not"

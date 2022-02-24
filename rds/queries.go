@@ -3,7 +3,11 @@ package rds
 import "fmt"
 
 const (
-	getBasicArea                      = "select id, code, active from areas_basic where id=$1"
+	getArea = `select code, area_name.name, geometric_area, visible, area_type.name 
+			   from area
+			   left join area_name on area.code = area_name.area_code
+			   left join area_type on area.area_type_id = area_type.id
+			   where code = $1`
 	getAreaCode                       = "select code from area where code = $1"
 	getAreaType                       = "select id from area_type where name = $1"
 	getRelationShipAreas              = "select an.area_code, an.name from area_name as an, area_relationship as ar where ar.rel_area_code = an.area_code and ar.area_code =$1"

@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"net/http"
 )
 
@@ -17,6 +18,16 @@ func NewErrorResponse(statusCode int, headers map[string]string, errors ...error
 		Status:  statusCode,
 		Headers: headers,
 	}
+}
+
+func NewDBReadError(ctx context.Context, err error) *ErrorResponse {
+	if err.Error() == errs.ErrNoRows.Error() {
+		responseErr := NewError(ctx, err, InvalidAreaCodeError, err.Error())
+		return NewErrorResponse(http.StatusNotFound, nil, responseErr)
+	}
+	responseErr := NewError(ctx, err, AreaDataIdGetError, err.Error())
+	return NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+
 }
 
 func NewBodyReadError(ctx context.Context, err error) *ErrorResponse {
