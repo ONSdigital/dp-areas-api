@@ -6,7 +6,7 @@ require (
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
 	github.com/ONSdigital/log.go/v2 v2.1.0
-	github.com/aws/aws-sdk-go v1.43.5
+	github.com/aws/aws-sdk-go v1.43.6
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgconn v1.11.0
 	github.com/jackc/pgproto3/v2 v2.2.0
@@ -34,7 +34,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220224003255-dbe011f71a99 // indirect
+	golang.org/x/net v0.0.0-20220225143145-3bcbab3f74ef // indirect
+	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

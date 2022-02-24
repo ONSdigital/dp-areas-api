@@ -13,7 +13,6 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/api/mock"
-	"github.com/ONSdigital/dp-areas-api/api/stubs"
 	"github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
@@ -25,16 +24,28 @@ const (
 	EnglandAreaData       = "E92000001"
 	WalesAreaData         = "W92000004"
 	SwanseaAirportBuaData = "W37000454"
+	YorkshireAreaData     = "E12000003"
+	SheffieldAreaData     = "E08000019"
 )
 
 var (
 	EnglandName     = "England"
 	WalesName       = "Wales"
+	SheffieldName   = "Sheffield"
 	isVisible       = true
 	countryAreaType = "Country"
 )
 
 var mu sync.Mutex
+
+var ancestors = map[string][]models.AreasAncestors{
+	EnglandAreaData: {},
+	WalesAreaData:   {},
+	SheffieldAreaData: {
+		{YorkshireAreaData, "Yorkshire and the Humber"},
+		{EnglandAreaData, "England"},
+	},
+}
 
 func GetAPIWithRDSMocks(mockedRDSStore api.RDSAreaStore) (*api.API, error) {
 	mu.Lock()
@@ -54,6 +65,9 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, Visible: &isVisible, AreaType: &countryAreaType}, nil
 			},
+			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
+				return ancestors[WalesAreaData], nil
+			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
 
@@ -70,7 +84,7 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 				So(*returnedArea.Name, ShouldEqual, "England")
 				So(*returnedArea.AreaType, ShouldEqual, "Country")
 				So(*returnedArea.Visible, ShouldEqual, true)
-				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["E92000001"])
+				So(returnedArea.Ancestors, ShouldResemble, ancestors[EnglandAreaData])
 			})
 		})
 	})
@@ -85,6 +99,9 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 				return &models.AreasDataResults{Code: "W92000004", Name: &WalesName, Visible: &isVisible, AreaType: &countryAreaType}, nil
+			},
+			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
+				return ancestors[WalesAreaData], nil
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
@@ -101,7 +118,7 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 				So(returnedArea.Code, ShouldEqual, WalesAreaData)
 				So(*returnedArea.Name, ShouldEqual, "Wales")
 				So(*returnedArea.AreaType, ShouldEqual, "Country")
-				So(returnedArea.Ancestors, ShouldResemble, stubs.Ancestors["W92000004"])
+				So(returnedArea.Ancestors, ShouldResemble, ancestors[WalesAreaData])
 			})
 		})
 	})
@@ -164,26 +181,26 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 		relatedAreas := []*models.AreaBasicData{
 			{"E12000001", "North East"},
 			{"E12000002", "North West"},
-			{"E12000003", "Yorkshire and The Humbe"},
+			{"E12000003", "Yorkshire and The Humber"},
 		}
 
 		expectedRelationShips := []*models.AreaRelationShips{
 			{"E12000001", "North East", "/v1/area/E12000001"},
 			{"E12000002", "North West", "/v1/area/E12000002"},
-			{"E12000003", "Yorkshire and The Humbe", "/v1/area/E12000003"},
+			{"E12000003", "Yorkshire and The Humber", "/v1/area/E12000003"},
 		}
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			ValidateAreaFunc: func(areaCode string) error {
 				return nil
 			},
-			GetRelationshipsFunc: func(areaCode string) ([]*models.AreaBasicData, error) {
+			GetRelationshipsFunc: func(areaCode, relationshipParameter string) ([]*models.AreaBasicData, error) {
 				return relatedAreas, nil
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
 
-		Convey("When request area data is served", func() {
+		Convey("When request area relationship data is served", func() {
 
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
@@ -220,6 +237,116 @@ func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
 	})
 }
 
+func TestGetAreaRelationshipsWithParameterReturnsOk(t *testing.T) {
+	Convey("Given a successful request for child area relationship data - E92000001", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations?relationship=child", YorkshireAreaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+		childRelatedAreas := []*models.AreaBasicData{
+			{SheffieldAreaData, SheffieldName},
+		}
+		relatedAreas := []*models.AreaBasicData{
+			{"E92000001", "North East"},
+			{"E12000002", "North West"},
+			{SheffieldAreaData, SheffieldName},
+		}
+
+		expectedChildRelationShips := []*models.AreaRelationShips{
+			{SheffieldAreaData, SheffieldName, "/v1/area/E08000019"},
+		}
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			ValidateAreaFunc: func(areaCode string) error {
+				return nil
+			},
+			GetRelationshipsFunc: func(areaCode, relationshipParameter string) ([]*models.AreaBasicData, error) {
+				if relationshipParameter == "child" {
+					return childRelatedAreas, nil
+				}
+				return relatedAreas, nil
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request child area relationship data is served", func() {
+
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				var relationsShips []*models.AreaRelationShips
+				err = json.Unmarshal(payload, &relationsShips)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(relationsShips, ShouldResemble, expectedChildRelationShips)
+			})
+		})
+	})
+}
+
+func TestGetAreaRelationshipsWithParameterFailsForInvalidIds(t *testing.T) {
+	Convey("Given a request for child area relationship data - invalid", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations?relationship=child", "InvalidAreaCode"), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			ValidateAreaFunc: func(areaCode string) error {
+				return apierrors.ErrNoRows
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an 404 response is returned", func() {
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+				payload, _ := ioutil.ReadAll(w.Body)
+				var responseBody map[string]interface{}
+				_ = json.Unmarshal(payload, &responseBody)
+				So(len(responseBody["errors"].([]interface{})), ShouldEqual, 1)
+				error := responseBody["errors"].([]interface{})[0].(map[string]interface{})
+				So(error["code"], ShouldEqual, models.InvalidAreaCodeError)
+			})
+		})
+	})
+}
+
+func TestGetAreaDataReturnsOKWithOrderedAncestryList(t *testing.T) {
+	Convey("Given a successful request to area data - Ancestry hierarchy ordered response", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", SheffieldAreaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: SheffieldAreaData, Name: &SheffieldName, AreaType: &countryAreaType}, nil
+			},
+			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
+				return ancestors[SheffieldAreaData], nil
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request area data is served", func() {
+
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				returnedArea := models.AreasDataResults{}
+				err = json.Unmarshal(payload, &returnedArea)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(returnedArea.Code, ShouldEqual, SheffieldAreaData)
+				So(*returnedArea.Name, ShouldEqual, SheffieldName)
+				So(*returnedArea.AreaType, ShouldEqual, "Country")
+				So(len(returnedArea.Ancestors), ShouldEqual, 2)
+				So(returnedArea.Ancestors[0], ShouldResemble, ancestors[SheffieldAreaData][0])
+				So(returnedArea.Ancestors[1], ShouldResemble, ancestors[SheffieldAreaData][1])
+			})
+		})
+	})
+}
+
 func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
 	Convey("Given a successful request to stubbed area data - empty Ancestors list", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), nil)
@@ -229,6 +356,9 @@ func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 				return &models.AreasDataResults{Code: WalesAreaData, Name: &WalesName, AreaType: &countryAreaType}, nil
+			},
+			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
+				return ancestors[WalesAreaData], nil
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
@@ -257,7 +387,14 @@ func TestGetAreaDataFailsForAncestorsDataError(t *testing.T) {
 		r.Header.Set(models.AcceptLanguageHeaderName, "cy")
 		w := httptest.NewRecorder()
 
-		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			ValidateAreaFunc: func(areaCode string) error {
+				return nil
+			},
+			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
+				return ancestors[SwanseaAirportBuaData], apierrors.ErrInternalServer
+			},
+		})
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {

@@ -167,7 +167,7 @@ func TestRDS_GetRelationships(t *testing.T) {
 					return rowMock, nil
 				},
 			}}
-		actualRelationships, err := rds.GetRelationships("E92000001")
+		actualRelationships, err := rds.GetRelationships("E92000001", "")
 
 		Convey("When relationships are fetched", func() {
 
@@ -186,7 +186,7 @@ func TestRDS_GetRelationships(t *testing.T) {
 					return nil, errors.New(errorMsg)
 				},
 			}}
-		actualRelationships, err := rds.GetRelationships("E92000001")
+		actualRelationships, err := rds.GetRelationships("E92000001", "")
 
 		Convey("When failed to connect to DB", func() {
 
@@ -213,13 +213,104 @@ func TestRDS_GetRelationships(t *testing.T) {
 					return rowMock, nil
 				},
 			}}
-		actualRelationships, err := rds.GetRelationships("E92000001")
+		actualRelationships, err := rds.GetRelationships("E92000001", "")
 
 		Convey("When relationships are fetched", func() {
 
 			Convey("Then empty relationships are returned", func() {
 				So(err, ShouldBeNil)
 				So(actualRelationships, ShouldBeEmpty)
+			})
+		})
+	})
+}
+
+func TestRDS_GetAncestors(t *testing.T) {
+	Convey("Given a valid area code with ancestors", t, func() {
+		callCount := 0
+
+		ancestors := []models.AreasAncestors{
+			{"E92000001", "England"},
+		}
+
+		rowMock := &pgxMock.PGXRowsMock{
+			CloseFunc: func() {
+			},
+			NextFunc: func() bool {
+				response := callCount < len(ancestors)
+				return response
+			},
+			ScanFunc: func(dest ...interface{}) error {
+				id := dest[0].(*string)
+				name := dest[1].(*string)
+
+				*id = ancestors[callCount].Id
+				*name = ancestors[callCount].Name
+
+				callCount = callCount + 1
+				return nil
+			},
+		}
+
+		rds := RDS{
+			conn: &pgxMock.PGXPoolMock{
+				QueryFunc: func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+					return rowMock, nil
+				},
+			}}
+		actualAncestors, err := rds.GetAncestors("E92000001")
+
+		Convey("When ancestors are fetched", func() {
+
+			Convey("Then all ancestors available for the area code is returned", func() {
+				So(err, ShouldBeNil)
+				So(actualAncestors, ShouldResemble, ancestors)
+			})
+		})
+	})
+
+	Convey("Given an valid area code", t, func() {
+		errorMsg := "error while connecting to DB"
+		rds := RDS{
+			conn: &pgxMock.PGXPoolMock{
+				QueryFunc: func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+					return nil, errors.New(errorMsg)
+				},
+			}}
+		actualAncestors, err := rds.GetAncestors("E92000001")
+
+		Convey("When failed to connect to DB", func() {
+
+			Convey("Then error is returned", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldEqual, errorMsg)
+				So(actualAncestors, ShouldBeNil)
+			})
+		})
+	})
+
+	Convey("Given an invalid area code", t, func() {
+		rowMock := &pgxMock.PGXRowsMock{
+			CloseFunc: func() {
+			},
+			NextFunc: func() bool {
+				return false
+			},
+		}
+
+		rds := RDS{
+			conn: &pgxMock.PGXPoolMock{
+				QueryFunc: func(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+					return rowMock, nil
+				},
+			}}
+		actualAncestors, err := rds.GetAncestors("E92000001")
+
+		Convey("When ancestors are fetched", func() {
+
+			Convey("Then empty ancestors are returned", func() {
+				So(err, ShouldBeNil)
+				So(actualAncestors, ShouldBeEmpty)
 			})
 		})
 	})
