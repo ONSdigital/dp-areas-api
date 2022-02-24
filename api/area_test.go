@@ -157,7 +157,7 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 }
 
 func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
-	Convey("Given a successful request to stubbed area data - E92000001", t, func() {
+	Convey("Given a successful request to area relationship data - E92000001", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations", EnglandAreaData), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
@@ -199,7 +199,7 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 }
 
 func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
-	Convey("Given a successful request to stubbed area data - invalid", t, func() {
+	Convey("Given a successful request to area relationship data - invalid", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s/relations", "InvalidAreaCode"), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
@@ -324,8 +324,7 @@ func TestUpdateAreaData(t *testing.T) {
 	})
 }
 
-func
-TestUpdateAreaDataReturnsValidationError(t *testing.T) {
+func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 	Convey("Given a request without area details area name details", t, func() {
 		reader := strings.NewReader(`{}`)
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:2200/v1/areas/%s", WalesAreaData), reader)

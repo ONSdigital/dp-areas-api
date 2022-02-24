@@ -3,6 +3,7 @@ package rds
 import (
 	"context"
 	"fmt"
+
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
@@ -101,6 +102,18 @@ func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {
 		if err != nil {
 			return err
 		}
+		err = r.insertRelationshipTypeTestData(ctx)
+		if err != nil {
+			return err
+		}
+		err = r.insertAreaNameTestData(ctx)
+		if err != nil {
+			return err
+		}
+		err = r.insertAreaRelationshipTestData(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -125,7 +138,7 @@ func (r *RDS) insertAreaTypeTestData(ctx context.Context) error {
 			return err
 		}
 		defer rows.Close()
-		log.Info(ctx, "query executed successfully:", logData)
+		log.Info(ctx, "area_type table query executed successfully:", logData)
 	}
 	return nil
 }
@@ -206,4 +219,87 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 		return isInserted, fmt.Errorf("failed to commit: %+v", err)
 	}
 	return isInserted, nil
+}
+
+func (r *RDS) insertRelationshipTypeTestData(ctx context.Context) error {
+	relationshipTypeData := DBRelationalData.RelationshipTypeData
+	executionList := make([]string, len(relationshipTypeData))
+	for key := range relationshipTypeData {
+		executionList[relationshipTypeData[key]["creation_order"].(int)] = relationshipTypeData[key]["values"].(string)
+	}
+	// execute queries
+	for index := range executionList {
+		logData := log.Data{"exceuting query": executionList[index]}
+		rows, err := r.conn.Query(
+			ctx,
+			relationshipTypeInsertTransaction,
+			executionList[index],
+			executionList[index],
+		)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		log.Info(ctx, "relationship_type table query executed successfully:", logData)
+	}
+	return nil
+}
+
+func (r *RDS) insertAreaNameTestData(ctx context.Context) error {
+	areaNameData := DBRelationalData.AreaNameData
+	// build queries
+	for name := range areaNameData {
+		queryValues := areaNameData[name]["values"].(map[string]interface{})
+		logData := log.Data{"exceuting query": name}
+
+		// handle scenario where dates not set => pointer to sql null
+		var active_from *string
+		if queryValues["active_from"].(string) != "" {
+			af := queryValues["active_from"].(string)
+			active_from = &af
+		}
+		var active_to *string
+		if queryValues["active_to"].(string) != "" {
+			at := queryValues["active_to"].(string)
+			active_to = &at
+		}
+
+		rows, err := r.conn.Query(
+			ctx,
+			areaNameInsertTransaction,
+			queryValues["area_code"],
+			name,
+			active_from,
+			active_to,
+		)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		log.Info(ctx, "area_name table query executed successfully:", logData)
+	}
+	return nil
+}
+
+func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
+	areaRelationshipData := DBRelationalData.AreaRelationshipData
+	// build queries
+	for code := range areaRelationshipData {
+		queryValues := areaRelationshipData[code]["values"].(map[string]interface{})
+		logData := log.Data{"exceuting query": code}
+
+		rows, err := r.conn.Query(
+			ctx,
+			areaRelationshipInsertTransaction,
+			code,
+			queryValues["rel_area_code"],
+			queryValues["rel_type_id"],
+		)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		log.Info(ctx, "area_relationship table query executed successfully:", logData)
+	}
+	return nil
 }

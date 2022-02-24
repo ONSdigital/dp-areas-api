@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/log.go/v2/log"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+
+	"github.com/ONSdigital/log.go/v2/log"
 
 	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/models"
@@ -89,7 +90,7 @@ func (api *API) getAreaRDSData(ctx context.Context, w http.ResponseWriter, req *
 	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 }
 
-//getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
+//getAreaRelationships is a handler that gets area relationship by ID
 func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
