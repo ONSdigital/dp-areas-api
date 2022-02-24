@@ -10,7 +10,6 @@ import (
 
 	"github.com/ONSdigital/log.go/v2/log"
 
-	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/gorilla/mux"
 )
