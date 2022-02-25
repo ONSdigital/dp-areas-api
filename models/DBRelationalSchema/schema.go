@@ -24,6 +24,10 @@ const DBSchema = `{
                         "data_type": "VARCHAR",
                         "constraints": ""
                     },
+                    "visible": {
+                        "data_type": "BOOLEAN",
+                        "constraints": ""
+                    },
                     "area_type_id": {
                         "data_type": "INT",
                         "constraints": "REFERENCES area_type(id)"

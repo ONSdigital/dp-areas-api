@@ -166,6 +166,7 @@ func (r *RDS) upsertAreaTestData(ctx context.Context) error {
 			active_to,
 			queryValues["area_type_id"].(int),
 			queryValues["geometric_area"].(string),
+			queryValues["visible"].(bool),
 		)
 		if err != nil {
 			return err

@@ -3,7 +3,7 @@ package rds
 import "fmt"
 
 const (
-	getArea = `select code, area_name.name, geometric_area, visible, area_type.name 
+	getArea = `select code, area_name.name, geometric_area, visible, area_type.name
 			   from area
 			   left join area_name on area.code = area_name.area_code
 			   left join area_type on area.area_type_id = area_type.id
@@ -15,8 +15,8 @@ const (
 	insertArea                = "insert into area(code, active_from, active_to, geometric_area, area_type_id) values($1, $2, $3, $4, $5)"
 	updateAreaOnConflict      = "on conflict(code) do update set active_from=$2, active_to=$3,geometric_area=$4,area_type_id=$5 returning (xmax = 0) as inserted"
 	areaTypeInsertTransaction = "insert into area_type(name) select $1 where not exists (select * from area_type where name = $2)"
-	areaInsertTransaction     = `insert into area(code, active_from, active_to, area_type_id, geometric_area)
-								 VALUES($1, $2, $3, $4, $5)
+	areaInsertTransaction     = `insert into area(code, active_from, active_to, area_type_id, geometric_area, visible)
+								 VALUES($1, $2, $3, $4, $5, $6)
                                  on conflict (code) do update
                                  set active_from=$2,active_to=$3, area_type_id=$4,geometric_area=$5`
 	relationshipTypeInsertTransaction = "insert into relationship_type(name) select $1 where not exists (select * from relationship_type where name = $2)"
