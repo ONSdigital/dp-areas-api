@@ -7,16 +7,12 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/rds"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
-
-	aurorards "github.com/aws/aws-sdk-go/service/rds"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -54,12 +50,6 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 	return hc, nil
 }
 
-// GetRDSClient creates aurora rds client
-func (e *ExternalServiceList) GetRDSClient(region string) rds.Client {
-	client := e.Init.DoGetRDSClient(region)
-	return client
-}
-
 func (e *ExternalServiceList) getRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
 	rds, err := e.Init.DoGetRDSDB(ctx, cfg)
 	if err != nil {
@@ -95,12 +85,4 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 	}
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	return &hc, nil
-}
-
-// DoGetRDSClient creates a cognito client
-func (e *Init) DoGetRDSClient(region string) rds.Client {
-	client := aurorards.New(session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	})), &aws.Config{Region: &region})
-	return client
 }

@@ -1,8 +1,25 @@
 package models
 
 import (
+	"context"
 	"time"
 )
+
+var areaTypeAndCode = map[string]string{
+	"E92": "Country",
+	"E06": "Unitary Authorities",
+	"W92": "Country",
+	"E12": "Region",
+	"W06": "Unitary Authorities",
+	"E47": "Combined Authorities",
+	"E11": "Metropolitan Counties",
+	"E10": "Counties",
+	"E09": "London Boroughs",
+	"E08": "Metropolitan Districts",
+	"E07": "Non-metropolitan Districts",
+	"E05": "Electoral Wards",
+	"W05": "Electoral Wards",
+}
 
 // AreaType defines possible area types
 type AreaType int
@@ -15,60 +32,71 @@ var (
 	}
 )
 
-// possible area types
-const (
-	Country AreaType = iota
-	Region
-	UnitaryAuthorities
-	CombinedAuthorities
-	MetropolitanCounties
-	Counties
-	LondonBoroughs
-	MetropolitanDistricts
-	NonMetropolitanDistricts
-	ElectoralWards
-	Invalid
-)
-
-//Area represents the structure for an area
-type Area struct {
-	ID                string        `bson:"id,omitempty"                  json:"id,omitempty"`
-	Version           int           `bson:"version,omitempty"             json:"version,omitempty"`
-	Name              string        `bson:"name,omitempty"                json:"name,omitempty"`
-	ReleaseDate       string        `bson:"release_date,omitempty"        json:"release_date,omitempty"`
-	LastUpdated       time.Time     `bson:"last_updated,omitempty"        json:"last_updated,omitempty"`
-	Type              string        `bson:"type,omitempty"                json:"type,omitempty"`
-	ParentAreas       []LinkedAreas `bson:"parent_areas,omitempty"        json:"parent_areas,omitempty"`
-	ChildAreas        []LinkedAreas `bson:"child_areas,omitempty"         json:"child_areas,omitempty"`
-	NeighbouringAreas []LinkedAreas `bson:"neighbouring_areas,omitempty"  json:"neighbouring_areas,omitempty"`
+// AreaName represents the structure of the area name details used for update request
+type AreaName struct {
+	Name       string     `json:"name"`
+	ActiveFrom *time.Time `json:"active_from"`
+	ActiveTo   *time.Time `json:"active_to"`
 }
 
-type LinkedAreas struct {
-	ID   string `bson:"id,omitempty"         json:"id,omitempty"`
-	Type string `bson:"type,omitempty"       json:"type,omitempty"`
-	Name string `bson:"name,omitempty"       json:"name,omitempty"`
+// AreaParams represents the structure of the area used for create or update
+type AreaParams struct {
+	Code          string     `json:"code"`
+	AreaName      *AreaName  `json:"area_name"`
+	GeometricData string     `json:"geometry"`
+	ActiveFrom    *time.Time `json:"active_from"`
+	ActiveTo      *time.Time `json:"active_to"`
+	Visible       *bool      `json:"visible"`
+	AreaType      string
 }
 
-// AreasResults represents a structure for a list of areas
-type AreasResults struct {
-	Items      *[]Area `json:"items"`
-	Count      int     `json:"count"`
-	Offset     int     `json:"offset"`
-	Limit      int     `json:"limit"`
-	TotalCount int     `json:"total_count"`
+func (a *AreaParams) ValidateAreaRequest(ctx context.Context) []error {
+	var validationErrs []error
+	if a.Code == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidAreaCodeError, InvalidAreaCodeErrorDescription))
+	}
+
+	if a.AreaType == "" {
+		validationErrs = append(validationErrs, NewValidationError(ctx, InvalidAreaTypeError, InvalidAreaTypeErrorDescription))
+	}
+
+	if a.AreaName == nil {
+		validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameDetailsNotProvidedError, AreaNameDetailsNotProvidedErrorDescription))
+	} else {
+
+		if a.AreaName.Name == "" {
+			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameNotProvidedError, AreaNameNotProvidedErrorDescription))
+		}
+
+		if a.AreaName.ActiveFrom == nil {
+			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameActiveFromNotProvidedError, AreaNameActiveFromNotProvidedErrorDescription))
+		}
+
+		if a.AreaName.ActiveTo == nil {
+			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameActiveToNotProvidedError, AreaNameActiveToNotProvidedErrorDescription))
+		}
+	}
+
+	return validationErrs
+}
+
+func (a *AreaParams) SetAreaType(ctx context.Context) {
+	if len(a.Code) > 3 {
+		areaCodePrefix := a.Code[:3]
+		if areaType, ok := areaTypeAndCode[areaCodePrefix]; ok {
+			a.AreaType = areaType
+		}
+	}
 }
 
 // AreasDataResults represents the structure for an area in api v1.
 type AreasDataResults struct {
-	Code          string                 `json:"code"`
-	Name          string                 `json:"name"`
-	ValidFrom     string                 `json:"date_start"`
-	ValidTo       string                 `json:"date_end"`
-	WelshName     string                 `json:"name_welsh"`
-	GeometricData map[string]interface{} `json:"geometry"`
-	Visible       bool                   `json:"visible"`
-	AreaType      string                 `json:"area_type"`
-	Ancestors     []AreasAncestors       `json:"ancestors"`
+	Code          string           `json:"code"`
+	Name          *string          `json:"name"`
+	GeometricData *string          `json:"geometry"`
+	Visible       *bool            `json:"visible"`
+	AreaType      *string          `json:"area_type"`
+	Ancestors     []AreasAncestors `json:"ancestors"`
 }
 
 // AreasAncestors represents the Ancestry structure.
@@ -90,10 +118,12 @@ type AreaBasicData struct {
 	Name string `json:"name"`
 }
 
+// Struct for seeding area_type table with test data
+type AreaTypeSeeding struct {
+	AreaTypes map[string]map[string]interface{}
+}
 
-// basic area data
-type AreaDataRDS struct {
-	Id     int64  `json:"id"`
-	Code   string `json:"code"`
-	Active bool   `json:"active"`
+// Struct for seeding area table with test data
+type AreaSeeding struct {
+	Areas map[string]interface{}
 }

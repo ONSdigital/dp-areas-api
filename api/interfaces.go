@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-areas-api/config"
 
 	"github.com/ONSdigital/dp-areas-api/models"
@@ -16,8 +17,10 @@ type RDSAreaStore interface {
 	Close()
 	GetRelationships(areaCode string) ([]*models.AreaBasicData, error)
 	ValidateArea(code string) error
-	GetArea(areaId string) (*models.AreaDataRDS, error)
+	GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error)
 	BuildTables(ctx context.Context, executionList []string) error
+	Ping(ctx context.Context) error
+	UpsertArea(ctx context.Context, area models.AreaParams) (bool, error)
 }
 
 // Ancestors defines a method to lookup ancestors from an areaID

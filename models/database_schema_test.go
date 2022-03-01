@@ -9,17 +9,18 @@ import (
 )
 
 const (
-	area_query = "CREATE TABLE IF NOT EXISTS area ( PRIMARY KEY (code), active_from TIMESTAMP , active_to TIMESTAMP , area_type_id INT REFERENCES area_type(id), code VARCHAR(50) , geometric_area VARCHAR )"
-	area_type_query = "CREATE TABLE IF NOT EXISTS area_type ( PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
-	area_name_query = "CREATE TABLE IF NOT EXISTS area_name ( PRIMARY KEY (id), active_from TIMESTAMP , active_to TIMESTAMP , area_code VARCHAR(50) REFERENCES area(code), id SERIAL , name VARCHAR(50) UNIQUE)"
-	relationship_type_query = "CREATE TABLE IF NOT EXISTS relationship_type ( PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
-	area_relationship_query = "CREATE TABLE IF NOT EXISTS area_relationship ( PRIMARY KEY (area_code,rel_area_code), area_code VARCHAR(50) REFERENCES area(code), rel_area_code VARCHAR(50) REFERENCES area(code), rel_type_id INT REFERENCES relationship_type(id))"
+	area_query              = "CREATE TABLE IF NOT EXISTS area (PRIMARY KEY (code), active_from TIMESTAMP , active_to TIMESTAMP , area_type_id INT REFERENCES area_type(id), code VARCHAR(50) , geometric_area VARCHAR , visible BOOLEAN )"
+	area_type_query         = "CREATE TABLE IF NOT EXISTS area_type (PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
+	area_name_query         = "CREATE TABLE IF NOT EXISTS area_name (PRIMARY KEY (id), active_from TIMESTAMP , active_to TIMESTAMP , area_code VARCHAR(50) REFERENCES area(code), id SERIAL , name VARCHAR(50) UNIQUE)"
+	relationship_type_query = "CREATE TABLE IF NOT EXISTS relationship_type (PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
+	area_relationship_query = "CREATE TABLE IF NOT EXISTS area_relationship (PRIMARY KEY (area_code,rel_area_code), area_code VARCHAR(50) REFERENCES area(code), rel_area_code VARCHAR(50) REFERENCES area(code), rel_type_id INT REFERENCES relationship_type(id))"
 )
+
 func TestSetup(t *testing.T) {
 	Convey("Ensure database schema model is built correctly", t, func() {
 		Convey("When a valid schema string is used - schema model built successfully", func() {
 			databaseSchema := models.DatabaseSchema{
-				DBName: "dp-areas-api",
+				DBName:       "dp-areas-api",
 				SchemaString: DBRelationalSchema.DBSchema,
 			}
 			err := databaseSchema.BuildDatabaseSchemaModel()
@@ -28,7 +29,7 @@ func TestSetup(t *testing.T) {
 			// sample from built schema model
 			So(databaseSchema.Tables["area"]["creation_order"].(float64), ShouldEqual, 2)
 			So(databaseSchema.Tables["area"]["primary_keys"].(string), ShouldEqual, "code")
-			So(len(databaseSchema.Tables["area"]["columns"].(map[string]interface{})), ShouldEqual, 5)
+			So(len(databaseSchema.Tables["area"]["columns"].(map[string]interface{})), ShouldEqual, 6)
 		})
 
 		Convey("When an invalid schema string is used - error generated", func() {
@@ -51,7 +52,7 @@ func TestSetup(t *testing.T) {
 
 		Convey("When an no schema string supplied - error generated", func() {
 			databaseSchema := models.DatabaseSchema{
-				DBName: "dp-areas-api",
+				DBName:       "dp-areas-api",
 				SchemaString: `""`,
 			}
 			err := databaseSchema.BuildDatabaseSchemaModel()
@@ -62,7 +63,7 @@ func TestSetup(t *testing.T) {
 
 		Convey("Ensure execution list built successfully", func() {
 			databaseSchema := models.DatabaseSchema{
-				DBName: "dp-areas-api",
+				DBName:       "dp-areas-api",
 				SchemaString: DBRelationalSchema.DBSchema,
 			}
 			_ = databaseSchema.BuildDatabaseSchemaModel()

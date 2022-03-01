@@ -14,23 +14,22 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	DefaultMaxLimit            int           `envconfig:"DEFAULT_MAXIMUM_LIMIT"`
-	DefaultLimit               int           `envconfig:"DEFAULT_LIMIT"`
-	DefaultOffset              int           `envconfig:"DEFAULT_OFFSET"`
-	RDSDBName                  string `envconfig:"DBNAME"`
-	RDSDBUser                  string `envconfig:"DBUSER"`
-	RDSDBHost                  string `envconfig:"DBHOST"`
-	RDSDBPort                  string `envconfig:"DBPORT"`
-	AWSRegion                  string `envconfig:"AWSREGION"`
-	RDSDBInstance1             string `envconfig:"RDSINSTANCE1"`
-	RDSDBInstance2             string `envconfig:"RDSINSTANCE2"`
-	RDSDBInstance3             string `envconfig:"RDSINSTANCE3"`
+	RDSDBName                  string        `envconfig:"DBNAME"`
+	RDSDBUser                  string        `envconfig:"DBUSER"`
+	RDSDBHost                  string        `envconfig:"DBHOST"`
+	RDSDBPort                  string        `envconfig:"DBPORT"`
+	AWSRegion                  string        `envconfig:"AWSREGION"`
+	RDSDBConnectionTTL         time.Duration `envconfig:"RDSCONNECTIONTTL"`
+	RDSDBMaxConnections        int           `envconfig:"RDSMAXCONNECTIONS"`
+	RDSDBMinConnections        int           `envconfig:"RDSMINCONNECTIONS"`
 	// flag to use local postres instace provided by dp-compose
-	DPPostgresLocal            bool   `envconfig:"USEPOSTGRESLOCAL"`
-	DPPostgresUserName         string `envconfig:"DPPOSTGRESUSERNAME"`
-	DPPostgresUserPassword     string `envconfig:"DPPOSTGRESPASSWORD"`
-	DPPostgresLocalPort        string `envconfig:"DPPOSTGRESPORT"`
-	DPPostgresLocalDB          string `envconfig:"USEPOSTGRESDB"`
+	DPPostgresLocal        bool   `envconfig:"USEPOSTGRESLOCAL"`
+	DPPostgresUserName     string `envconfig:"DPPOSTGRESUSERNAME"`
+	DPPostgresUserPassword string `envconfig:"DPPOSTGRESPASSWORD"`
+	DPPostgresLocalPort    string `envconfig:"DPPOSTGRESPORT"`
+	DPPostgresLocalDB      string `envconfig:"USEPOSTGRESDB"`
+
+	EnablePrivateEndpoints bool `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 }
 
 func (c Config) GetRDSEndpoint() string {
@@ -55,30 +54,31 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		DefaultMaxLimit:            1000,
-		DefaultLimit:               20,
-		DefaultOffset:              0,
-		DPPostgresLocal: true,
-		DPPostgresUserName: "postgres",
-		DPPostgresUserPassword: os.Getenv("DPPOSTGRESPASSWORD"),
-		DPPostgresLocalPort: "5432",
-		DPPostgresLocalDB: "dp-areas-api",
+		DPPostgresLocal:            true,
+		DPPostgresUserName:         "postgres",
+		DPPostgresUserPassword:     os.Getenv("DPPOSTGRESPASSWORD"),
+		DPPostgresLocalPort:        "5432",
+		DPPostgresLocalDB:          "dp-areas-api",
+		RDSDBConnectionTTL:         24 * time.Hour,
+		RDSDBMaxConnections:        4,
+		RDSDBMinConnections:        1,
+		EnablePrivateEndpoints:     true,
 	}
 
 	return cfg, envconfig.Process("", cfg)
 }
 
 // GetDBEndpoint get sql endpoint
-func (c Config) GetDBEndpoint () string {
+func (c Config) GetDBEndpoint() string {
 	return fmt.Sprintf("%s:%s", c.RDSDBHost, c.RDSDBPort)
 }
 
 // GetLocalDBConnectionString returns local connection string
-func (c Config) GetLocalDBConnectionString () string {
+func (c Config) GetLocalDBConnectionString() string {
 	return fmt.Sprintf("postgres://%s:%s@localhost:%s/%s", c.DPPostgresUserName, c.DPPostgresUserPassword, c.DPPostgresLocalPort, c.DPPostgresLocalDB)
 }
 
 // GetRemoteDBConnectionString returns remote connection string
-func (c Config) GetRemoteDBConnectionString (authToken string) string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", c.RDSDBHost, c.RDSDBPort, c.RDSDBUser, authToken, c.RDSDBName)
+func (c Config) GetRemoteDBConnectionString(authToken string) string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s pool_max_conns=%d pool_min_conns=%d pool_max_conn_lifetime=%s", c.RDSDBHost, c.RDSDBPort, c.RDSDBUser, authToken, c.RDSDBName, c.RDSDBMaxConnections, c.RDSDBMinConnections, c.RDSDBConnectionTTL)
 }

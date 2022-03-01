@@ -20,96 +20,8 @@ parameters:
     type: string
     required: true
 
-  version:
-    name: version
-    description: "A version of a dataset"
-    in: path
-    type: string
-    required: true
-
-  offset:
-    name: offset
-    description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The
-                  default value is 0"
-    in: query
-    type: integer
-    required: false
-    default: 0
-
-  limit:
-    name: limit
-    description: "The number of items requested. The default value is 20 and the maximum allowed is 1000."
-    in: query
-    type: integer
-    required: false
-    default: 20
-
 paths:
 
-  /areas:
-    get:
-      tags:
-        - "Public"
-      summary: "Returns a list of all areas"
-      description: "Returns a paginated list of all areas"
-      produces:
-        - "application/json"
-      parameters:
-        - $ref: '#/parameters/offset'
-        - $ref: '#/parameters/limit'
-      responses:
-        200:
-          description: "Successfully returned a json object containing a list of all areas"
-          schema:
-            type: object
-            properties:
-              count:
-                description: "The number of areas returned"
-                readOnly: true
-                type: integer
-                example: 1
-              items:
-                description: "A list of areas"
-                type: array
-                items:
-                  $ref: '#/definitions/Area'
-              limit:
-                description: "The number of areas requested"
-                type: integer
-                default: 20
-              offset:
-                description: "The first row of areas to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
-                type: integer
-                default: 0
-              total_count:
-                description: "The total number of areas"
-                readOnly: true
-                type: integer
-                example: 1
-        400:
-           $ref: '#/responses/InvalidRequestError'
-        500:
-           $ref: '#/responses/InternalError'
-
-  /areas/{id}:
-    get:
-      tags:
-        - "Public"
-      summary: "Returns the latest version of an area"
-      description: "Returns an area for a given id"
-      produces:
-        - "application/json"
-      parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        200:
-          description: "Successfully returned an area for a given id"
-          schema:
-            $ref: "#/definitions/Area"
-        404:
-          $ref: "#/responses/ResourceNotFound"
-        500:
-          $ref: "#/responses/InternalError"
   /v1/areas/{id}:
     get:
       tags:
@@ -133,6 +45,31 @@ paths:
           $ref: "#/definitions/ErrorResponse"
         500:
           $ref: "#/definitions/ErrorResponse"
+    put:
+      tags:
+        - "Public"
+      summary: "Upserts a given area details"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: header
+          type: string
+          name: Accept-Language
+          description: "The language type - 'en' for English, 'cy' for Cymraeg"
+        - in: body
+          name: area
+          description: "The name details, geometry of area"
+          schema:
+            $ref: "#/definitions/Area"
+      responses:
+        200:
+          description: "Successfully updated an existing area"
+        201:
+          description: "Successfully created an new area"
+        500:
+          $ref: "#/definitions/ErrorResponse"
+
   /v1/areas/{id}/relations:
     get:
       tags:
@@ -152,123 +89,11 @@ paths:
           $ref: "#/definitions/ErrorResponse"
         500:
           $ref: "#/definitions/ErrorResponse"
-  /areas/{id}/versions:
-    get:
-      tags:
-        - "Public"
-      summary: "Returns a list of version history of an area "
-      description: "Returns a list of available versions for an area for a given id"
-      produces:
-        - "application/json"
-      parameters:
-         - $ref: '#/parameters/id'
-         - $ref: '#/parameters/offset'
-         - $ref: '#/parameters/limit'
-      responses:
-        200:
-          description: "A json list containing all version for an area"
-          schema:
-            $ref: "#/definitions/Versions"
-        400:
-          $ref: '#/responses/InvalidRequestError'
-        404:
-          description: "No versions found for the id provided"
-        500:
-          $ref: '#/responses/InternalError'
-
-  /areas/{id}/versions/{version}:
-    get:
-      tags:
-        - "Public"
-      summary: "Get a version"
-      description: "Get a specific version for an area"
-      parameters:
-        - $ref: '#/parameters/id'
-        - $ref: '#/parameters/version'
-      responses:
-        200:
-          description: "A json object containing the version for an area"
-          schema:
-            $ref: '#/definitions/Version'
-        400:
-          $ref: '#/responses/InvalidRequestError'
-        404:
-          $ref: "#/responses/ResourceNotFound"
-        500:
-          $ref: '#/responses/InternalError'
 
 definitions:
-  Version:
-    $ref: '#/definitions/Area'
-  Area:
-    type: object
-    required: ["id"]
-    properties:
-      child_areas:
-        type: array
-        description: "An array of areas that are contained within the boundary of this area that are within the same geographical hierarchy"
-        items:
-          $ref: '#/definitions/Linked_area'
-        example:
-          id: "W05001011"
-          type: "electoral wards"
-          name: "Cyncoed"
-      id:
-        type: string
-        description: "A unique id for the area"
-        example: "W06000015"
-      last_updated:
-        type: string
-        description: "The date when the data was last updated for the area"
-        example: "2020-06-11T11:49:21.520922Z"
-      name:
-        type: string
-        readOnly: true
-        description: "The name of the area"
-        example: "Cardiff"
-      neighbouring_areas:
-        type: array
-        items:
-          $ref: '#/definitions/Linked_area'
-        description: "A list of areas that are within the same geographical hierarchy, at the same level (
-                      but not necessarily of the same type) within that hierarchy and share a border with this area"
-        example:
-          id: "W06000014"
-          type: "unitary authorities"
-          name: "Vale of Glamorgan"
-      parent_areas:
-        type: array
-        items:
-          $ref: '#/definitions/Linked_area'
-        description: "A list of areas whose boundaries contain this area that are within the same geographical hierarchy"
-        example:
-          id: "W92000004"
-          type: "country"
-          name: "wales"
-      related_areas:
-        type: array
-        items:
-          $ref: '#/definitions/Linked_area'
-        description: "Has links to areas"
-        example:
-          id: "W05000872"
-          type: "electoral wards"
-          name: "Penylan"
-      release_date:
-        type: string
-        description: "The date when the version was released"
-        example: "2020-06-11T11:49:21.520922Z"
-      type:
-          $ref: "#/definitions/Type"
-      version:
-        type: integer
-        readOnly: true
-        description: "The version of current area"
-        example: 1
-
   AreaData:
     type: object
-    required: ["id"]
+    required: [ "id" ]
     properties:
       code:
         type: string
@@ -278,35 +103,14 @@ definitions:
         type: string
         description: "The name of the area"
         example: "Wales"
-      date_start:
-        type: string
-        description: "The date from which the area data became active"
-        example: "Thu, 01 Jan 2009 00:00:00 GMT"
-      date_end:
-        type: string
-        description: "The date from which the area data became inactive"
-        example: "Thu, 01 Jan 2029 00:00:00 GMT"
-      name_welsh:
-        type: string
-        description: "The Welsh version of the name field"
-        example: "Cymru"
       geometry:
-        type: object
-        properties:
-          coordinates:
-            type: array
-            items:
-              description: "coordinates for boundary code"
-              type: array
-              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
-          type:
-            type: string
-            description: "coordinate type"
-            example: "MutliPolygon"
+        type: string
+        description: "coordinates for boundary code"
+        example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
       area_type:
         type: string
-        description: "english or welsh label text"
-        example: "Cymraeg"
+        description: "Country or Region"
+        example: "Country"
       visible:
         type: boolean
         description: "whether we surface a page for this area or not"
@@ -322,53 +126,6 @@ definitions:
             type: string
             description: "The name of the ancestors area"
             example: "ancestor"
-
-  Linked_area:
-    type: object
-    required: ["id"]
-    properties:
-      id:
-        $ref: '#/parameters/id'
-      type:
-        $ref: "#/definitions/Type"
-      name:
-        type: string
-        readOnly: true
-        description: "The name of the linked-area"
-
-  Type:
-        type: string
-        description: "The type for an area"
-        enum: [country, region, unitary authorities, combined authorities, metropolitan counties, counties, London boroughs,
-               metropolitan districts, non-metropolitan districts, electoral wards]
-        example: "unitary authorities"
-
-  Versions:
-    type: object
-    properties:
-      count:
-        description: "The number of versions returned for an area"
-        readOnly: true
-        type: integer
-        example: 1
-      items:
-        description: "An array of Areas"
-        type: array
-        items:
-          $ref: '#/definitions/Version'
-      limit:
-        description: "The number of versions requested for an area"
-        type: integer
-        default: 20
-      offset:
-        description: "The first row of versions for an area to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
-        type: integer
-        default: 0
-      total_count:
-        description: "The total number of versions for an area"
-        readOnly: true
-        type: integer
-        example: 1
 
   ErrorResponse:
     description: "A list of any errors"
@@ -396,24 +153,57 @@ definitions:
         description: "Description of the error"
   AreaRelations:
     type: array
+    items:
+      properties:
+        area_code:
+          type: string
+          description: "The unique code for the related area"
+          example: "W92000004"
+        area_name:
+          type: string
+          description: "The relationship type"
+          example: "parent"
+        href:
+          type: string
+          description: "reference link to get related area details"
+          example: "v1/areas/W92000004"
+  Area:
+    type: object
+    required: [ "code", "area_name" ]
     properties:
-      area_code:
+      code:
         type: string
-        description: "The unique code for the related area"
+        description: "The unique code for the area"
         example: "W92000004"
       area_name:
+        type: object
+        description: "Details of the area name"
+        properties:
+          name:
+            type: string
+            description: "The name of the area"
+            example: "England"
+          active_from:
+            type: string
+            description: "The date from which the area data became active"
+            example: "2022-01-01T00:00:00Z05:00"
+          active_to:
+            type: string
+            description: "The date from which the area data became inactive"
+            example: "2022-01-01T00:00:00Z05:00"
+      geometry:
         type: string
-        description: "The relationship type"
-        example: "parent"
-      href:
+        description: "The details of geometry coordinates"
+        example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+      active_from:
         type: string
-        description: "reference link to get related area details"
-        example: "v1/areas/W92000004"
-
-responses:
-  ResourceNotFound:
-    description: "Resource was not found"
-  InternalError:
-    description: "Failed to process the request due to an internal error"
-  InvalidRequestError:
-    description: "Failed to process the request due to invalid request"
+        description: "The date from which the area data became active"
+        example: "2022-01-01T00:00:00Z05:00"
+      active_to:
+        type: string
+        description: "The date from which the area data became inactive"
+        example: "2022-01-01T00:00:00Z05:00"
+      visible:
+        type: boolean
+        description: "whether we surface a page for this area or not"
+        example: true

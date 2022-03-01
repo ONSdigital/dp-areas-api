@@ -28,13 +28,14 @@ func TestConfig(t *testing.T) {
 					GracefulShutdownTimeout:    5 * time.Second,
 					HealthCheckInterval:        30 * time.Second,
 					HealthCheckCriticalTimeout: 90 * time.Second,
-					DefaultMaxLimit:            1000,
-					DefaultLimit:               20,
-					DefaultOffset:              0,
-					DPPostgresLocal: true,
-					DPPostgresUserName: "postgres",
-					DPPostgresLocalPort: "5432",
-					DPPostgresLocalDB: "dp-areas-api",
+					DPPostgresLocal:            true,
+					DPPostgresUserName:         "postgres",
+					DPPostgresLocalPort:        "5432",
+					DPPostgresLocalDB:          "dp-areas-api",
+					RDSDBConnectionTTL:         24 * time.Hour,
+					RDSDBMaxConnections:        4,
+					RDSDBMinConnections:        1,
+					EnablePrivateEndpoints: true,
 				})
 			})
 

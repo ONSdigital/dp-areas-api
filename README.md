@@ -18,9 +18,6 @@ Digital Publishing areas API used to navigate profiles for different geographica
 | GRACEFUL_SHUTDOWN_TIMEOUT    | 5s        | The graceful shutdown timeout in seconds (`time.Duration` format)
 | HEALTHCHECK_INTERVAL         | 30s       | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s       | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
-| DEFAULT_LIMIT                | 20        | Default limit for pagination
-| DEFAULT_OFFSET               | 0         | Default offset for pagination
-| DEFAULT_MAXIMUM_LIMIT        | 1000      | Default maximum limit for pagination
 
 ### Connecting to the AWS AURORA RDS instance from your local machine
 

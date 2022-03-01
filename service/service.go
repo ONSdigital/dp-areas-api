@@ -9,7 +9,6 @@ import (
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalSchema"
 
 	"github.com/ONSdigital/dp-areas-api/pgx"
-	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -19,7 +18,8 @@ import (
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
 const (
-	databaseName = "dp-areas-api"
+	databaseName     = "dp-areas-api"
+	dpPublishingUser = "dp-areas-api-publishing"
 )
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
@@ -53,8 +53,8 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	// only run publishing user
-	if cfg.RDSDBUser == "dp-areas-api-publishing" || cfg.DPPostgresLocal {
+	// only run publishing user or if pointing at local postgres instance
+	if cfg.RDSDBUser == dpPublishingUser || cfg.DPPostgresLocal {
 		// rds table schema builder
 		rdsSchema := &models.DatabaseSchema{
 			DBName:       databaseName,
@@ -86,9 +86,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	rdsClient := serviceList.GetRDSClient(cfg.AWSRegion)
-
-	if err := registerCheckers(ctx, cfg, hc, rdsClient); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, rds); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -162,10 +160,10 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rdsClient rds.Client) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rds api.RDSAreaStore) (err error) {
 	hasErrors := false
 
-	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(rdsClient, []string{cfg.RDSDBInstance1, cfg.RDSDBInstance2, cfg.RDSDBInstance3})); err != nil {
+	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(ctx, cfg, rds)); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for rds client", err)
 	}

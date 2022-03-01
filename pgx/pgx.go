@@ -29,6 +29,14 @@ type PGXRows interface {
 	pgx.Rows
 }
 
+//go:generate moq -out mock/transcations.go -pkg mock . PGXTransaction
+
+// PGXTransaction interface to mock pgx.Tx for adding tests to repository layer
+type PGXTransaction interface {
+	pgx.Tx
+}
+
+
 //go:generate moq -out mock/pgx.go -pkg mock . PGXPool
 
 // PGXPool interface is abstraction of pgxpool package
