@@ -9,21 +9,16 @@ import (
 )
 
 //go:generate moq -out mock/rdsAreaStore.go -pkg mock . RDSAreaStore
-//go:generate moq -out mock/ancestorStore.go -pkg mock . AncestorStore
 
 // RDSAreaStore represents all the required methods from aurora DB
 type RDSAreaStore interface {
 	Init(ctx context.Context, cfg *config.Config) error
 	Close()
-	GetRelationships(areaCode string) ([]*models.AreaBasicData, error)
+	GetRelationships(areaCode, relationshipParameter string) ([]*models.AreaBasicData, error)
 	ValidateArea(code string) error
 	GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error)
 	BuildTables(ctx context.Context, executionList []string) error
 	Ping(ctx context.Context) error
 	UpsertArea(ctx context.Context, area models.AreaParams) (bool, error)
-}
-
-// Ancestors defines a method to lookup ancestors from an areaID
-type AncestorStore interface {
 	GetAncestors(areaID string) ([]models.AreasAncestors, error)
 }

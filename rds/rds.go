@@ -63,18 +63,34 @@ func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResu
 	return &area, nil
 }
 
-func (r *RDS) GetRelationships(areaCode string) ([]*models.AreaBasicData, error) {
+func (r *RDS) GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 	var relationships []*models.AreaBasicData
-	rows, err := r.conn.Query(context.Background(), getRelationShipAreas, areaCode)
-	if err != nil {
-		return nil, err
+
+	if relationshipParameter == "" {
+
+		rows, err := r.conn.Query(context.Background(), getRelationShipAreas, areaCode)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var rs models.AreaBasicData
+			rows.Scan(&rs.Code, &rs.Name)
+			relationships = append(relationships, &rs)
+		}
+	} else {
+		rows, err := r.conn.Query(context.Background(), getRelationShipAreasWithParameter, areaCode, relationshipParameter)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var rs models.AreaBasicData
+			rows.Scan(&rs.Code, &rs.Name)
+			relationships = append(relationships, &rs)
+		}
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var rs models.AreaBasicData
-		rows.Scan(&rs.Code, &rs.Name)
-		relationships = append(relationships, &rs)
-	}
+
 	return relationships, nil
 }
 
@@ -299,4 +315,27 @@ func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
 		log.Info(ctx, "area_relationship table query executed successfully:", logData)
 	}
 	return nil
+}
+
+func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
+	var ancestors []*models.AreasAncestors
+
+	rows, err := r.conn.Query(context.Background(), getAncestors, areaCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var rs models.AreasAncestors
+		rows.Scan(&rs.Id, &rs.Name)
+		fmt.Println(rs)
+		ancestors = append(ancestors, &rs)
+	}
+
+	var a []models.AreasAncestors
+	for _, data := range ancestors {
+		a = append(a, *data)
+	}
+
+	return a, nil
 }
