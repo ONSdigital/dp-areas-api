@@ -27,10 +27,13 @@ var _ api.RDSAreaStore = &RDSAreaStoreMock{}
 // 			CloseFunc: func()  {
 // 				panic("mock out the Close method")
 // 			},
+// 			GetAncestorsFunc: func(areaID string) ([]models.AreasAncestors, error) {
+// 				panic("mock out the GetAncestors method")
+// 			},
 // 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 // 				panic("mock out the GetArea method")
 // 			},
-// 			GetRelationshipsFunc: func(areaCode string) ([]*models.AreaBasicData, error) {
+// 			GetRelationshipsFunc: func(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 // 				panic("mock out the GetRelationships method")
 // 			},
 // 			InitFunc: func(ctx context.Context, cfg *config.Config) error {
@@ -58,11 +61,14 @@ type RDSAreaStoreMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func()
 
+	// GetAncestorsFunc mocks the GetAncestors method.
+	GetAncestorsFunc func(areaID string) ([]models.AreasAncestors, error)
+
 	// GetAreaFunc mocks the GetArea method.
 	GetAreaFunc func(ctx context.Context, areaId string) (*models.AreasDataResults, error)
 
 	// GetRelationshipsFunc mocks the GetRelationships method.
-	GetRelationshipsFunc func(areaCode string) ([]*models.AreaBasicData, error)
+	GetRelationshipsFunc func(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error)
 
 	// InitFunc mocks the Init method.
 	InitFunc func(ctx context.Context, cfg *config.Config) error
@@ -88,6 +94,11 @@ type RDSAreaStoreMock struct {
 		// Close holds details about calls to the Close method.
 		Close []struct {
 		}
+		// GetAncestors holds details about calls to the GetAncestors method.
+		GetAncestors []struct {
+			// AreaID is the areaID argument value.
+			AreaID string
+		}
 		// GetArea holds details about calls to the GetArea method.
 		GetArea []struct {
 			// Ctx is the ctx argument value.
@@ -99,6 +110,8 @@ type RDSAreaStoreMock struct {
 		GetRelationships []struct {
 			// AreaCode is the areaCode argument value.
 			AreaCode string
+			// RelationshipParameter is the relationshipParameter argument value.
+			RelationshipParameter string
 		}
 		// Init holds details about calls to the Init method.
 		Init []struct {
@@ -127,6 +140,7 @@ type RDSAreaStoreMock struct {
 	}
 	lockBuildTables      sync.RWMutex
 	lockClose            sync.RWMutex
+	lockGetAncestors     sync.RWMutex
 	lockGetArea          sync.RWMutex
 	lockGetRelationships sync.RWMutex
 	lockInit             sync.RWMutex
@@ -196,6 +210,37 @@ func (mock *RDSAreaStoreMock) CloseCalls() []struct {
 	return calls
 }
 
+// GetAncestors calls GetAncestorsFunc.
+func (mock *RDSAreaStoreMock) GetAncestors(areaID string) ([]models.AreasAncestors, error) {
+	if mock.GetAncestorsFunc == nil {
+		panic("RDSAreaStoreMock.GetAncestorsFunc: method is nil but RDSAreaStore.GetAncestors was just called")
+	}
+	callInfo := struct {
+		AreaID string
+	}{
+		AreaID: areaID,
+	}
+	mock.lockGetAncestors.Lock()
+	mock.calls.GetAncestors = append(mock.calls.GetAncestors, callInfo)
+	mock.lockGetAncestors.Unlock()
+	return mock.GetAncestorsFunc(areaID)
+}
+
+// GetAncestorsCalls gets all the calls that were made to GetAncestors.
+// Check the length with:
+//     len(mockedRDSAreaStore.GetAncestorsCalls())
+func (mock *RDSAreaStoreMock) GetAncestorsCalls() []struct {
+	AreaID string
+} {
+	var calls []struct {
+		AreaID string
+	}
+	mock.lockGetAncestors.RLock()
+	calls = mock.calls.GetAncestors
+	mock.lockGetAncestors.RUnlock()
+	return calls
+}
+
 // GetArea calls GetAreaFunc.
 func (mock *RDSAreaStoreMock) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	if mock.GetAreaFunc == nil {
@@ -232,29 +277,33 @@ func (mock *RDSAreaStoreMock) GetAreaCalls() []struct {
 }
 
 // GetRelationships calls GetRelationshipsFunc.
-func (mock *RDSAreaStoreMock) GetRelationships(areaCode string) ([]*models.AreaBasicData, error) {
+func (mock *RDSAreaStoreMock) GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
 	if mock.GetRelationshipsFunc == nil {
 		panic("RDSAreaStoreMock.GetRelationshipsFunc: method is nil but RDSAreaStore.GetRelationships was just called")
 	}
 	callInfo := struct {
-		AreaCode string
+		AreaCode              string
+		RelationshipParameter string
 	}{
-		AreaCode: areaCode,
+		AreaCode:              areaCode,
+		RelationshipParameter: relationshipParameter,
 	}
 	mock.lockGetRelationships.Lock()
 	mock.calls.GetRelationships = append(mock.calls.GetRelationships, callInfo)
 	mock.lockGetRelationships.Unlock()
-	return mock.GetRelationshipsFunc(areaCode)
+	return mock.GetRelationshipsFunc(areaCode, relationshipParameter)
 }
 
 // GetRelationshipsCalls gets all the calls that were made to GetRelationships.
 // Check the length with:
 //     len(mockedRDSAreaStore.GetRelationshipsCalls())
 func (mock *RDSAreaStoreMock) GetRelationshipsCalls() []struct {
-	AreaCode string
+	AreaCode              string
+	RelationshipParameter string
 } {
 	var calls []struct {
-		AreaCode string
+		AreaCode              string
+		RelationshipParameter string
 	}
 	mock.lockGetRelationships.RLock()
 	calls = mock.calls.GetRelationships

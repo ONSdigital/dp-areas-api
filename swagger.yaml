@@ -80,6 +80,13 @@ paths:
         - "application/json"
       parameters:
         - $ref: '#/parameters/id'
+        - in: query
+          name: relationship
+          schema:
+            type: string
+          description: "type of relationship parameter requested"
+          example: "child"
+          required: false
       responses:
         200:
           description: "Successfully returned an area relationships for either E92000001 or W92000004 only"
@@ -125,7 +132,7 @@ definitions:
           name:
             type: string
             description: "The name of the ancestors area"
-            example: "ancestor"
+            example: "England"
 
   ErrorResponse:
     description: "A list of any errors"
