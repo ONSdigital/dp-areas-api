@@ -29,7 +29,8 @@ type Config struct {
 	DPPostgresLocalPort    string `envconfig:"DPPOSTGRESPORT"`
 	DPPostgresLocalDB      string `envconfig:"USEPOSTGRESDB"`
 
-	EnablePrivateEndpoints bool `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
+	EnablePrivateEndpoints bool   `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
+	S3Bucket               string `envconfig:"S3_BUCKET"`
 }
 
 func (c Config) GetRDSEndpoint() string {
@@ -63,6 +64,7 @@ func Get() (*Config, error) {
 		RDSDBMaxConnections:        4,
 		RDSDBMinConnections:        1,
 		EnablePrivateEndpoints:     true,
+		S3Bucket:                   "ons-dp-area-boundaries",
 	}
 
 	return cfg, envconfig.Process("", cfg)

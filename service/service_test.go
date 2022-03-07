@@ -136,8 +136,9 @@ func TestRun(t *testing.T) {
 			})
 
 			Convey("Then checkers are registered and the healthcheck and http server started", func() {
-				So(hcMock.AddCheckCalls(), ShouldHaveLength, 1)
-				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
+				So(hcMock.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMock.AddCheckCalls()[0].Name, ShouldResemble, "S3 healthchecker")
+				So(hcMock.AddCheckCalls()[1].Name, ShouldResemble, "RDS healthchecker")
 				So(initMock.DoGetHTTPServerCalls(), ShouldHaveLength, 1)
 				So(initMock.DoGetHTTPServerCalls()[0].BindAddr, ShouldEqual, "localhost:25500")
 				So(hcMock.StartCalls(), ShouldHaveLength, 1)
@@ -177,8 +178,9 @@ func TestRun(t *testing.T) {
 				So(err.Error(), ShouldResemble, fmt.Sprintf("unable to register checkers: %s", errAddheckFail.Error()))
 				So(svcList.HealthCheck, ShouldBeTrue)
 				// ADD CODE: add code to confirm checkers exist
-				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 1)
-				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "RDS healthchecker")
+				So(hcMockAddFail.AddCheckCalls(), ShouldHaveLength, 2)
+				So(hcMockAddFail.AddCheckCalls()[0].Name, ShouldResemble, "S3 healthchecker")
+				So(hcMockAddFail.AddCheckCalls()[1].Name, ShouldResemble, "RDS healthchecker")
 			})
 			Reset(func() {
 				// This reset is run after each `Convey` at the same scope (indentation)
