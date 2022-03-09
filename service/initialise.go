@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	s3 "github.com/ONSdigital/dp-s3"
+	s3 "github.com/ONSdigital/dp-s3/v2"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
@@ -60,8 +60,8 @@ func (e *ExternalServiceList) getRDSDB(ctx context.Context, cfg *config.Config) 
 	return rds, nil
 }
 
-func (e *ExternalServiceList) getS3Client(cfg *config.Config) (*s3.S3, error) {
-	return s3.NewClient(cfg.AWSRegion, cfg.S3Bucket)
+func (e *ExternalServiceList) getS3Client(cfg *config.Config) (*s3.Client, error) {
+	return s3.NewClientWithCredentials(cfg.AWSRegion, cfg.S3Bucket, cfg.AWSAccessKey, cfg.AWSSecretKey)
 
 }
 

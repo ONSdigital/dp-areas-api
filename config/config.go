@@ -31,6 +31,8 @@ type Config struct {
 
 	EnablePrivateEndpoints bool   `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	S3Bucket               string `envconfig:"S3_BUCKET"`
+	AWSAccessKey           string `envconfig:"AWS_ACCESS_KEY_ID"`
+	AWSSecretKey           string `envconfig:"AWS_SECRET_ACCESS_KEY"`
 }
 
 func (c Config) GetRDSEndpoint() string {

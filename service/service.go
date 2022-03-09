@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	s3 "github.com/ONSdigital/dp-s3"
+	s3 "github.com/ONSdigital/dp-s3/v2"
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -168,7 +168,7 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rds api.RDSAreaStore, s3Client *s3.S3) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rds api.RDSAreaStore, s3Client *s3.Client) (err error) {
 	hasErrors := false
 
 	if err := hc.AddCheck("S3 healthchecker", s3Client.Checker); err != nil {

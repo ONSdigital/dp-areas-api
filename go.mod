@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
-	github.com/ONSdigital/dp-s3 v1.10.0
+	github.com/ONSdigital/dp-s3/v2 v2.0.0-beta.4
 	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/aws/aws-sdk-go v1.43.12
 	github.com/gorilla/mux v1.8.0
