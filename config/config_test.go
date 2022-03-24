@@ -35,8 +35,9 @@ func TestConfig(t *testing.T) {
 					RDSDBConnectionTTL:         24 * time.Hour,
 					RDSDBMaxConnections:        4,
 					RDSDBMinConnections:        1,
-					EnablePrivateEndpoints: true,
-					S3Bucket: "ons-dp-area-boundaries",
+					EnablePrivateEndpoints:     true,
+					S3Bucket:                   "ons-dp-area-boundaries",
+					LoadSampleData:             false,
 				})
 			})
 

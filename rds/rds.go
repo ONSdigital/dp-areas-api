@@ -17,6 +17,7 @@ import (
 type RDS struct {
 	conn             pgx.PGXPool
 	useLocalPostgres bool
+	loadSampleData   bool
 }
 
 func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
@@ -38,6 +39,10 @@ func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
 	if err != nil {
 		log.Error(ctx, "error connecting to rds instance", err)
 		return err
+	}
+
+	if cfg.LoadSampleData {
+		r.loadSampleData = true
 	}
 
 	r.conn = rdsConn
@@ -105,7 +110,7 @@ func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {
 		log.Info(ctx, "query executed successfully:", logData)
 	}
 	//  seed local instance with test data
-	if r.useLocalPostgres {
+	if r.useLocalPostgres || r.loadSampleData {
 		err = r.insertAreaTypeTestData(ctx)
 		if err != nil {
 			return err
