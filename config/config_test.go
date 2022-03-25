@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -46,6 +47,44 @@ func TestConfig(t *testing.T) {
 				newCfg, newErr := Get()
 				So(newErr, ShouldBeNil)
 				So(newCfg, ShouldResemble, cfg)
+			})
+		})
+	})
+
+	Convey("Given the app config contains sensitive secrets", t, func() {
+		cfg := &Config{
+			BindAddr:                   "localhost:25500",
+			GracefulShutdownTimeout:    5 * time.Second,
+			HealthCheckInterval:        30 * time.Second,
+			HealthCheckCriticalTimeout: 90 * time.Second,
+			DPPostgresLocal:            true,
+			DPPostgresUserName:         "postgres",
+			DPPostgresLocalPort:        "5432",
+			DPPostgresLocalDB:          "dp-areas-api",
+			RDSDBConnectionTTL:         24 * time.Hour,
+			RDSDBMaxConnections:        4,
+			RDSDBMinConnections:        1,
+			EnablePrivateEndpoints:     true,
+			S3Bucket:                   "ons-dp-area-boundaries",
+			LoadSampleData:             false,
+			AWSAccessKey:               "awsAccessKeyID",     // Sensitive field.
+			AWSSecretKey:               "awsSecretAccessKey", // Sensitive field.
+		}
+
+		Convey("When the config struct is marshalled to JSON", func() {
+			b, err := json.Marshal(cfg)
+			So(err, ShouldBeNil)
+
+			out := string(b)
+
+			Convey("Then the output does not contain the AWS Access Key ID", func() {
+				So(out, ShouldNotContainSubstring, "AWS_ACCESS_KEY_ID")
+				So(out, ShouldNotContainSubstring, "awsAccessKeyID")
+			})
+
+			Convey("And the output does not contain the AWS Secret Access Key", func() {
+				So(out, ShouldNotContainSubstring, "AWS_SECRET_ACCESS_KEY")
+				So(out, ShouldNotContainSubstring, "awsSecretAccessKey")
 			})
 		})
 	})
