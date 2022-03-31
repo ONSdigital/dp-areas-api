@@ -154,7 +154,7 @@ func (r *RDS) insertAreaTypeTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_type table query executed successfully:", logData)
 	}
 	return nil
@@ -192,7 +192,7 @@ func (r *RDS) upsertAreaTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area table query executed successfully:", logData)
 	}
 	return nil
@@ -257,7 +257,7 @@ func (r *RDS) insertRelationshipTypeTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "relationship_type table query executed successfully:", logData)
 	}
 	return nil
@@ -293,7 +293,7 @@ func (r *RDS) insertAreaNameTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_name table query executed successfully:", logData)
 	}
 	return nil
@@ -316,7 +316,7 @@ func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_relationship table query executed successfully:", logData)
 	}
 	return nil
