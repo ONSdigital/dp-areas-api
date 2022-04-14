@@ -36,6 +36,7 @@ func TestConfig(t *testing.T) {
 					RDSDBMaxConnections:        4,
 					RDSDBMinConnections:        1,
 					EnablePrivateEndpoints: true,
+					S3Bucket: "ons-dp-area-boundaries",
 				})
 			})
 

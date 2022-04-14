@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	s3 "github.com/ONSdigital/dp-s3/v2"
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -53,6 +54,13 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
+	// Get S3 client
+	s3Client, err := serviceList.getS3Client(cfg)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise s3 client", err)
+		return nil, err
+	}
+
 	// only run publishing user or if pointing at local postgres instance
 	if cfg.RDSDBUser == dpPublishingUser || cfg.DPPostgresLocal {
 		// rds table schema builder
@@ -86,7 +94,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, cfg, hc, rds); err != nil {
+	if err := registerCheckers(ctx, cfg, hc, rds, s3Client); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -160,9 +168,13 @@ func (svc *Service) Close(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rds api.RDSAreaStore) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, hc HealthChecker, rds api.RDSAreaStore, s3Client *s3.Client) (err error) {
 	hasErrors := false
 
+	if err := hc.AddCheck("S3 healthchecker", s3Client.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for s3 client", err)
+	}
 	if err := hc.AddCheck("RDS healthchecker", health.RDSHealthCheck(ctx, cfg, rds)); err != nil {
 		hasErrors = true
 		log.Error(ctx, "error adding check for rds client", err)

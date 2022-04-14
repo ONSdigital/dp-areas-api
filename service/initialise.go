@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	s3 "github.com/ONSdigital/dp-s3/v2"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
@@ -57,6 +58,11 @@ func (e *ExternalServiceList) getRDSDB(ctx context.Context, cfg *config.Config) 
 	}
 	e.RDS = true
 	return rds, nil
+}
+
+func (e *ExternalServiceList) getS3Client(cfg *config.Config) (*s3.Client, error) {
+	return s3.NewClientWithCredentials(cfg.AWSRegion, cfg.S3Bucket, cfg.AWSAccessKey, cfg.AWSSecretKey)
+
 }
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
