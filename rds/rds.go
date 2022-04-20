@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -61,10 +62,23 @@ func (r *RDS) ValidateArea(areaCode string) error {
 
 func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	area := models.AreasDataResults{}
-	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &area.GeometricData, &area.Visible, &area.AreaType)
+	var BoundaryDataBlob string
+	GeometricData := make([][][2]float64, 0)
+
+	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &BoundaryDataBlob, &area.Visible, &area.AreaType)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(BoundaryDataBlob) != 0 {
+		err = json.Unmarshal([]byte(BoundaryDataBlob), &GeometricData)
+
+		if err != nil {
+			return nil, err
+		}
+		area.GeometricData = GeometricData
+	}
+
 	return &area, nil
 }
 
@@ -333,7 +347,6 @@ func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
 	for rows.Next() {
 		var rs models.AreasAncestors
 		rows.Scan(&rs.Id, &rs.Name)
-		fmt.Println(rs)
 		ancestors = append(ancestors, &rs)
 	}
 

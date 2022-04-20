@@ -23,7 +23,7 @@ func TestRDS_GetArea(t *testing.T) {
 				countryType := "Country"
 				*dest[0].(*string) = "W92000004"
 				*(dest[1].(**string)) = &walesName
-				*dest[2].(**string) = nil
+				*dest[2].(*string) = ""
 				*dest[3].(**bool) = &isVisible
 				*dest[4].(**string) = &countryType
 				return nil

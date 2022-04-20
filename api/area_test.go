@@ -29,11 +29,13 @@ const (
 )
 
 var (
-	EnglandName     = "England"
-	WalesName       = "Wales"
-	SheffieldName   = "Sheffield"
-	isVisible       = true
-	countryAreaType = "Country"
+	EnglandName             = "England"
+	WalesName               = "Wales"
+	SheffieldName           = "Sheffield"
+	isVisible               = true
+	countryAreaType         = "Country"
+	latitude        float64 = 53.65955162358695
+	longitude       float64 = -1.434126224128561
 )
 
 var mu sync.Mutex
@@ -63,7 +65,7 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
-				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, Visible: &isVisible, AreaType: &countryAreaType}, nil
+				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
 			},
 			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
 				return ancestors[WalesAreaData], nil
@@ -81,6 +83,7 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
 				So(returnedArea.Code, ShouldEqual, EnglandAreaData)
+				So(returnedArea.GeometricData[0][0], ShouldResemble, [2]float64{longitude, latitude})
 				So(*returnedArea.Name, ShouldEqual, "England")
 				So(*returnedArea.AreaType, ShouldEqual, "Country")
 				So(*returnedArea.Visible, ShouldEqual, true)
@@ -488,4 +491,17 @@ func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 
 		})
 	})
+}
+
+func testGeometricData() [][][2]float64 {
+	var gd [][][2]float64
+	gd = make([][][2]float64, 1)
+
+	for i := range gd {
+		gd[i] = make([][2]float64, 1)
+		for _ = range gd[i] {
+			gd[0][0] = [2]float64{longitude, latitude}
+		}
+	}
+	return gd
 }
