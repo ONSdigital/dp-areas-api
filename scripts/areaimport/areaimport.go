@@ -5,16 +5,13 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-areas-api/models"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var areaTypeAndCode = map[string]string{
@@ -33,29 +30,12 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
-// http://127.0.0.1:25500/v1/areas/
-// /Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv
-type Config struct {
-	CSVFilePath   string `envconfig:"CSV_FILE_PATH" required:"true"`
-	AreaUpdateUrl string `envconfig:"AREA_UPDATE_URL" required:"true"`
-}
-type logs struct {
-	errors  []string
-	success []string
-}
-
 func BoolPointer(b bool) *bool {
 	return &b
 }
 
-func importChangeHistoryAreaInfo() logs {
-	var errors []string
-	var success []string
-	var areaChildInfo []models.AreaParams
-	csvFile, err := os.Open(config.CSVFilePath)
-	if err != nil {
-		log.Fatalf("Failed to open the CSV on path %+v:", err)
-	}
+func importChangeHistoryAreaInfo() {
+	csvFile, _ := os.Open("/Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv")
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 
 	for {
@@ -71,14 +51,15 @@ func importChangeHistoryAreaInfo() logs {
 		if line[10] != "live" {
 			continue
 		}
+
 		if line[1] == "" {
-			errors = append(errors, "found area info with empty name: "+line[0])
+			log.Printf("found area info with empty name: %+v", line[0])
 			continue
 		}
 
 		_, areaTypeFound := areaTypeAndCode[line[8]]
 		if !areaTypeFound {
-			errors = append(errors, "area type not drive for: "+line[0])
+			log.Printf("area type not drive for: %+v", line[0])
 			continue
 		}
 
@@ -95,76 +76,39 @@ func importChangeHistoryAreaInfo() logs {
 			ActiveTo:   &active_to,
 		}
 
-		hectares, _ := strconv.ParseFloat(line[11], 64)
 		areaInfo := models.AreaParams{
 			Code:         line[0],
 			AreaName:     &areaName,
 			Visible:      BoolPointer(true),
 			ActiveFrom:   &active_from,
 			ActiveTo:     &active_to,
-			ParentCode:   line[7],
-			AreaHectares: hectares,
+			ParentId:     line[7],
+			AreaHectares: line[11],
 		}
 
-		if areaInfo.ParentCode != "" {
-			areaChildInfo = append(areaChildInfo, areaInfo)
-			continue
-		}
+		json, err := json.Marshal(areaInfo)
 
-		resp, err := importAreaInfo(config, areaInfo)
 		if err != nil {
-			log.Fatal("Could not parse time:", err)
+			log.Fatalf("json marshalling failed: %+v", err)
 		}
 
-		success = append(success, "api response for line[0]: "+resp.Status)
+		client := &http.Client{}
 
-	}
-
-	if len(areaChildInfo) > 0 {
-		for _, v := range areaChildInfo {
-			resp, err := importAreaInfo(config, v)
-			if err != nil {
-				log.Fatal("Could not parse time:", err)
-			}
-			success = append(success, "api response for line[0]: "+resp.Status)
+		req, err := http.NewRequest(http.MethodPut, "http://127.0.0.1:25500/v1/areas/"+line[0], bytes.NewBuffer(json))
+		if err != nil {
+			log.Fatalf("request failed %+v", err)
 		}
-	}
-	logs := logs{
-		errors:  errors,
-		success: success,
-	}
-	return logs
-}
-func getConfig() *Config {
-	conf := &Config{}
-	envconfig.Process("", conf)
-	return conf
-}
-func importAreaInfo(config *Config, areaInfo models.AreaParams) (*http.Response, error) {
-	json, err := json.Marshal(areaInfo)
 
-	if err != nil {
-		return nil, err
-	}
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Fatalf("error response from server: %+v", err)
+		}
 
-	client := &http.Client{}
+		log.Printf("api response is (%s): %+v \n", line[0], resp)
 
-	req, err := http.NewRequest(http.MethodPut, config.AreaUpdateUrl+areaInfo.Code, bytes.NewBuffer(json))
-	if err != nil {
-		return nil, err
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return resp, nil
 }
 func main() {
-	config := getConfig()
-	logs := importChangeHistoryAreaInfo(config)
-
-	fmt.Println(logs)
+	importChangeHistoryAreaInfo()
 }
