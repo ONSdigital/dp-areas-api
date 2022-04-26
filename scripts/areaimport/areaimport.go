@@ -5,6 +5,7 @@ import (
     "bytes"
     "encoding/csv"
     "encoding/json"
+    "fmt"
     "io"
     "log"
     "net/http"
@@ -30,11 +31,18 @@ var areaTypeAndCode = map[string]string{
     "W05": "Electoral Wards",
 }
 
+type logs struct {
+    errors  []string
+    success []string
+}
+
 func BoolPointer(b bool) *bool {
     return &b
 }
 
-func importChangeHistoryAreaInfo() {
+func importChangeHistoryAreaInfo() logs {
+    var errors []string
+    var success []string
     csvFile, _ := os.Open("/Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv")
     reader := csv.NewReader(bufio.NewReader(csvFile))
 
@@ -50,16 +58,15 @@ func importChangeHistoryAreaInfo() {
         }
         if line[10] != "live" {
             continue
-        }
-
+        }        
         if line[1] == "" {
-            log.Printf("found area info with empty name: %+v", line[0])
+            errors = append(errors, "found area info with empty name: "+line[0])
             continue
         }
 
         _, areaTypeFound := areaTypeAndCode[line[8]]
         if !areaTypeFound {
-            log.Printf("area type not drive for: %+v", line[0])
+            errors = append(errors, "area type not drive for: "+line[0])
             continue
         }
 
@@ -105,10 +112,17 @@ func importChangeHistoryAreaInfo() {
             log.Fatalf("error response from server: %+v", err)
         }
 
-        log.Printf("api response is (%s): %+v \n", line[0], resp)
+        success = append(success, "api response for line[0]: "+resp.Status)
 
     }
+    logs := logs{
+        errors:  errors,
+        success: success,
+    }
+    return logs
 }
 func main() {
-    importChangeHistoryAreaInfo()
+    result := importChangeHistoryAreaInfo()
+
+    fmt.Println(result)
 }
