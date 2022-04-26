@@ -48,8 +48,8 @@ type AreaParams struct {
 	ActiveTo      *time.Time `json:"active_to"`
 	Visible       *bool      `json:"visible"`
 	AreaType      string
-	ParentCode    string  `json:"parent_code"`
-	AreaHectares  float64 `json:"area_hectares"`
+	ParentId      string
+	AreaHectares  string
 }
 
 func (a *AreaParams) ValidateAreaRequest(ctx context.Context) []error {
@@ -95,7 +95,7 @@ func (a *AreaParams) SetAreaType(ctx context.Context) {
 type AreasDataResults struct {
 	Code          string           `json:"code"`
 	Name          *string          `json:"name"`
-	GeometricData [][][2]float64   `json:"geometry"`
+	GeometricData *string          `json:"geometry"`
 	Visible       *bool            `json:"visible"`
 	AreaType      *string          `json:"area_type"`
 	Ancestors     []AreasAncestors `json:"ancestors"`
