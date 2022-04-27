@@ -246,7 +246,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 
 	if area.ParentCode != "" {
 		var relationshipId int
-		err = tx.QueryRow(ctx, getRelationShipId).Scan(&relationshipId)
+		err = tx.QueryRow(ctx, getRelationShipId, "child").Scan(&relationshipId)
 		if err != nil {
 			return isInserted, fmt.Errorf("failed to get child relationshipid: %+v", err)
 		}
@@ -255,7 +255,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 
 		if err != nil {
 			tx.Rollback(ctx)
-			return isInserted, fmt.Errorf("failed to upsert into area relationship: %+v", err)
+			return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
 		}
 	}
 
