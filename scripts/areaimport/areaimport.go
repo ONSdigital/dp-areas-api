@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-areas-api/models"
@@ -43,7 +44,7 @@ func BoolPointer(b bool) *bool {
 func importChangeHistoryAreaInfo() logs {
 	var errors []string
 	var success []string
-	csvFile, _ := os.Open("/Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv")
+	csvFile, _ := os.Open("~/Downloads/Code_History_Database_(December_2021)_UK/ChangeHistory.csv")
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 
 	for {
@@ -83,14 +84,15 @@ func importChangeHistoryAreaInfo() logs {
 			ActiveTo:   &active_to,
 		}
 
+		hectares, _ := strconv.ParseFloat(line[11], 64)
 		areaInfo := models.AreaParams{
 			Code:         line[0],
 			AreaName:     &areaName,
 			Visible:      BoolPointer(true),
 			ActiveFrom:   &active_from,
 			ActiveTo:     &active_to,
-			ParentId:     line[7],
-			AreaHectares: line[11],
+			ParentCode:   line[7],
+			AreaHectares: hectares,
 		}
 
 		json, err := json.Marshal(areaInfo)

@@ -15,7 +15,7 @@ var (
 // DatabaseSchema database schema model
 type DatabaseSchema struct {
 	DBName,
-	SchemaString  string
+	SchemaString string
 	ExecutionList []string
 	Tables        map[string]map[string]interface{}
 }
@@ -42,7 +42,7 @@ func (db *DatabaseSchema) TableSchemaBuilder() {
 	for table := range db.Tables {
 		var (
 			schemaHandleCols = db.Tables[table]["columns"].(map[string]interface{})
-			colArray = make([]string, 0)
+			colArray         = make([]string, 0)
 		)
 		for name, data := range schemaHandleCols {
 			d := data.(map[string]interface{})
@@ -64,4 +64,3 @@ func cleanString(str string) (*string, error) {
 	cleanSchemaString := reg.ReplaceAllString(str, "")
 	return &cleanSchemaString, nil
 }
-

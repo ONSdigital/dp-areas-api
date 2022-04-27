@@ -31,6 +31,10 @@ const DBSchema = `{
                     "area_type_id": {
                         "data_type": "INT",
                         "constraints": "REFERENCES area_type(id)"
+                    },
+                    "land_hectares": {
+                        "data_type": "FLOAT(4)",
+                        "constraints": ""
                     }
                 }
             },
