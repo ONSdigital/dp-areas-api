@@ -93,7 +93,7 @@ func (a *AreaParams) SetAreaType(ctx context.Context) {
 type AreasDataResults struct {
 	Code          string           `json:"code"`
 	Name          *string          `json:"name"`
-	GeometricData *string          `json:"geometry"`
+	GeometricData [][][2]float64   `json:"geometry"`
 	Visible       *bool            `json:"visible"`
 	AreaType      *string          `json:"area_type"`
 	Ancestors     []AreasAncestors `json:"ancestors"`

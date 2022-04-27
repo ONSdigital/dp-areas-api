@@ -31,8 +31,9 @@ type Config struct {
 
 	EnablePrivateEndpoints bool   `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	S3Bucket               string `envconfig:"S3_BUCKET"`
-	AWSAccessKey           string `envconfig:"AWS_ACCESS_KEY_ID"`
-	AWSSecretKey           string `envconfig:"AWS_SECRET_ACCESS_KEY"`
+	AWSAccessKey           string `envconfig:"AWS_ACCESS_KEY_ID" json:"-"`     // Sensitive field which should not be output in JSON.
+	AWSSecretKey           string `envconfig:"AWS_SECRET_ACCESS_KEY" json:"-"` // Sensitive field which should not be output in JSON.
+	LoadSampleData         bool   `envconfig:"LOAD_SAMPLE_DATA"`
 }
 
 func (c Config) GetRDSEndpoint() string {
@@ -66,6 +67,7 @@ func Get() (*Config, error) {
 		RDSDBMaxConnections:        4,
 		RDSDBMinConnections:        1,
 		EnablePrivateEndpoints:     true,
+		LoadSampleData:             false,
 		S3Bucket:                   "ons-dp-area-boundaries",
 	}
 

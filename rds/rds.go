@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -17,6 +18,7 @@ import (
 type RDS struct {
 	conn             pgx.PGXPool
 	useLocalPostgres bool
+	loadSampleData   bool
 }
 
 func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
@@ -40,6 +42,10 @@ func (r *RDS) Init(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
+	if cfg.LoadSampleData {
+		r.loadSampleData = true
+	}
+
 	r.conn = rdsConn
 	return nil
 }
@@ -56,10 +62,23 @@ func (r *RDS) ValidateArea(areaCode string) error {
 
 func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	area := models.AreasDataResults{}
-	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &area.GeometricData, &area.Visible, &area.AreaType)
+	var BoundaryDataBlob string
+	GeometricData := make([][][2]float64, 0)
+
+	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &BoundaryDataBlob, &area.Visible, &area.AreaType)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(BoundaryDataBlob) != 0 {
+		err = json.Unmarshal([]byte(BoundaryDataBlob), &GeometricData)
+
+		if err != nil {
+			return nil, err
+		}
+		area.GeometricData = GeometricData
+	}
+
 	return &area, nil
 }
 
@@ -105,7 +124,7 @@ func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {
 		log.Info(ctx, "query executed successfully:", logData)
 	}
 	//  seed local instance with test data
-	if r.useLocalPostgres {
+	if r.useLocalPostgres || r.loadSampleData {
 		err = r.insertAreaTypeTestData(ctx)
 		if err != nil {
 			return err
@@ -149,7 +168,7 @@ func (r *RDS) insertAreaTypeTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_type table query executed successfully:", logData)
 	}
 	return nil
@@ -187,7 +206,7 @@ func (r *RDS) upsertAreaTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area table query executed successfully:", logData)
 	}
 	return nil
@@ -252,7 +271,7 @@ func (r *RDS) insertRelationshipTypeTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "relationship_type table query executed successfully:", logData)
 	}
 	return nil
@@ -288,7 +307,7 @@ func (r *RDS) insertAreaNameTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_name table query executed successfully:", logData)
 	}
 	return nil
@@ -311,7 +330,7 @@ func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		rows.Close()
 		log.Info(ctx, "area_relationship table query executed successfully:", logData)
 	}
 	return nil
@@ -328,7 +347,6 @@ func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
 	for rows.Next() {
 		var rs models.AreasAncestors
 		rows.Scan(&rs.Id, &rs.Name)
-		fmt.Println(rs)
 		ancestors = append(ancestors, &rs)
 	}
 
