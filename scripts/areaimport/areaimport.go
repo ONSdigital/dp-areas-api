@@ -123,6 +123,7 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 		if err != nil {
 			log.Fatalf("error response from server: %+v", err)
 		}
+		defer resp.Body.Close()
 
 		success = append(success, "api response for line[0]: "+resp.Status)
 
@@ -140,7 +141,6 @@ func getConfig() *Config {
 }
 func main() {
 	config := getConfig()
-	fmt.Println(config)
 	result := importChangeHistoryAreaInfo(config)
 
 	fmt.Println(result)
