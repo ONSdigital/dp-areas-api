@@ -32,6 +32,12 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
+// http://127.0.0.1:25500/v1/areas/
+// /Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv
+type Config struct {
+	CSVFilePath   string `envconfig:"CSV_FILE_PATH" required:"true"`
+	AreaUpdateUrl string `envconfig:"AREA_UPDATE_URL" required:"true"`
+}
 type logs struct {
 	errors  []string
 	success []string
@@ -44,7 +50,10 @@ func BoolPointer(b bool) *bool {
 func importChangeHistoryAreaInfo() logs {
 	var errors []string
 	var success []string
-	csvFile, _ := os.Open("~/Downloads/Code_History_Database_(December_2021)_UK/ChangeHistory.csv")
+	csvFile, err := os.Open(config.CSVFilePath)
+	if err != nil {
+		log.Fatalf("Failed to open the CSV on path %+v:", err)
+	}
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 
 	for {
@@ -124,7 +133,9 @@ func importChangeHistoryAreaInfo() logs {
 	return logs
 }
 func main() {
-	result := importChangeHistoryAreaInfo()
+	config := getConfig()
+	fmt.Println(config)
+	result := importChangeHistoryAreaInfo(config)
 
 	fmt.Println(result)
 }
