@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ONSdigital/dp-areas-api/config"
@@ -61,10 +62,23 @@ func (r *RDS) ValidateArea(areaCode string) error {
 
 func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	area := models.AreasDataResults{}
-	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &area.GeometricData, &area.Visible, &area.AreaType)
+	var BoundaryDataBlob string
+	GeometricData := make([][][2]float64, 0)
+
+	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &BoundaryDataBlob, &area.Visible, &area.AreaType)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(BoundaryDataBlob) != 0 {
+		err = json.Unmarshal([]byte(BoundaryDataBlob), &GeometricData)
+
+		if err != nil {
+			return nil, err
+		}
+		area.GeometricData = GeometricData
+	}
+
 	return &area, nil
 }
 
@@ -214,7 +228,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 	if err != nil {
 		return isInserted, fmt.Errorf("failed to get area type: %+v", err)
 	}
-	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId, area.Visible}
+	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId, area.Visible, area.AreaHectares}
 
 	err = tx.QueryRow(ctx, upsertArea, areaDetails...).Scan(&isInserted)
 
@@ -228,6 +242,21 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 	if err != nil {
 		tx.Rollback(ctx)
 		return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
+	}
+
+	if area.ParentCode != "" {
+		var relationshipId int
+		err = tx.QueryRow(ctx, getRelationShipId, "child").Scan(&relationshipId)
+		if err != nil {
+			return isInserted, fmt.Errorf("failed to get child relationshipid: %+v", err)
+		}
+
+		_, err = tx.Exec(ctx, areaRelationshipInsertTransaction, area.ParentCode, area.Code, relationshipId)
+
+		if err != nil {
+			tx.Rollback(ctx)
+			return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
+		}
 	}
 
 	err = tx.Commit(ctx)
@@ -333,7 +362,6 @@ func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
 	for rows.Next() {
 		var rs models.AreasAncestors
 		rows.Scan(&rs.Id, &rs.Name)
-		fmt.Println(rs)
 		ancestors = append(ancestors, &rs)
 	}
 
