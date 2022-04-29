@@ -255,7 +255,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 
 		if err != nil {
 			tx.Rollback(ctx)
-			return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
+			return isInserted, fmt.Errorf("failed to upsert into area relationship: %+v", err)
 		}
 	}
 
