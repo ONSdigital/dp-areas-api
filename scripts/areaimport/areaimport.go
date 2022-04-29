@@ -51,6 +51,7 @@ func BoolPointer(b bool) *bool {
 func importChangeHistoryAreaInfo(config *Config) logs {
 	var errors []string
 	var success []string
+	var areaChildInfo []models.AreaParams
 	csvFile, err := os.Open(config.CSVFilePath)
 	if err != nil {
 		log.Fatalf("Failed to open the CSV on path %+v:", err)
@@ -105,27 +106,28 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 			AreaHectares: hectares,
 		}
 
-		json, err := json.Marshal(areaInfo)
-
-		if err != nil {
-			log.Fatalf("json marshalling failed: %+v", err)
+		if areaInfo.ParentCode != "" {
+			areaChildInfo = append(areaChildInfo, areaInfo)
+			continue
 		}
 
-		client := &http.Client{}
-
-		req, err := http.NewRequest(http.MethodPut, config.AreaUpdateUrl+line[0], bytes.NewBuffer(json))
+		resp, err := importAreaInfo(config, areaInfo)
 		if err != nil {
-			log.Fatalf("request failed %+v", err)
-		}
-
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatalf("error response from server: %+v", err)
+			log.Fatal("Could not parse time:", err)
 		}
 
 		success = append(success, "api response for line[0]: "+resp.Status)
 
+	}
+
+	if len(areaChildInfo) > 0 {
+		for _, v := range areaChildInfo {
+			resp, err := importAreaInfo(config, v)
+			if err != nil {
+				log.Fatal("Could not parse time:", err)
+			}
+			success = append(success, "api response for line[0]: "+resp.Status)
+		}
 	}
 	logs := logs{
 		errors:  errors,
@@ -138,10 +140,31 @@ func getConfig() *Config {
 	envconfig.Process("", conf)
 	return conf
 }
+func importAreaInfo(config *Config, areaInfo models.AreaParams) (*http.Response, error) {
+	json, err := json.Marshal(areaInfo)
+
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest(http.MethodPut, config.AreaUpdateUrl+areaInfo.Code, bytes.NewBuffer(json))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return resp, nil
+}
 func main() {
 	config := getConfig()
-	fmt.Println(config)
-	result := importChangeHistoryAreaInfo(config)
+	logs := importChangeHistoryAreaInfo(config)
 
-	fmt.Println(result)
+	fmt.Println(logs)
 }
