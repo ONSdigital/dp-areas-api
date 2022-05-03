@@ -36,8 +36,7 @@ https://eu-west-1.console.aws.amazon.com/rds/home?region=eu-west-1#database:id=d
 ```
 export AWS_PROFILE="development"
 export PG_USER="dp-areas-api-publishing"
-export PGPASSWORD="$(aws rds generate-db-auth-token --hostname 
- --port 5432 --region eu-west-1 --username dp-areas-api-publishing)"
+export PGPASSWORD="$(aws rds generate-db-auth-token --hostname develop-area-profiles-postgres.cluster-cpviojtnaxsj.eu-west-1.rds.amazonaws.com --port 5432 --region eu-west-1 --username dp-areas-api-publishing)"
 ```
 
 These config variables are only required if running the dp-areas-api branch I’m working on (https://github.com/ONSdigital/dp-areas-api/tree/feature/postgres_healthcheck):
@@ -83,15 +82,12 @@ wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
 6. Finally, execute the sql command to open a tunnel to the AWS AURORA RDS instance:
 
 ```
-psql -h url to rds instance -p 5432 "sslmode=verify-full sslrootcert="rds-ca-2019-root.pem" dbname=dp-areas-api user=dp-areas-api-publishing"
+psql -h develop-area-profiles-postgres.cluster-cpviojtnaxsj.eu-west-1.rds.amazonaws.com -p 5432 "sslmode=verify-full sslrootcert=/Users/indra/Docs/rds-ca-2019-root.pem dbname=dp-areas-api user=dp-areas-api-publishing"
 ```
 
-### Add env variable to import area info
-```
+### Add evn variable to import area info
 export CSV_FILE_PATH="<CSV_FILE_PATH>"
 export AREA_UPDATE_URL=http://127.0.0.1:25500/v1/areas/
-```
-
 
 ### Contributing
 
