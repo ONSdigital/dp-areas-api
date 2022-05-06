@@ -228,7 +228,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 	if err != nil {
 		return isInserted, fmt.Errorf("failed to get area type: %+v", err)
 	}
-	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId, area.Visible}
+	areaDetails := []interface{}{area.Code, area.ActiveFrom, area.ActiveTo, area.GeometricData, areaTypeId, area.Visible, area.AreaHectares}
 
 	err = tx.QueryRow(ctx, upsertArea, areaDetails...).Scan(&isInserted)
 
@@ -242,6 +242,21 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 	if err != nil {
 		tx.Rollback(ctx)
 		return isInserted, fmt.Errorf("failed to upsert into area_name: %+v", err)
+	}
+
+	if area.ParentCode != "" {
+		var relationshipId int
+		err = tx.QueryRow(ctx, getRelationShipId).Scan(&relationshipId)
+		if err != nil {
+			return isInserted, fmt.Errorf("failed to get child relationshipid: %+v", err)
+		}
+
+		_, err = tx.Exec(ctx, areaRelationshipInsertTransaction, area.ParentCode, area.Code, relationshipId)
+
+		if err != nil {
+			tx.Rollback(ctx)
+			return isInserted, fmt.Errorf("failed to upsert into area relationship: %+v", err)
+		}
 	}
 
 	err = tx.Commit(ctx)

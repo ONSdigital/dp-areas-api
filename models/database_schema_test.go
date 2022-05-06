@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	area_query              = "CREATE TABLE IF NOT EXISTS area (PRIMARY KEY (code), active_from TIMESTAMP , active_to TIMESTAMP , area_type_id INT REFERENCES area_type(id), code VARCHAR(50) , geometric_area VARCHAR , visible BOOLEAN )"
+	area_query              = "CREATE TABLE IF NOT EXISTS area (PRIMARY KEY (code), active_from TIMESTAMP , active_to TIMESTAMP , area_type_id INT REFERENCES area_type(id), code VARCHAR(50) , geometric_area VARCHAR , land_hectares FLOAT(4) , visible BOOLEAN )"
 	area_type_query         = "CREATE TABLE IF NOT EXISTS area_type (PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
 	area_name_query         = "CREATE TABLE IF NOT EXISTS area_name (PRIMARY KEY (id), active_from TIMESTAMP , active_to TIMESTAMP , area_code VARCHAR(50) REFERENCES area(code), id SERIAL , name VARCHAR(50) UNIQUE)"
 	relationship_type_query = "CREATE TABLE IF NOT EXISTS relationship_type (PRIMARY KEY (id), id SERIAL , name VARCHAR(50) )"
@@ -29,7 +29,7 @@ func TestSetup(t *testing.T) {
 			// sample from built schema model
 			So(databaseSchema.Tables["area"]["creation_order"].(float64), ShouldEqual, 2)
 			So(databaseSchema.Tables["area"]["primary_keys"].(string), ShouldEqual, "code")
-			So(len(databaseSchema.Tables["area"]["columns"].(map[string]interface{})), ShouldEqual, 6)
+			So(len(databaseSchema.Tables["area"]["columns"].(map[string]interface{})), ShouldEqual, 7)
 		})
 
 		Convey("When an invalid schema string is used - error generated", func() {
