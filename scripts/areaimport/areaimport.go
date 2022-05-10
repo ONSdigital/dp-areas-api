@@ -46,7 +46,7 @@ func BoolPointer(b bool) *bool {
 	return &b
 }
 
-func importChangeHistoryAreaInfo() logs {
+func importChangeHistoryAreaInfo(config *Config) logs {
 	var errors []string
 	var success []string
 	var areaChildInfo []models.AreaParams
