@@ -48,6 +48,8 @@ type AreaParams struct {
 	ActiveTo      *time.Time `json:"active_to"`
 	Visible       *bool      `json:"visible"`
 	AreaType      string
+	ParentCode    string  `json:"parent_code"`
+	AreaHectares  float64 `json:"area_hectares"`
 }
 
 func (a *AreaParams) ValidateAreaRequest(ctx context.Context) []error {
