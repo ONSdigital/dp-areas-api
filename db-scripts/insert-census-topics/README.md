@@ -24,7 +24,7 @@ Example of the (optional) `<options>` part:
 It is recommended to perform a dry run and check the result looks as expected:
 
 ```
-mongo localhost:27017/topics --eval 'cfg={verbose:true, update:false}' insert-census-topics.js
+mongo localhost:27017/topics --eval 'cfg={verbose:true, insert:false}' insert-census-topics.js
 ```
 
 Note: when connecting to a TLS-enabled DocumentDB cluster (sandbox or prod), you'll need to add the following options:
