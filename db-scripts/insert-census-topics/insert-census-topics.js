@@ -5,6 +5,7 @@
 const topicsCollection = 'topics'
 const contentCollection = 'content'
 const idSize = 4
+const rootId = "topic_root"
 const idAlphabet = '123456789'
 const apiUrl = "http://localhost:25300/topics/"
 
@@ -113,6 +114,16 @@ censusTopic.current.links.subtopics = {
 censusTopic.next.subtopics_ids = []
 censusTopic.current.subtopics_ids = []
 
+// Add census topic to subtopics of root
+var rootTopicCursor = db.getCollection(topicsCollection).find({id:rootId})
+if (!rootTopicCursor.hasNext()) {
+    print("Error: Couldn't find the root topic")
+    quit(0)
+}
+var rootTopic = rootTopicCursor.next()
+rootTopic.next.subtopics_ids.push(censusTopic.id)
+rootTopic.current.subtopics_ids.push(censusTopic.id)
+
 // Create census subtopics
 for (var idx in subtopics) {
     var subtopicDefiniton = subtopics[idx];
@@ -136,14 +147,18 @@ for (var idx in subtopics) {
     censusTopic.current.subtopics_ids.push(topic.id)
 }
 
-var coensusContent = createContent(censusTopic.id)
+var censusContent = createContent(censusTopic.id)
 if (cfg.verbose) {
     print("New Census topic")
     print(JSON.stringify(censusTopic))
     print("New Census content")
-    print(JSON.stringify(coensusContent))
+    print(JSON.stringify(censusContent))
+    print("New topic root")
+    print(JSON.stringify(rootTopic))
 }
+
 if (cfg.insert) {
     db.getCollection(topicsCollection).insertOne(censusTopic)
-    db.getCollection(contentCollection).insertOne(coensusContent)
+    db.getCollection(contentCollection).insertOne(censusContent)
+    db.getCollection(topicsCollection).updateOne({id:rootId}, {$set : rootTopic} )
 }
