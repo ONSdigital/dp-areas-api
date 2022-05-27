@@ -145,10 +145,37 @@ func (r *RDS) BuildTables(ctx context.Context, executionList []string) error {
 		if err != nil {
 			return err
 		}
+		err = r.insertBoundariesTestData(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
+func (r *RDS) insertBoundariesTestData(ctx context.Context) error {
+	boundariesData := DBRelationalData.BoundariesData
+	// build queries
+	for area_id := range boundariesData {
+		queryValues := boundariesData[area_id]["values"].(map[string]interface{})
+		logData := log.Data{"exceuting query": area_id}
+
+		rows, err := r.conn.Query(
+			ctx,
+			boundariesInsertTransaction,
+			area_id,
+			queryValues["centroid_bng"],
+			queryValues["centroid"],
+			queryValues["boundary"],
+		)
+		if err != nil {
+			return err
+		}
+		rows.Close()
+		log.Info(ctx, "boundaries table query executed successfully:", logData)
+	}
+	return nil
+}
 func (r *RDS) insertAreaTypeTestData(ctx context.Context) error {
 	areaTypeData := DBRelationalData.AreaTypeData
 	executionList := make([]string, len(areaTypeData))
