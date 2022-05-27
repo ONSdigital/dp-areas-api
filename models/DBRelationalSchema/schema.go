@@ -4,6 +4,28 @@ package DBRelationalSchema
 const DBSchema = `{
     "dp-areas-api": {
         "tables": {
+            "boundaries": {
+                "creation_order": 5,
+                "primary_keys": "area_id",
+                "columns": {
+                    "area_id": {
+                        "data_type": "VARCHAR(50)",
+                        "constraints": ""
+                    },
+                    "centroid_bng": {
+                        "data_type": "VARCHAR",
+                        "constraints": ""
+                    },
+                    "centroid": {
+                        "data_type": "VARCHAR",
+                        "constraints": ""
+                    },
+                    "boundary": {
+                        "data_type": "VARCHAR",
+                        "constraints": ""
+                    }
+                }
+            },
             "area": {
                 "creation_order": 2,
                 "primary_keys": "code",

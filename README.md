@@ -83,7 +83,7 @@ wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
 6. Finally, execute the sql command to open a tunnel to the AWS AURORA RDS instance:
 
 ```
-psql -h url to rds instance -p 5432 "sslmode=verify-full sslrootcert= dbname=dp-areas-api user=dp-areas-api-publishing"
+psql -h url to rds instance -p 5432 "sslmode=verify-full sslrootcert="" dbname=dp-areas-api user=dp-areas-api-publishing"
 ```
 
 ### Add env variable to import area info
@@ -91,6 +91,7 @@ psql -h url to rds instance -p 5432 "sslmode=verify-full sslrootcert= dbname=dp-
 export CSV_FILE_PATH="<CSV_FILE_PATH>"
 export AREA_UPDATE_URL=http://127.0.0.1:25500/v1/areas/
 ```
+
 
 ### Contributing
 
