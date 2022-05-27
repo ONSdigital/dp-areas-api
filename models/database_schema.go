@@ -37,7 +37,7 @@ func (db *DatabaseSchema) BuildDatabaseSchemaModel() error {
 
 // TableSchemaBuilder builds table schema
 func (db *DatabaseSchema) TableSchemaBuilder() {
-	//as we're apply a FK constraint, order of creation is important, so build array of fixed size to preserve
+	//as we're applied a FK constraint, order of creation is important, so build array of fixed size to preserve
 	db.ExecutionList = make([]string, len(db.Tables))
 	for table := range db.Tables {
 		var (
