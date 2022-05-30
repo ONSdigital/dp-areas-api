@@ -82,10 +82,8 @@ paths:
         - $ref: '#/parameters/id'
         - in: query
           name: relationship
-          schema:
-            type: string
+          type: string
           description: "type of relationship parameter requested"
-          example: "child"
           required: false
       responses:
         200:
@@ -124,15 +122,17 @@ definitions:
         example: true
       ancestors:
         type: array
-        properties:
-          id:
-            type: string
-            description: "The unique code for the ancestors area"
-            example: "W92000004"
-          name:
-            type: string
-            description: "The name of the ancestors area"
-            example: "England"
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "The unique code for the ancestors area"
+              example: "W92000004"
+            name:
+              type: string
+              description: "The name of the ancestors area"
+              example: "England"
 
   ErrorResponse:
     description: "A list of any errors"
