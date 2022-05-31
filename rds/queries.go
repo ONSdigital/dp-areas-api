@@ -26,6 +26,7 @@ const (
 	areaRelationshipInsertTransaction = "insert into area_relationship(area_code, rel_area_code, rel_type_id) VALUES($1, $2, $3) on conflict(area_code, rel_area_code) do update set rel_type_id = $3"
 	getRelationShipId                 = "select id from relationship_type where name = 'child'"
 	getAncestors                      = "with recursive ancestors as (select area_code from area_relationship where rel_area_code = $1 and rel_type_id = (select id from relationship_type where name = 'child') union select ar.area_code from area_relationship ar inner join ancestors a on a.area_code = ar.rel_area_code ) select a.area_code, an.name from ancestors as a, area_name as an where a.area_code = an.area_code"
+	boundariesInsertTransaction       = "insert into boundaries(area_id, centroid_bng, centroid, boundary) values($1, $2, $3, $4) on conflict(area_id) do update set centroid_bng=$2,centroid=$3,boundary=$4"
 )
 
 var upsertArea = fmt.Sprintf("%s %s", insertArea, updateAreaOnConflict)
