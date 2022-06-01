@@ -244,11 +244,6 @@ func (api *API) getNavigationPrivateHandler(w http.ResponseWriter, req *http.Req
 		"function":   "getNavigationPrivateHandler",
 	}
 
-	if lang != "en" && lang != "cy" {
-		handleError(ctx, w, apierrors.ErrContentUnrecognisedParameter, logdata)
-		return
-	}
-
 	itemsEN := []models.TopicNonReferential{
 		{
 			Title:       "Business, industry and trade",
@@ -760,14 +755,14 @@ func (api *API) getNavigationPrivateHandler(w http.ResponseWriter, req *http.Req
 			},
 		},
 	}
-	if lang == "en" {
-		if err := WriteJSONBody(ctx, itemsEN, w, logdata); err != nil {
+
+	if lang == "cy" {
+		if err := WriteJSONBody(ctx, itemsCY, w, logdata); err != nil {
 			// WriteJSONBody has already logged the error
 			return
 		}
-	}
-	if lang == "cy" {
-		if err := WriteJSONBody(ctx, itemsCY, w, logdata); err != nil {
+	} else {
+		if err := WriteJSONBody(ctx, itemsEN, w, logdata); err != nil {
 			// WriteJSONBody has already logged the error
 			return
 		}
