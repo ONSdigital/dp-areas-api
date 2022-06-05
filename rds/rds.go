@@ -273,7 +273,7 @@ func (r *RDS) UpsertArea(ctx context.Context, area models.AreaParams) (bool, err
 
 	if area.ParentCode != "" {
 		var relationshipId int
-		err = tx.QueryRow(ctx, getRelationShipId, "child").Scan(&relationshipId)
+		err = tx.QueryRow(ctx, getRelationShipId).Scan(&relationshipId)
 		if err != nil {
 			return isInserted, fmt.Errorf("failed to get child relationshipid: %+v", err)
 		}
