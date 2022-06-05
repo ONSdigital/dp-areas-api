@@ -13,3 +13,4 @@ dp-areas-api
 *.iws
 vendor/
 /dev_env.sh
+dev_env.sh
