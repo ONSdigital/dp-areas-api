@@ -33,6 +33,8 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
+// http://127.0.0.1:25500/v1/areas/
+// /Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv
 type Config struct {
 	CSVFilePath   string `envconfig:"CSV_FILE_PATH" required:"true"`
 	AreaUpdateUrl string `envconfig:"AREA_UPDATE_URL" required:"true"`
