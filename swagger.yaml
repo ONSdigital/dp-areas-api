@@ -277,40 +277,42 @@ definitions:
       items:
         $ref: '#/definitions/ListOfNavigationItems'
   ListOfNavigationItems:
-    type: object
+    type: array
     description: "A list of navigation items"
-    properties:
-      description:
-        $ref: '#/definitions/Description'
-      label:
-        $ref: '#/definitions/Label'
-      links:
-        type: object
-        properties:
-          self:
-            $ref: '#/definitions/SelfHref'
-      name:
-        $ref: '#/definitions/Name'
-      title:
-        $ref: '#/definitions/Title'
-      uri:
-        $ref: '#/definitions/Uri'
-      subtopics_items:
-        type: array
-        items:
+    items:
+      type: object
+      properties:
+        description:
+          $ref: '#/definitions/Description'
+        label:
+          $ref: '#/definitions/Label'
+        links:
+          type: object
           properties:
-            description:
-              $ref: '#/definitions/Description'
-            label:
-              $ref: '#/definitions/Label'
-            links:
-              type: object
-              properties:
-                self:
-                  $ref: '#/definitions/SelfHref'
-            name:
-              $ref: '#/definitions/Name'
-            title:
-              $ref: '#/definitions/Title'
-            uri:
-              $ref: '#/definitions/Uri'
+            self:
+              $ref: '#/definitions/SelfHref'
+        name:
+          $ref: '#/definitions/Name'
+        title:
+          $ref: '#/definitions/Title'
+        uri:
+          $ref: '#/definitions/Uri'
+        subtopics:
+          type: array
+          items:
+            properties:
+              description:
+                $ref: '#/definitions/Description'
+              label:
+                $ref: '#/definitions/Label'
+              links:
+                type: object
+                properties:
+                  self:
+                    $ref: '#/definitions/SelfHref'
+              name:
+                $ref: '#/definitions/Name'
+              title:
+                $ref: '#/definitions/Title'
+              uri:
+                $ref: '#/definitions/Uri'
