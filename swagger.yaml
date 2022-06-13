@@ -92,7 +92,7 @@ paths:
           description: "Content not found"
         500:
           $ref: '#/responses/InternalError'
-  /topics/navigation:
+  /navigation:
     get:
       tags:
         - "Public"
@@ -106,12 +106,16 @@ paths:
         200:
           description: "Provides a hierarchical list of navigation items with their links, copy and localisation references"
           schema:
-            $ref: '#/definitions/ListOfNavigationItems'
+            $ref: '#/definitions/Navigation'
+        401:
+          $ref: '#/responses/Unauthorised'
         500:
           $ref: '#/responses/InternalError'
 responses:
   InternalError:
     description: "Failed to process the request due to an internal error"
+  Unauthorised:
+    description: "Failed to process the request due to being unauthorised"
 definitions:
   Content:
     type: object
@@ -252,34 +256,61 @@ definitions:
   Title:
     type: string
     description: "A string containing the title of something"
-  Href:
+  Uri:
     type: string
-    description: "A hyperlink reference as a string"
+    description: "The path to the resource on the web domain"
+  Navigation:
+    type: object
+    description: "Resource describing the structure for the ONS website navbar."
+    properties:
+      description:
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            type: object
+            properties:
+              href:
+                type: string
+                description: "The URL to the resource"
+      items:
+        $ref: '#/definitions/ListOfNavigationItems'
   ListOfNavigationItems:
     type: object
     description: "A list of navigation items"
     properties:
       description:
         $ref: '#/definitions/Description'
-      title:
-        $ref: '#/definitions/Title'
-      name:
-        $ref: '#/definitions/Name'
       label:
         $ref: '#/definitions/Label'
-      href:
-        $ref: '#/definitions/Href'
+      links:
+        type: object
+        properties:
+          self:
+            $ref: '#/definitions/SelfHref'
+      name:
+        $ref: '#/definitions/Name'
+      title:
+        $ref: '#/definitions/Title'
+      uri:
+        $ref: '#/definitions/Uri'
       subtopics_items:
         type: array
         items:
           properties:
             description:
               $ref: '#/definitions/Description'
-            title:
-              $ref: '#/definitions/Title'
-            name:
-              $ref: '#/definitions/Name'
             label:
               $ref: '#/definitions/Label'
-            href:
-              $ref: '#/definitions/Href'
+            links:
+              type: object
+              properties:
+                self:
+                  $ref: '#/definitions/SelfHref'
+            name:
+              $ref: '#/definitions/Name'
+            title:
+              $ref: '#/definitions/Title'
+            uri:
+              $ref: '#/definitions/Uri'
