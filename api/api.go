@@ -70,6 +70,12 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
 	api.get("/topics", api.getTopicsListPublicHandler)
+
+	api.get(
+		"/navigation",
+		api.isAuthenticated(
+			api.isAuthorised(readPermission, api.getNavigationPrivateHandler)),
+	)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
