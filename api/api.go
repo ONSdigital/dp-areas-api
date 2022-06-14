@@ -59,6 +59,10 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 
 		log.Info(ctx, "enabling only public endpoints for dataset api")
 		api.enablePublicEndpoints(ctx)
+
+		if cfg.EnablePermissionsAuth {
+			api.enablePublicEndpointsWithAuth(ctx)
+		}
 	}
 
 	return api
@@ -70,7 +74,10 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
 	api.get("/topics", api.getTopicsListPublicHandler)
+}
 
+func (api *API) enablePublicEndpointsWithAuth(ctx context.Context) {
+	// api.get("/navigation", api.getNavigationPrivateHandler)
 	api.get(
 		"/navigation",
 		api.isAuthenticated(
