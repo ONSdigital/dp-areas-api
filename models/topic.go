@@ -26,19 +26,21 @@ type Topic struct {
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 }
 
+type Navigation struct {
+	Description string                 `json:"description"`
+	Links       *TopicLinks            `json:"links,omitempty"`
+	Items       *[]TopicNonReferential `json:"items,omitempty"`
+}
+
 // TopicNonReferential is used to create a single comprehensive list of topics and subtopics.
 type TopicNonReferential struct {
-	ID            string                `bson:"_id,omitempty"            json:"id,omitempty"`
-	Description   string                `bson:"description,omitempty"    json:"description,omitempty"`
-	Title         string                `bson:"title,omitempty"          json:"title,omitempty"`
-	Keywords      []string              `bson:"keywords,omitempty"       json:"keywords,omitempty"`
-	State         string                `bson:"state,omitempty"          json:"state,omitempty"`
-	Links         *TopicLinks           `bson:"links,omitempty"          json:"links,omitempty"`
-	SubtopicIds   []string              `bson:"subtopics_ids,omitempty"  json:"-"`
-	SubtopicItems []TopicNonReferential `bson:"subtopics_items,omitempty"  json:"subtopics_items,omitempty"`
-	Name          string                `bson:"name,omitempty"  json:"name,omitempty"`
-	Label         string                `bson:"label,omitempty"  json:"label,omitempty"`
-	Href          string                `bson:"href,omitempty"  json:"href,omitempty"`
+	Description   string                 `json:"description,omitempty"`
+	Label         string                 `json:"label"`
+	Links         *TopicLinks            `json:"links,omitempty"`
+	Name          string                 `json:"name"`
+	SubtopicItems *[]TopicNonReferential `json:"subtopics,omitempty"`
+	Title         string                 `json:"title"`
+	Uri           string                 `json:"uri"`
 }
 
 // TopicWrite is used for component testing
