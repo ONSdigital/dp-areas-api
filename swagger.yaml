@@ -27,10 +27,10 @@ parameters:
     type: string
   lang:
     name: lang
-    description: "the 2 character code of the language required in returned labels"
+    description: "the 2 character code of the language required in returned labels, e.g. cy for welsh"
     in: query
     type: string
-    required: true
+    required: false
 paths:
   /topics/{id}:
     get:
@@ -107,8 +107,6 @@ paths:
           description: "Provides a hierarchical list of navigation items with their links, copy and localisation references"
           schema:
             $ref: '#/definitions/Navigation'
-        401:
-          $ref: '#/responses/Unauthorised'
         500:
           $ref: '#/responses/InternalError'
 responses:
