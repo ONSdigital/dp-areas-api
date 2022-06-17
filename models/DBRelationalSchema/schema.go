@@ -32,7 +32,7 @@ const DBSchema = `{
                 "columns": {
                     "code": {
                         "data_type": "VARCHAR(50)",
-                        "constraints": ""
+                        "constraints": "UNIQUE"
                     },
                     "active_from": {
                         "data_type": "TIMESTAMP",
