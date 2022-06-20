@@ -32,7 +32,7 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 
 	publishSubnetEndpoints := map[testEndpoint]int{
 		// Topics endpoints
-		{Method: "GET", URL: "http://localhost:25300/navigation"}: http.StatusNotFound,
+		{Method: "GET", URL: "http://localhost:25300/bad-endpoint"}: http.StatusNotFound,
 	}
 
 	Convey("When the API is started with private endpoints disabled and permission auth disabled", t, func() {
@@ -85,35 +85,19 @@ func TestSetup(t *testing.T) {
 			cfg, err := config.Get()
 			So(err, ShouldBeNil)
 			cfg.EnablePrivateEndpoints = false
+			cfg.EnablePermissionsAuth = true
 
 			mockedDataStore := &storetest.StorerMock{}
 
-			Convey("And when permission auth is enabled", func() {
-				cfg.EnablePermissionsAuth = true
-				api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, permissions)
+			api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, permissions)
 
-				Convey("Then the following routes should have been added", func() {
-					So(api, ShouldNotBeNil)
-					So(hasRoute(api.Router, "/topics", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}/subtopics", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}/content", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/navigation", "GET"), ShouldBeTrue)
-				})
-			})
-
-			Convey("and when permission auth not enabled", func() {
-				cfg.EnablePermissionsAuth = false
-				api := GetWebAPIWithMocks(testContext, cfg, mockedDataStore, permissions)
-
-				Convey("Then the following routes should have been added", func() {
-					So(api, ShouldNotBeNil)
-					So(hasRoute(api.Router, "/topics", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}/subtopics", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/topics/{id}/content", "GET"), ShouldBeTrue)
-					So(hasRoute(api.Router, "/navigation", "GET"), ShouldBeFalse)
-				})
+			Convey("Then the following routes should have been added", func() {
+				So(api, ShouldNotBeNil)
+				So(hasRoute(api.Router, "/topics", "GET"), ShouldBeTrue)
+				So(hasRoute(api.Router, "/topics/{id}", "GET"), ShouldBeTrue)
+				So(hasRoute(api.Router, "/topics/{id}/subtopics", "GET"), ShouldBeTrue)
+				So(hasRoute(api.Router, "/topics/{id}/content", "GET"), ShouldBeTrue)
+				So(hasRoute(api.Router, "/navigation", "GET"), ShouldBeTrue)
 			})
 		})
 	})
