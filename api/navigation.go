@@ -169,8 +169,8 @@ var labels = map[string]map[string]string{
 	},
 }
 
-// getNavigationPrivateHandler is currently a hard-coded list of topics to be used for site navigation
-func (api *API) getNavigationPrivateHandler(w http.ResponseWriter, req *http.Request) {
+// getNavigationHandler is currently a hard-coded list of topics to be used for site navigation
+func (api *API) getNavigationHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	lang := req.URL.Query().Get("lang")
 	logdata := log.Data{

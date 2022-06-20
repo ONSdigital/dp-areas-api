@@ -70,7 +70,7 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 	api.get("/topics/{id}", api.getTopicPublicHandler)
 	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
-	api.get("/navigation", api.getNavigationPrivateHandler)
+	api.get("/navigation", api.getNavigationHandler)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
@@ -103,7 +103,7 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 	api.get(
 		"/navigation",
 		api.isAuthenticated(
-			api.isAuthorised(readPermission, api.getNavigationPrivateHandler)),
+			api.isAuthorised(readPermission, api.getNavigationHandler)),
 	)
 }
 
