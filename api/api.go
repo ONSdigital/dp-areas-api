@@ -57,7 +57,7 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 	} else {
 		// create web related endpoints ...
 
-		log.Info(ctx, "enabling only public endpoints for dataset api")
+		log.Info(ctx, "enabling only public endpoints for topic api")
 		api.enablePublicEndpoints(ctx)
 	}
 
@@ -74,7 +74,7 @@ func (api *API) enablePublicEndpoints(ctx context.Context) {
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
-// checks required when running the dataset API in publishing (private) mode.
+// checks required when running the topic API in publishing (private) mode.
 func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 	api.get(
 		"/topics/{id}",
