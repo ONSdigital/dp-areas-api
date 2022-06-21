@@ -72,7 +72,6 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 
 	if payload != nil {
 		req, err = http.NewRequest(method, path, bytes.NewReader(payload))
-		req.Header.Add("Content-type", "application/json")
 	} else {
 		req, err = http.NewRequest(method, path, http.NoBody)
 	}
@@ -83,6 +82,10 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 			Err:  fmt.Errorf("failed to create request for call to topic api, error is: %v", err),
 			Code: http.StatusInternalServerError,
 		}
+	}
+
+	if payload != nil {
+		req.Header.Add("Content-type", "application/json")
 	}
 
 	err = headers.Add(req)
