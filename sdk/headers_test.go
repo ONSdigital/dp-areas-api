@@ -24,7 +24,7 @@ func TestAdd(t *testing.T) {
 			Convey("Then no headers is set on the request", func() {
 				So(req.Header, ShouldBeEmpty)
 
-				Convey("No error is returned", func() {
+				Convey("And no error is returned", func() {
 					So(err, ShouldBeNil)
 				})
 			})
@@ -45,7 +45,7 @@ func TestAdd(t *testing.T) {
 				So(req.Header[dprequest.AuthHeaderKey], ShouldHaveLength, 1)
 				So(req.Header[dprequest.AuthHeaderKey][0], ShouldEqual, expectedHeader)
 
-				Convey("No error is returned", func() {
+				Convey("And no error is returned", func() {
 					So(err, ShouldBeNil)
 				})
 			})
@@ -65,7 +65,7 @@ func TestAdd(t *testing.T) {
 				So(req.Header[dprequest.FlorenceHeaderKey], ShouldHaveLength, 1)
 				So(req.Header[dprequest.FlorenceHeaderKey][0], ShouldEqual, headers.UserAuthToken)
 
-				Convey("No error is returned", func() {
+				Convey("And no error is returned", func() {
 					So(err, ShouldBeNil)
 				})
 			})
