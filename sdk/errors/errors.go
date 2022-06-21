@@ -24,7 +24,7 @@ func (e StatusError) Error() string {
 	return e.Err.Error()
 }
 
-// Returns our HTTP status code.
+// Status returns the HTTP status code.
 func (e StatusError) Status() int {
 	return e.Code
 }

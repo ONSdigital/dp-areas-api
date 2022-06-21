@@ -101,7 +101,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 		}
 	}
 	defer func() {
-		err = closeResponseBody(ctx, resp)
+		err = closeResponseBody(resp)
 	}()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 400 {
@@ -127,7 +127,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 }
 
 // closeResponseBody closes the response body and logs an error if unsuccessful
-func closeResponseBody(ctx context.Context, resp *http.Response) error {
+func closeResponseBody(resp *http.Response) error {
 	if resp.Body != nil {
 		if err := resp.Body.Close(); err != nil {
 			return apiError.StatusError{

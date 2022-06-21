@@ -19,10 +19,14 @@ func TestAdd(t *testing.T) {
 		var headers Headers
 
 		Convey("When calling the Add method on Headers", func() {
-			headers.Add(req)
+			err := headers.Add(req)
 
 			Convey("Then no headers is set on the request", func() {
 				So(req.Header, ShouldBeEmpty)
+
+				Convey("No error is returned", func() {
+					So(err, ShouldBeNil)
+				})
 			})
 		})
 	})
@@ -33,13 +37,17 @@ func TestAdd(t *testing.T) {
 		}
 
 		Convey("When calling the Add method on Headers", func() {
-			headers.Add(req)
+			err := headers.Add(req)
 
 			expectedHeader := dprequest.BearerPrefix + headers.ServiceAuthToken
 			Convey("Then an Authorization header is set on the request", func() {
 				So(req.Header, ShouldContainKey, dprequest.AuthHeaderKey)
 				So(req.Header[dprequest.AuthHeaderKey], ShouldHaveLength, 1)
 				So(req.Header[dprequest.AuthHeaderKey][0], ShouldEqual, expectedHeader)
+
+				Convey("No error is returned", func() {
+					So(err, ShouldBeNil)
+				})
 			})
 		})
 	})
@@ -50,12 +58,16 @@ func TestAdd(t *testing.T) {
 		}
 
 		Convey("When calling the Add method on Headers", func() {
-			headers.Add(req)
+			err := headers.Add(req)
 
 			Convey("Then an X-Florence-Token header is set on the request", func() {
 				So(req.Header, ShouldContainKey, dprequest.FlorenceHeaderKey)
 				So(req.Header[dprequest.FlorenceHeaderKey], ShouldHaveLength, 1)
 				So(req.Header[dprequest.FlorenceHeaderKey][0], ShouldEqual, headers.UserAuthToken)
+
+				Convey("No error is returned", func() {
+					So(err, ShouldBeNil)
+				})
 			})
 		})
 	})

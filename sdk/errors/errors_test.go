@@ -27,7 +27,7 @@ func Test(t *testing.T) {
 		Convey("when calling the Status method on status error", func() {
 			statusCode := sErr.Status()
 
-			Convey("then the error message is returned", func() {
+			Convey("then the status is returned", func() {
 				So(statusCode, ShouldEqual, 500)
 			})
 		})
@@ -35,7 +35,7 @@ func Test(t *testing.T) {
 		Convey("when passing status error into ErrorStatus func", func() {
 			statusCode := ErrorStatus(sErr)
 
-			Convey("then the error message is returned", func() {
+			Convey("then the status is returned", func() {
 				So(statusCode, ShouldEqual, 500)
 			})
 		})
