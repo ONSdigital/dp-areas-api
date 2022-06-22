@@ -66,12 +66,7 @@ func newMockHTTPClient(r *http.Response, err error) *dphttp.ClienterMock {
 
 func newTopicAPIClient(t *testing.T, httpClient *dphttp.ClienterMock) *Client {
 	healthClient := healthcheck.NewClientWithClienter(service, testHost, httpClient)
-	searchReindexClient, err := NewWithHealthClient(healthClient)
-	if err != nil {
-		t.Errorf("failed to create a topic api client, error is: %v", err)
-	}
-
-	return searchReindexClient
+	return NewWithHealthClient(healthClient)
 }
 
 func TestHealthCheckerClient(t *testing.T) {
