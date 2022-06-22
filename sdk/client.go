@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,13 +33,10 @@ func New(topicAPIURL string) *Client {
 
 // NewWithHealthClient creates a new instance of topic API Client,
 // reusing the URL and Clienter from the provided healthcheck client
-func NewWithHealthClient(hcCli *healthcheck.Client) (*Client, error) {
-	if hcCli == nil {
-		return nil, errors.New("health client is nil")
-	}
+func NewWithHealthClient(hcCli *healthcheck.Client) *Client {
 	return &Client{
 		hcCli: healthcheck.NewClientWithClienter(service, hcCli.URL, hcCli.Client),
-	}, nil
+	}
 }
 
 // URL returns the URL used by this client
