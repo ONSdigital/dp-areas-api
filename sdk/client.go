@@ -87,6 +87,35 @@ func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) 
 	return &rootTopics, nil
 }
 
+// GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
+func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, error) {
+	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
+
+	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if err != nil {
+		logData := log.Data{
+			"path":        path,
+			"method":      http.MethodGet,
+			"req_headers": reqHeaders,
+			"body":        nil,
+		}
+		log.Error(ctx, "failed to call topic api", err, logData)
+		return nil, err
+	}
+
+	var subtopics models.PublicSubtopics
+
+	if err = json.Unmarshal(b, &subtopics); err != nil {
+		logData := log.Data{
+			"response_bytes": b,
+		}
+		log.Error(ctx, "failed to unmarshal bytes into subtopics", err, logData)
+		return nil, err
+	}
+
+	return &subtopics, nil
+}
+
 // callTopicAPI calls the Topic API endpoint given by path for the provided REST method, request headers, and body payload.
 // It returns the response body and any error that occurred.
 func (cli *Client) callTopicAPI(ctx context.Context, path, method string, headers Headers, payload []byte) ([]byte, error) {
