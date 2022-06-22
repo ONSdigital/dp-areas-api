@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -21,6 +22,33 @@ const (
 var (
 	queryStr = "select id, code, active from areas_basic where id=$1"
 )
+
+// getBoundary is a handler that gets boundary for an ID - currently from stubbed data
+func (api *API) getBoundary(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
+	// identifier from request
+	vars := mux.Vars(req)
+	boundaryID := vars["id"]
+	logData := log.Data{"boundary identifier": boundaryID}
+	log.Info(ctx, "received request to get boundary", logData)
+
+	// get boundary data
+	data, exist := DBRelationalData.BoundariesData[boundaryID]
+	if !exist {
+		// boundary id does not exist = 404
+		responseErr := models.NewError(ctx, nil, models.MarshallingAreaBoundaryError, fmt.Sprintf("boundary identifier %s does not exist", boundaryID))
+		return nil, models.NewErrorResponse(http.StatusNotFound, nil, responseErr)
+	}
+
+	// build response
+	jsonResponse, err := json.Marshal(data)
+	if err != nil {
+		responseErr := models.NewError(ctx, err, models.MarshallingAreaBoundaryError, err.Error())
+		return nil, models.NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
+	}
+
+	// result
+	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
+}
 
 //getBoundaryAreaData is a handler that gets a boundary data by ID
 func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {

@@ -57,6 +57,62 @@ func GetAPIWithRDSMocks(mockedRDSStore api.RDSAreaStore) (*api.API, error) {
 	return api.Setup(context.Background(), cfg, mux.NewRouter(), mockedRDSStore)
 }
 
+func TestGetBoundaryDataReturnsOk(t *testing.T) {
+	Convey("Given a successful request - E92000001", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/boundaries/%s", EnglandAreaData), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request boundary data is served", func() {
+			Convey("Then an OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				returnedArea := models.BoundaryDataResults{}
+				err = json.Unmarshal(payload, &returnedArea)
+				So(w.Code, ShouldEqual, http.StatusOK)
+				So(err, ShouldBeNil)
+				So(returnedArea.Columns, ShouldEqual, "area_id, centroid_bng, centroid, boundary")
+				So(returnedArea.Values.AreaID, ShouldEqual, EnglandAreaData)
+				So(returnedArea.Values.Boundary, ShouldEqual, "[[[-4.333344310304969,51.7249345567844],[-4.333714799280278,51.72459176590723],[-4.333228471051473,51.72485054948815],[-4.332484708106176,51.72356674989395],[-4.331536255737817,51.72317184002521],[-4.331998050964103,51.72328323509102],[-4.331985242138722,51.72303436581642],[-4.331926419513477,51.72324150346475],[-4.331169197082952,51.72279244850181],[-4.332242159236069,51.72127380479937],[-4.332572468607179,51.72125016436441],[-4.332702576920521,51.7210758648653],[-4.332779021783574,51.720677780977],[-4.334653645452485,51.72266301535556],[-4.333985539454364,51.72284809808241],[-4.334603522966874,51.7227584105357],[-4.334424154980614,51.72464599982296],[-4.334172914205174,51.72488393285414],[-4.334206192564066,51.72446153276184],[-4.333894953495085,51.7251385780543],[-4.333344310304969,51.7249345567844]]]")
+				So(returnedArea.Values.Centroid, ShouldEqual, "[-4.333344310304969,51.7249345567844]")
+				So(returnedArea.Values.CentroidBng, ShouldEqual, "[-4.333344310304969,51.7249345567844]")
+			})
+		})
+	})
+}
+
+func TestGetBoundaryDataWithUnknownIDReturnsNotFound(t *testing.T) {
+	Convey("Given a unsuccessful request - E92000002", t, func() {
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/boundaries/%s", "E92000002"), nil)
+		r.Header.Set(models.AcceptLanguageHeaderName, "en")
+		w := httptest.NewRecorder()
+
+		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
+			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
+				return &models.AreasDataResults{Code: "E92000002", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
+			},
+		})
+		areaApi.Router.ServeHTTP(w, r)
+
+		Convey("When request boundary data is served", func() {
+			Convey("Then an NOT OK response is returned", func() {
+				payload, err := ioutil.ReadAll(w.Body)
+				So(err, ShouldBeNil)
+				returnedArea := models.BoundaryDataResults{}
+				err = json.Unmarshal(payload, &returnedArea)
+				So(w.Code, ShouldEqual, http.StatusNotFound)
+			})
+		})
+	})
+}
+
 func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 	Convey("Given a successful request - E92000001", t, func() {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", EnglandAreaData), nil)
