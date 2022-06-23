@@ -1,5 +1,6 @@
 package models
 
+// Navigation is used to get high level list of topics and subtopics with links and description for site navigation.
 type Navigation struct {
 	Description string                 `json:"description"`
 	Links       *TopicLinks            `json:"links,omitempty"`

@@ -18,6 +18,7 @@ import (
 )
 
 func TestGetTopicPrivateHandler(t *testing.T) {
+	t.Parallel()
 
 	Convey("Given a topic API in publishing mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
@@ -67,6 +68,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 }
 
 func TestGetSubtopicsPrivateHandler(t *testing.T) {
+	t.Parallel()
 
 	Convey("Given a topic API in web mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
@@ -200,6 +202,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 }
 
 func TestGetTopicsListPrivateHandler(t *testing.T) {
+	t.Parallel()
 
 	Convey("Given a topic API in web mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
@@ -263,10 +266,6 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 					So(retTopic.Next.ID, ShouldEqual, "1")
 				})
 			})
-
-			// No more tests needed because getting the 'topic_root' makes use of
-			// function getSubtopicsPublicByID() which is fully tested in
-			// TestGetSubtopicsPublicHandler() above, preventing duplication of tests.
 		})
 	})
 }
