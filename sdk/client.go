@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,13 +33,10 @@ func New(topicAPIURL string) *Client {
 
 // NewWithHealthClient creates a new instance of topic API Client,
 // reusing the URL and Clienter from the provided healthcheck client
-func NewWithHealthClient(hcCli *healthcheck.Client) (*Client, error) {
-	if hcCli == nil {
-		return nil, errors.New("health client is nil")
-	}
+func NewWithHealthClient(hcCli *healthcheck.Client) *Client {
 	return &Client{
 		hcCli: healthcheck.NewClientWithClienter(service, hcCli.URL, hcCli.Client),
-	}, nil
+	}
 }
 
 // URL returns the URL used by this client
@@ -85,6 +81,35 @@ func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) 
 	}
 
 	return &rootTopics, nil
+}
+
+// GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
+func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, error) {
+	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
+
+	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if err != nil {
+		logData := log.Data{
+			"path":        path,
+			"method":      http.MethodGet,
+			"req_headers": reqHeaders,
+			"body":        nil,
+		}
+		log.Error(ctx, "failed to call topic api", err, logData)
+		return nil, err
+	}
+
+	var subtopics models.PublicSubtopics
+
+	if err = json.Unmarshal(b, &subtopics); err != nil {
+		logData := log.Data{
+			"response_bytes": b,
+		}
+		log.Error(ctx, "failed to unmarshal bytes into subtopics", err, logData)
+		return nil, err
+	}
+
+	return &subtopics, nil
 }
 
 // callTopicAPI calls the Topic API endpoint given by path for the provided REST method, request headers, and body payload.

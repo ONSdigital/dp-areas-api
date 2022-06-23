@@ -26,15 +26,15 @@ const (
 var (
 	initialTestState = healthcheck.CreateCheckState(service)
 
-	testPublicRootTopics = models.PublicSubtopics{
+	testPublicTopics = models.PublicSubtopics{
 		Count:       2,
 		Offset:      0,
 		Limit:       100,
 		TotalCount:  2,
-		PublicItems: &[]models.Topic{testPublicRootTopic1, testPublicRootTopic2},
+		PublicItems: &[]models.Topic{testPublicTopic1, testPublicTopic2},
 	}
 
-	testPublicRootTopic1 = models.Topic{
+	testPublicTopic1 = models.Topic{
 		ID:          "1234",
 		Description: "Root Topic 1",
 		Title:       "Root Topic 1",
@@ -42,7 +42,7 @@ var (
 		State:       "published",
 	}
 
-	testPublicRootTopic2 = models.Topic{
+	testPublicTopic2 = models.Topic{
 		ID:          "5678",
 		Description: "Root Topic 2",
 		Title:       "Root Topic 2",
@@ -66,12 +66,7 @@ func newMockHTTPClient(r *http.Response, err error) *dphttp.ClienterMock {
 
 func newTopicAPIClient(t *testing.T, httpClient *dphttp.ClienterMock) *Client {
 	healthClient := healthcheck.NewClientWithClienter(service, testHost, httpClient)
-	searchReindexClient, err := NewWithHealthClient(healthClient)
-	if err != nil {
-		t.Errorf("failed to create a topic api client, error is: %v", err)
-	}
-
-	return searchReindexClient
+	return NewWithHealthClient(healthClient)
 }
 
 func TestHealthCheckerClient(t *testing.T) {
@@ -143,7 +138,7 @@ func TestGetRootTopicsPublic(t *testing.T) {
 	ctx := context.Background()
 
 	Convey("Given public root topics is returned successfully", t, func() {
-		body, err := json.Marshal(testPublicRootTopics)
+		body, err := json.Marshal(testPublicTopics)
 		if err != nil {
 			t.Errorf("failed to setup test data, error: %v", err)
 		}
@@ -161,7 +156,7 @@ func TestGetRootTopicsPublic(t *testing.T) {
 			respRootTopics, err := topicAPIClient.GetRootTopicsPublic(ctx, Headers{})
 
 			Convey("Then the expected public root topics is returned", func() {
-				So(*respRootTopics, ShouldResemble, testPublicRootTopics)
+				So(*respRootTopics, ShouldResemble, testPublicTopics)
 
 				Convey("And no error is returned", func() {
 					So(err, ShouldBeNil)
@@ -218,6 +213,93 @@ func TestGetRootTopicsPublic(t *testing.T) {
 						doCalls := httpClient.DoCalls()
 						So(doCalls, ShouldHaveLength, 1)
 						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics")
+					})
+				})
+			})
+		})
+	})
+}
+
+func TestGetSubtopicsPublic(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	Convey("Given public subtopics is returned successfully", t, func() {
+		body, err := json.Marshal(testPublicTopics)
+		if err != nil {
+			t.Errorf("failed to setup test data, error: %v", err)
+		}
+
+		httpClient := newMockHTTPClient(
+			&http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(body)),
+			},
+			nil)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetSubtopicsPublic is called", func() {
+			respSubtopics, err := topicAPIClient.GetSubtopicsPublic(ctx, Headers{}, "1357")
+
+			Convey("Then the expected public subtopics is returned", func() {
+				So(*respSubtopics, ShouldResemble, testPublicTopics)
+
+				Convey("And no error is returned", func() {
+					So(err, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/subtopics")
+					})
+				})
+			})
+		})
+	})
+
+	Convey("Given a 500 response from topic api", t, func() {
+		httpClient := newMockHTTPClient(&http.Response{StatusCode: http.StatusInternalServerError}, nil)
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetSubtopicsPublic is called", func() {
+			respSubtopics, err := topicAPIClient.GetSubtopicsPublic(ctx, Headers{}, "1357")
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+
+				Convey("And the expected public subtopics should be nil", func() {
+					So(respSubtopics, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/subtopics")
+					})
+				})
+			})
+		})
+	})
+
+	Convey("Given the client returns an unexpected error", t, func() {
+		clientError := errors.New("unexpected error")
+		httpClient := newMockHTTPClient(&http.Response{}, clientError)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetSubtopicsPublic is called", func() {
+			respSubtopics, err := topicAPIClient.GetSubtopicsPublic(ctx, Headers{}, "1357")
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+
+				Convey("And the expected public subtopics should be nil", func() {
+					So(respSubtopics, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/subtopics")
 					})
 				})
 			})

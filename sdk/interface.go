@@ -14,6 +14,8 @@ type Clienter interface {
 	Checker(ctx context.Context, check *health.CheckState) error
 	GetRootTopicsPrivate(ctx context.Context, reqHeaders Headers) (*models.PrivateSubtopics, error)
 	GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) (*models.PublicSubtopics, error)
+	GetSubtopicsPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.PrivateSubtopics, error)
+	GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, error)
 	Health() *healthcheck.Client
 	URL() string
 }

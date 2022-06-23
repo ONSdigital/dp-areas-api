@@ -31,6 +31,12 @@ var _ sdk.Clienter = &ClienterMock{}
 // 			GetRootTopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, error) {
 // 				panic("mock out the GetRootTopicsPublic method")
 // 			},
+// 			GetSubtopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error) {
+// 				panic("mock out the GetSubtopicsPrivate method")
+// 			},
+// 			GetSubtopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error) {
+// 				panic("mock out the GetSubtopicsPublic method")
+// 			},
 // 			HealthFunc: func() *healthcheck.Client {
 // 				panic("mock out the Health method")
 // 			},
@@ -52,6 +58,12 @@ type ClienterMock struct {
 
 	// GetRootTopicsPublicFunc mocks the GetRootTopicsPublic method.
 	GetRootTopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, error)
+
+	// GetSubtopicsPrivateFunc mocks the GetSubtopicsPrivate method.
+	GetSubtopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error)
+
+	// GetSubtopicsPublicFunc mocks the GetSubtopicsPublic method.
+	GetSubtopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error)
 
 	// HealthFunc mocks the Health method.
 	HealthFunc func() *healthcheck.Client
@@ -82,6 +94,24 @@ type ClienterMock struct {
 			// ReqHeaders is the reqHeaders argument value.
 			ReqHeaders sdk.Headers
 		}
+		// GetSubtopicsPrivate holds details about calls to the GetSubtopicsPrivate method.
+		GetSubtopicsPrivate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ReqHeaders is the reqHeaders argument value.
+			ReqHeaders sdk.Headers
+			// ID is the id argument value.
+			ID string
+		}
+		// GetSubtopicsPublic holds details about calls to the GetSubtopicsPublic method.
+		GetSubtopicsPublic []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ReqHeaders is the reqHeaders argument value.
+			ReqHeaders sdk.Headers
+			// ID is the id argument value.
+			ID string
+		}
 		// Health holds details about calls to the Health method.
 		Health []struct {
 		}
@@ -92,6 +122,8 @@ type ClienterMock struct {
 	lockChecker              sync.RWMutex
 	lockGetRootTopicsPrivate sync.RWMutex
 	lockGetRootTopicsPublic  sync.RWMutex
+	lockGetSubtopicsPrivate  sync.RWMutex
+	lockGetSubtopicsPublic   sync.RWMutex
 	lockHealth               sync.RWMutex
 	lockURL                  sync.RWMutex
 }
@@ -198,6 +230,84 @@ func (mock *ClienterMock) GetRootTopicsPublicCalls() []struct {
 	mock.lockGetRootTopicsPublic.RLock()
 	calls = mock.calls.GetRootTopicsPublic
 	mock.lockGetRootTopicsPublic.RUnlock()
+	return calls
+}
+
+// GetSubtopicsPrivate calls GetSubtopicsPrivateFunc.
+func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error) {
+	if mock.GetSubtopicsPrivateFunc == nil {
+		panic("ClienterMock.GetSubtopicsPrivateFunc: method is nil but Clienter.GetSubtopicsPrivate was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		ID         string
+	}{
+		Ctx:        ctx,
+		ReqHeaders: reqHeaders,
+		ID:         id,
+	}
+	mock.lockGetSubtopicsPrivate.Lock()
+	mock.calls.GetSubtopicsPrivate = append(mock.calls.GetSubtopicsPrivate, callInfo)
+	mock.lockGetSubtopicsPrivate.Unlock()
+	return mock.GetSubtopicsPrivateFunc(ctx, reqHeaders, id)
+}
+
+// GetSubtopicsPrivateCalls gets all the calls that were made to GetSubtopicsPrivate.
+// Check the length with:
+//     len(mockedClienter.GetSubtopicsPrivateCalls())
+func (mock *ClienterMock) GetSubtopicsPrivateCalls() []struct {
+	Ctx        context.Context
+	ReqHeaders sdk.Headers
+	ID         string
+} {
+	var calls []struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		ID         string
+	}
+	mock.lockGetSubtopicsPrivate.RLock()
+	calls = mock.calls.GetSubtopicsPrivate
+	mock.lockGetSubtopicsPrivate.RUnlock()
+	return calls
+}
+
+// GetSubtopicsPublic calls GetSubtopicsPublicFunc.
+func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error) {
+	if mock.GetSubtopicsPublicFunc == nil {
+		panic("ClienterMock.GetSubtopicsPublicFunc: method is nil but Clienter.GetSubtopicsPublic was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		ID         string
+	}{
+		Ctx:        ctx,
+		ReqHeaders: reqHeaders,
+		ID:         id,
+	}
+	mock.lockGetSubtopicsPublic.Lock()
+	mock.calls.GetSubtopicsPublic = append(mock.calls.GetSubtopicsPublic, callInfo)
+	mock.lockGetSubtopicsPublic.Unlock()
+	return mock.GetSubtopicsPublicFunc(ctx, reqHeaders, id)
+}
+
+// GetSubtopicsPublicCalls gets all the calls that were made to GetSubtopicsPublic.
+// Check the length with:
+//     len(mockedClienter.GetSubtopicsPublicCalls())
+func (mock *ClienterMock) GetSubtopicsPublicCalls() []struct {
+	Ctx        context.Context
+	ReqHeaders sdk.Headers
+	ID         string
+} {
+	var calls []struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		ID         string
+	}
+	mock.lockGetSubtopicsPublic.RLock()
+	calls = mock.calls.GetSubtopicsPublic
+	mock.lockGetSubtopicsPublic.RUnlock()
 	return calls
 }
 

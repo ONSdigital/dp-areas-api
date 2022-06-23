@@ -18,8 +18,6 @@ import (
 )
 
 func TestGetTopicPrivateHandler(t *testing.T) {
-	t.Parallel()
-
 	Convey("Given a topic API in publishing mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
@@ -68,8 +66,6 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 }
 
 func TestGetSubtopicsPrivateHandler(t *testing.T) {
-	t.Parallel()
-
 	Convey("Given a topic API in web mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
@@ -202,8 +198,6 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 }
 
 func TestGetTopicsListPrivateHandler(t *testing.T) {
-	t.Parallel()
-
 	Convey("Given a topic API in web mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
