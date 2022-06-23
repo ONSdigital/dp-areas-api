@@ -3,11 +3,13 @@ package steps
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-topic-api/config"
 	"time"
+
+	"github.com/ONSdigital/dp-topic-api/config"
 
 	dpMongoDriver "github.com/ONSdigital/dp-mongodb/v3/mongodb"
 
+	componentModels "github.com/ONSdigital/dp-topic-api/features/models"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/cucumber/godog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,7 +17,7 @@ import (
 
 func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) error {
 	ctx := context.Background()
-	topics := []models.TopicWrite{}
+	topics := []componentModels.TopicWrite{}
 	m := f.MongoClient
 
 	err := json.Unmarshal([]byte(topicsWriteJson.Content), &topics)
@@ -32,7 +34,7 @@ func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) erro
 	return nil
 }
 
-func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoCollection *dpMongoDriver.Collection, topicDoc models.TopicWrite) error {
+func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoCollection *dpMongoDriver.Collection, topicDoc componentModels.TopicWrite) error {
 	update := bson.M{
 		"$set": topicDoc,
 		"$setOnInsert": bson.M{

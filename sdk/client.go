@@ -3,6 +3,7 @@ package sdk
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,7 +12,9 @@ import (
 
 	healthcheck "github.com/ONSdigital/dp-api-clients-go/v2/health"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-topic-api/models"
 	apiError "github.com/ONSdigital/dp-topic-api/sdk/errors"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
@@ -53,6 +56,35 @@ func (cli *Client) Health() *healthcheck.Client {
 // Checker calls topic api health endpoint and returns a check object to the caller
 func (cli *Client) Checker(ctx context.Context, check *health.CheckState) error {
 	return cli.hcCli.Checker(ctx, check)
+}
+
+// GetRootTopicsPublic gets the public list of top level root topics for Web which returns the Current document(s) in the response
+func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) (*models.PublicSubtopics, error) {
+	path := fmt.Sprintf("%s/topics", cli.hcCli.URL)
+
+	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if err != nil {
+		logData := log.Data{
+			"path":        path,
+			"method":      http.MethodGet,
+			"req_headers": reqHeaders,
+			"body":        nil,
+		}
+		log.Error(ctx, "failed to call topic api", err, logData)
+		return nil, err
+	}
+
+	var rootTopics models.PublicSubtopics
+
+	if err = json.Unmarshal(b, &rootTopics); err != nil {
+		logData := log.Data{
+			"response_bytes": b,
+		}
+		log.Error(ctx, "failed to unmarshal bytes into root topics", err, logData)
+		return nil, err
+	}
+
+	return &rootTopics, nil
 }
 
 // callTopicAPI calls the Topic API endpoint given by path for the provided REST method, request headers, and body payload.
