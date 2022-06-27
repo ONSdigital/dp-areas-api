@@ -101,6 +101,17 @@ type AreasDataResults struct {
 	Ancestors     []AreasAncestors `json:"ancestors"`
 }
 
+// BoundaryDataResults represents the structure for a boundary in api v1.
+type BoundaryDataResults struct {
+	Columns string `json:"columns"`
+	Values  struct {
+		AreaID      string `json:"area_id"`
+		Boundary    string `json:"boundary"`
+		Centroid    string `json:"centroid"`
+		CentroidBng string `json:"centroid_bng"`
+	} `json:"values"`
+}
+
 // AreasAncestors represents the Ancestry structure.
 type AreasAncestors struct {
 	Id   string `json:"id"`

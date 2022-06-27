@@ -8,6 +8,7 @@ const (
 	AncestryDataGetError               = "ErrorRetrievingAncestryData"
 	MarshallingAreaDataError           = "ErrorMarshallingAreaData"
 	MarshallingAreaRelationshipsError  = "ErrorMarshallingAreaRelationshipData"
+	MarshallingAreaBoundaryError       = "ErrorMarshallingAreaBoundaryData"
 	InvalidAreaCodeError               = "InvalidAreaCode"
 	AreaNameNotProvidedError           = "AreaNameNotProvidedError"
 	InvalidAreaTypeError               = "InvalidAreaType"

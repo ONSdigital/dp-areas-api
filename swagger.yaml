@@ -74,7 +74,7 @@ paths:
     get:
       tags:
         - "Public"
-      summary: "Returns the latest version of an area realtionships- stubbed to return data for E92000001 / W92000004 only"
+      summary: "Returns the latest version of an area relationships- stubbed to return data for E92000001 / W92000004 only"
       description: "Returns an area for given id's E92000001 and W92000004 only"
       produces:
         - "application/json"
@@ -95,7 +95,62 @@ paths:
         500:
           $ref: "#/definitions/ErrorResponse"
 
+  /v1/boundaries/{id}:
+    get:
+      tags:
+        - "Public"
+      summary: "Returns the latest version of a boundary - stubbed to return data for E92000001 only"
+      description: "Returns an boundary for given id's E92000001 only"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: '#/parameters/id'
+        - in: query
+          name: relationship
+          type: string
+          description: "type of relationship parameter requested"
+          required: false
+      responses:
+        200:
+          description: "Successfully returned the boundary coordiantes for E92000001 only"
+          schema:
+            $ref: "#/definitions/Boundary"
+        404:
+          $ref: "#/definitions/ErrorResponse"
+        500:
+          $ref: "#/definitions/ErrorResponse"
+
 definitions:
+  Boundary:
+    description: "An individual error details"
+    type: object
+    properties:
+      columns:
+        type: string
+        description: ""
+        example: "W92000004"
+      values:
+        type: array
+        items:
+          type: object
+          properties:
+            area_id:
+              type: string
+              description: "The unique code for the ancestors area"
+              example: "W92000004"
+            boundary:
+              type: string
+              description: "coordinates for boundary code"
+              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+            centroid:
+              type: string
+              description: "coordinates for boundary centroid"
+              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+            centroid_bng:
+              type: string
+              description: "coordinates for boundary centroid bng"
+              example: "[[-3.31312158427656,53.35578183923212],[-3.312849585026868,53.35553905667192]]"
+
   AreaData:
     type: object
     required: [ "id" ]

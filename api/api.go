@@ -63,6 +63,8 @@ func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSA
 		r.HandleFunc("/v1/areas/{id}", contextAndErrors(api.updateArea)).Methods(http.MethodPut)
 	}
 
+	r.HandleFunc("/v1/boundaries/{id}", contextAndErrors(api.getBoundary)).Methods(http.MethodGet)
+
 	return api, nil
 }
 
