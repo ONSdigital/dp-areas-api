@@ -112,6 +112,35 @@ func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, i
 	return &subtopics, nil
 }
 
+// GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
+func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers) (*models.Navigation, error) {
+	path := fmt.Sprintf("%s/navigation", cli.hcCli.URL)
+
+	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if err != nil {
+		logData := log.Data{
+			"path":        path,
+			"method":      http.MethodGet,
+			"req_headers": reqHeaders,
+			"body":        nil,
+		}
+		log.Error(ctx, "failed to call topic api", err, logData)
+		return nil, err
+	}
+
+	var navigation models.Navigation
+
+	if err = json.Unmarshal(b, &navigation); err != nil {
+		logData := log.Data{
+			"response_bytes": b,
+		}
+		log.Error(ctx, "failed to unmarshal bytes into navigation", err, logData)
+		return nil, err
+	}
+
+	return &navigation, nil
+}
+
 // callTopicAPI calls the Topic API endpoint given by path for the provided REST method, request headers, and body payload.
 // It returns the response body and any error that occurred.
 func (cli *Client) callTopicAPI(ctx context.Context, path, method string, headers Headers, payload []byte) ([]byte, error) {
