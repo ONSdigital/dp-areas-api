@@ -50,16 +50,12 @@ var (
 		State:       "published",
 	}
 
-	abc = models.TopicNonReferential{
-		Description: "this is a description",
-	}
-
 	testPublicNavigation = models.Navigation{
-		Description: "Root Topic 2",
+		Description: "Descriptiontest1",
 		Links:       nil,
 		Items: &[]models.TopicNonReferential{
 			{
-				Description:   "this is a description",
+				Description:   "Descriptiontest2",
 				Label:         "labeltest",
 				Links:         &models.TopicLinks{},
 				Name:          "nametest",
