@@ -112,7 +112,7 @@ func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, i
 	return &subtopics, nil
 }
 
-// GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
+// GetNavigationPublic gets the public list of navigation items
 func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers) (*models.Navigation, error) {
 	path := fmt.Sprintf("%s/navigation", cli.hcCli.URL)
 
