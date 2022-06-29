@@ -343,7 +343,7 @@ func TestGetNavigationPublic(t *testing.T) {
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When GetNavigationPublic is called", func() {
-			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{})
+			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{}, "en")
 
 			Convey("Then the expected navigation items are returned", func() {
 				So(*respNavigation, ShouldResemble, testPublicNavigation)
@@ -359,6 +359,24 @@ func TestGetNavigationPublic(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("When GetNavigationPublic is called with lang query param", func() {
+			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{}, "cy")
+
+			Convey("Then the expected navigation items are returned", func() {
+				So(*respNavigation, ShouldResemble, testPublicNavigation)
+
+				Convey("And no error is returned", func() {
+					So(err, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Query().Get("lang"), ShouldEqual, "cy")
+					})
+				})
+			})
+		})
 	})
 
 	Convey("Given a 500 response from topic api", t, func() {
@@ -366,7 +384,7 @@ func TestGetNavigationPublic(t *testing.T) {
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When GetNavigationPublic is called", func() {
-			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{})
+			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{}, "en")
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
@@ -391,7 +409,7 @@ func TestGetNavigationPublic(t *testing.T) {
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When GetNavigationPublic is called", func() {
-			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{})
+			respNavigation, err := topicAPIClient.GetNavigationPublic(ctx, Headers{}, "en")
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
