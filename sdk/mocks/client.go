@@ -9,6 +9,7 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/dp-topic-api/sdk"
+	apiError "github.com/ONSdigital/dp-topic-api/sdk/errors"
 	"sync"
 )
 
@@ -25,16 +26,19 @@ var _ sdk.Clienter = &ClienterMock{}
 // 			CheckerFunc: func(ctx context.Context, check *health.CheckState) error {
 // 				panic("mock out the Checker method")
 // 			},
-// 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, error) {
+// 			GetNavigationPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error) {
+// 				panic("mock out the GetNavigationPublic method")
+// 			},
+// 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error) {
 // 				panic("mock out the GetRootTopicsPrivate method")
 // 			},
-// 			GetRootTopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, error) {
+// 			GetRootTopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error) {
 // 				panic("mock out the GetRootTopicsPublic method")
 // 			},
-// 			GetSubtopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error) {
+// 			GetSubtopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
 // 				panic("mock out the GetSubtopicsPrivate method")
 // 			},
-// 			GetSubtopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error) {
+// 			GetSubtopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error) {
 // 				panic("mock out the GetSubtopicsPublic method")
 // 			},
 // 			HealthFunc: func() *healthcheck.Client {
@@ -53,17 +57,20 @@ type ClienterMock struct {
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(ctx context.Context, check *health.CheckState) error
 
+	// GetNavigationPublicFunc mocks the GetNavigationPublic method.
+	GetNavigationPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error)
+
 	// GetRootTopicsPrivateFunc mocks the GetRootTopicsPrivate method.
-	GetRootTopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, error)
+	GetRootTopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error)
 
 	// GetRootTopicsPublicFunc mocks the GetRootTopicsPublic method.
-	GetRootTopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, error)
+	GetRootTopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error)
 
 	// GetSubtopicsPrivateFunc mocks the GetSubtopicsPrivate method.
-	GetSubtopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error)
+	GetSubtopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error)
 
 	// GetSubtopicsPublicFunc mocks the GetSubtopicsPublic method.
-	GetSubtopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error)
+	GetSubtopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error)
 
 	// HealthFunc mocks the Health method.
 	HealthFunc func() *healthcheck.Client
@@ -79,6 +86,15 @@ type ClienterMock struct {
 			Ctx context.Context
 			// Check is the check argument value.
 			Check *health.CheckState
+		}
+		// GetNavigationPublic holds details about calls to the GetNavigationPublic method.
+		GetNavigationPublic []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ReqHeaders is the reqHeaders argument value.
+			ReqHeaders sdk.Headers
+			// Options is the options argument value.
+			Options sdk.Options
 		}
 		// GetRootTopicsPrivate holds details about calls to the GetRootTopicsPrivate method.
 		GetRootTopicsPrivate []struct {
@@ -120,6 +136,7 @@ type ClienterMock struct {
 		}
 	}
 	lockChecker              sync.RWMutex
+	lockGetNavigationPublic  sync.RWMutex
 	lockGetRootTopicsPrivate sync.RWMutex
 	lockGetRootTopicsPublic  sync.RWMutex
 	lockGetSubtopicsPrivate  sync.RWMutex
@@ -163,8 +180,47 @@ func (mock *ClienterMock) CheckerCalls() []struct {
 	return calls
 }
 
+// GetNavigationPublic calls GetNavigationPublicFunc.
+func (mock *ClienterMock) GetNavigationPublic(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error) {
+	if mock.GetNavigationPublicFunc == nil {
+		panic("ClienterMock.GetNavigationPublicFunc: method is nil but Clienter.GetNavigationPublic was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		Options    sdk.Options
+	}{
+		Ctx:        ctx,
+		ReqHeaders: reqHeaders,
+		Options:    options,
+	}
+	mock.lockGetNavigationPublic.Lock()
+	mock.calls.GetNavigationPublic = append(mock.calls.GetNavigationPublic, callInfo)
+	mock.lockGetNavigationPublic.Unlock()
+	return mock.GetNavigationPublicFunc(ctx, reqHeaders, options)
+}
+
+// GetNavigationPublicCalls gets all the calls that were made to GetNavigationPublic.
+// Check the length with:
+//     len(mockedClienter.GetNavigationPublicCalls())
+func (mock *ClienterMock) GetNavigationPublicCalls() []struct {
+	Ctx        context.Context
+	ReqHeaders sdk.Headers
+	Options    sdk.Options
+} {
+	var calls []struct {
+		Ctx        context.Context
+		ReqHeaders sdk.Headers
+		Options    sdk.Options
+	}
+	mock.lockGetNavigationPublic.RLock()
+	calls = mock.calls.GetNavigationPublic
+	mock.lockGetNavigationPublic.RUnlock()
+	return calls
+}
+
 // GetRootTopicsPrivate calls GetRootTopicsPrivateFunc.
-func (mock *ClienterMock) GetRootTopicsPrivate(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, error) {
+func (mock *ClienterMock) GetRootTopicsPrivate(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error) {
 	if mock.GetRootTopicsPrivateFunc == nil {
 		panic("ClienterMock.GetRootTopicsPrivateFunc: method is nil but Clienter.GetRootTopicsPrivate was just called")
 	}
@@ -199,7 +255,7 @@ func (mock *ClienterMock) GetRootTopicsPrivateCalls() []struct {
 }
 
 // GetRootTopicsPublic calls GetRootTopicsPublicFunc.
-func (mock *ClienterMock) GetRootTopicsPublic(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, error) {
+func (mock *ClienterMock) GetRootTopicsPublic(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error) {
 	if mock.GetRootTopicsPublicFunc == nil {
 		panic("ClienterMock.GetRootTopicsPublicFunc: method is nil but Clienter.GetRootTopicsPublic was just called")
 	}
@@ -234,7 +290,7 @@ func (mock *ClienterMock) GetRootTopicsPublicCalls() []struct {
 }
 
 // GetSubtopicsPrivate calls GetSubtopicsPrivateFunc.
-func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, error) {
+func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
 	if mock.GetSubtopicsPrivateFunc == nil {
 		panic("ClienterMock.GetSubtopicsPrivateFunc: method is nil but Clienter.GetSubtopicsPrivate was just called")
 	}
@@ -273,7 +329,7 @@ func (mock *ClienterMock) GetSubtopicsPrivateCalls() []struct {
 }
 
 // GetSubtopicsPublic calls GetSubtopicsPublicFunc.
-func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, error) {
+func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error) {
 	if mock.GetSubtopicsPublicFunc == nil {
 		panic("ClienterMock.GetSubtopicsPublicFunc: method is nil but Clienter.GetSubtopicsPublic was just called")
 	}
