@@ -196,6 +196,7 @@ func TestGetRootTopicsPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public root topics should be nil", func() {
 					So(respRootTopics, ShouldBeNil)
@@ -221,6 +222,7 @@ func TestGetRootTopicsPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public root topics should be nil", func() {
 					So(respRootTopics, ShouldBeNil)
@@ -283,6 +285,7 @@ func TestGetSubtopicsPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public subtopics should be nil", func() {
 					So(respSubtopics, ShouldBeNil)
@@ -308,6 +311,7 @@ func TestGetSubtopicsPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public subtopics should be nil", func() {
 					So(respSubtopics, ShouldBeNil)
@@ -388,6 +392,7 @@ func TestGetNavigationPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public navigation items should be nil", func() {
 					So(respNavigation, ShouldBeNil)
@@ -413,6 +418,7 @@ func TestGetNavigationPublic(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected public subtopics should be nil", func() {
 					So(respNavigation, ShouldBeNil)
