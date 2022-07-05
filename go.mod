@@ -2,6 +2,8 @@ module github.com/ONSdigital/dp-areas-api
 
 go 1.17
 
+retract v1.13.0
+
 require (
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
