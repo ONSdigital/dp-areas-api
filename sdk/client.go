@@ -13,7 +13,6 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/models"
 	apiError "github.com/ONSdigital/dp-topic-api/sdk/errors"
-	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
@@ -55,92 +54,70 @@ func (cli *Client) Checker(ctx context.Context, check *health.CheckState) error 
 }
 
 // GetRootTopicsPublic gets the public list of top level root topics for Web which returns the Current document(s) in the response
-func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) (*models.PublicSubtopics, error) {
+func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) (*models.PublicSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics", cli.hcCli.URL)
 
-	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
-	if err != nil {
-		logData := log.Data{
-			"path":        path,
-			"method":      http.MethodGet,
-			"req_headers": reqHeaders,
-			"body":        nil,
-		}
-		log.Error(ctx, "failed to call topic api", err, logData)
-		return nil, err
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	var rootTopics models.PublicSubtopics
 
-	if err = json.Unmarshal(b, &rootTopics); err != nil {
-		logData := log.Data{
-			"response_bytes": b,
+	if err := json.Unmarshal(b, &rootTopics); err != nil {
+		return nil, apiError.StatusError{
+			Err:  fmt.Errorf("failed to unmarshal rootTopics - error is: %v", err),
+			Code: apiErr.Status(),
 		}
-		log.Error(ctx, "failed to unmarshal bytes into root topics", err, logData)
-		return nil, err
 	}
 
 	return &rootTopics, nil
 }
 
 // GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
-func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, error) {
+func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
 
-	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
-	if err != nil {
-		logData := log.Data{
-			"path":        path,
-			"method":      http.MethodGet,
-			"req_headers": reqHeaders,
-			"body":        nil,
-		}
-		log.Error(ctx, "failed to call topic api", err, logData)
-		return nil, err
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	var subtopics models.PublicSubtopics
 
-	if err = json.Unmarshal(b, &subtopics); err != nil {
-		logData := log.Data{
-			"response_bytes": b,
+	if err := json.Unmarshal(b, &subtopics); err != nil {
+		return nil, apiError.StatusError{
+			Err:  fmt.Errorf("failed to unmarshal subtopics - error is: %v", err),
+			Code: apiErr.Status(),
 		}
-		log.Error(ctx, "failed to unmarshal bytes into subtopics", err, logData)
-		return nil, err
 	}
 
 	return &subtopics, nil
 }
 
 // GetNavigationPublic gets the public list of navigation items
-func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers, options Options) (*models.Navigation, error) {
+func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers, options Options) (*models.Navigation, apiError.Error) {
 	lang, err := options.Lang.String()
 	if err != nil {
-		return nil, err
+		return nil, apiError.StatusError{
+			Err: fmt.Errorf("failed to get language - error is: %v", err),
+		}
 	}
 
 	path := fmt.Sprintf("%s/navigation?lang=%s", cli.hcCli.URL, lang)
 
-	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
-	if err != nil {
-		logData := log.Data{
-			"path":        path,
-			"method":      http.MethodGet,
-			"req_headers": reqHeaders,
-			"body":        nil,
-		}
-		log.Error(ctx, "failed to call topic api", err, logData)
-		return nil, err
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	var navigation models.Navigation
 
 	if err = json.Unmarshal(b, &navigation); err != nil {
-		logData := log.Data{
-			"response_bytes": b,
+		return nil, apiError.StatusError{
+			Err:  fmt.Errorf("failed to unmarshal navigation - error is: %v", err),
+			Code: apiErr.Status(),
 		}
-		log.Error(ctx, "failed to unmarshal bytes into navigation", err, logData)
-		return nil, err
 	}
 
 	return &navigation, nil
@@ -148,12 +125,11 @@ func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers, 
 
 // callTopicAPI calls the Topic API endpoint given by path for the provided REST method, request headers, and body payload.
 // It returns the response body and any error that occurred.
-func (cli *Client) callTopicAPI(ctx context.Context, path, method string, headers Headers, payload []byte) ([]byte, error) {
+func (cli *Client) callTopicAPI(ctx context.Context, path, method string, headers Headers, payload []byte) ([]byte, apiError.Error) {
 	URL, err := url.Parse(path)
 	if err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to parse path: \"%v\" error is: %v", path, err),
-			Code: http.StatusInternalServerError,
+			Err: fmt.Errorf("failed to parse path: \"%v\" error is: %v", path, err),
 		}
 	}
 
@@ -170,8 +146,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 	// check req, above, didn't error
 	if err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to create request for call to topic api, error is: %v", err),
-			Code: http.StatusInternalServerError,
+			Err: fmt.Errorf("failed to create request for call to topic api, error is: %v", err),
 		}
 	}
 
@@ -182,8 +157,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 	err = headers.Add(req)
 	if err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to add headers to request, error is: %v", err),
-			Code: http.StatusInternalServerError,
+			Err: fmt.Errorf("failed to add headers to request, error is: %v", err),
 		}
 	}
 
@@ -213,7 +187,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 	if err != nil {
 		return nil, apiError.StatusError{
 			Err:  fmt.Errorf("failed to read response body from call to topic api, error is: %v", err),
-			Code: http.StatusInternalServerError,
+			Code: resp.StatusCode,
 		}
 	}
 
@@ -221,7 +195,7 @@ func (cli *Client) callTopicAPI(ctx context.Context, path, method string, header
 }
 
 // closeResponseBody closes the response body and logs an error if unsuccessful
-func closeResponseBody(resp *http.Response) error {
+func closeResponseBody(resp *http.Response) apiError.Error {
 	if resp.Body != nil {
 		if err := resp.Body.Close(); err != nil {
 			return apiError.StatusError{
