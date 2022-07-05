@@ -7,62 +7,46 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-topic-api/models"
-	"github.com/ONSdigital/log.go/v2/log"
+	apiError "github.com/ONSdigital/dp-topic-api/sdk/errors"
 )
 
 // GetRootTopicsPrivate gets the private list of top level root topics for Publishing which returns both Next and Current document(s) in the response
-func (cli *Client) GetRootTopicsPrivate(ctx context.Context, reqHeaders Headers) (*models.PrivateSubtopics, error) {
+func (cli *Client) GetRootTopicsPrivate(ctx context.Context, reqHeaders Headers) (*models.PrivateSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics", cli.hcCli.URL)
 
-	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
-	if err != nil {
-		logData := log.Data{
-			"path":        path,
-			"method":      http.MethodGet,
-			"req_headers": reqHeaders,
-			"body":        nil,
-		}
-		log.Error(ctx, "failed to call topic api", err, logData)
-		return nil, err
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	var rootTopics models.PrivateSubtopics
 
-	if err = json.Unmarshal(b, &rootTopics); err != nil {
-		logData := log.Data{
-			"response_bytes": b,
+	if err := json.Unmarshal(b, &rootTopics); err != nil {
+		return nil, apiError.StatusError{
+			Err:  fmt.Errorf("failed to unmarshal rootTopics - error is: %v", err),
+			Code: apiErr.Status(),
 		}
-		log.Error(ctx, "failed to unmarshal bytes into root topics", err, logData)
-		return nil, err
 	}
 
 	return &rootTopics, nil
 }
 
 // GetSubtopicsPrivate gets the private list of subtopics of a topic for Publishing which returns both Next and Current document(s) in the response
-func (cli *Client) GetSubtopicsPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.PrivateSubtopics, error) {
+func (cli *Client) GetSubtopicsPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
 
-	b, err := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
-	if err != nil {
-		logData := log.Data{
-			"path":        path,
-			"method":      http.MethodGet,
-			"req_headers": reqHeaders,
-			"body":        nil,
-		}
-		log.Error(ctx, "failed to call topic api", err, logData)
-		return nil, err
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
 	}
 
 	var subtopics models.PrivateSubtopics
 
-	if err = json.Unmarshal(b, &subtopics); err != nil {
-		logData := log.Data{
-			"response_bytes": b,
+	if err := json.Unmarshal(b, &subtopics); err != nil {
+		return nil, apiError.StatusError{
+			Err:  fmt.Errorf("failed to unmarshal subtopics - error is: %v", err),
+			Code: apiErr.Status(),
 		}
-		log.Error(ctx, "failed to unmarshal bytes into subtopics", err, logData)
-		return nil, err
 	}
 
 	return &subtopics, nil

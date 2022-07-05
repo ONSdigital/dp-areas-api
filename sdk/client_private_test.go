@@ -85,6 +85,7 @@ func TestGetRootTopicsPrivate(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected private root topics should be nil", func() {
 					So(respRootTopics, ShouldBeNil)
@@ -110,6 +111,7 @@ func TestGetRootTopicsPrivate(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected private root topics should be nil", func() {
 					So(respRootTopics, ShouldBeNil)
@@ -174,6 +176,7 @@ func TestGetSubtopicsPrivate(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected private subtopics should be nil", func() {
 					So(respSubtopics, ShouldBeNil)
@@ -199,6 +202,7 @@ func TestGetSubtopicsPrivate(t *testing.T) {
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
 
 				Convey("And the expected private subtopics should be nil", func() {
 					So(respSubtopics, ShouldBeNil)
