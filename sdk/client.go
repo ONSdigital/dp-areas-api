@@ -66,8 +66,7 @@ func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) 
 
 	if err := json.Unmarshal(b, &rootTopics); err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to unmarshal rootTopics - error is: %v", err),
-			Code: apiErr.Status(),
+			Err: fmt.Errorf("failed to unmarshal rootTopics - error is: %v", err),
 		}
 	}
 
@@ -87,8 +86,7 @@ func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, i
 
 	if err := json.Unmarshal(b, &subtopics); err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to unmarshal subtopics - error is: %v", err),
-			Code: apiErr.Status(),
+			Err: fmt.Errorf("failed to unmarshal subtopics - error is: %v", err),
 		}
 	}
 
@@ -115,8 +113,7 @@ func (cli *Client) GetNavigationPublic(ctx context.Context, reqHeaders Headers, 
 
 	if err = json.Unmarshal(b, &navigation); err != nil {
 		return nil, apiError.StatusError{
-			Err:  fmt.Errorf("failed to unmarshal navigation - error is: %v", err),
-			Code: apiErr.Status(),
+			Err: fmt.Errorf("failed to unmarshal navigation - error is: %v", err),
 		}
 	}
 
