@@ -80,7 +80,7 @@ var labels = map[string]map[string]string{
 		welsh:   "Gwerth Ychwanegol Gros",
 	},
 	"inflation-and-price-indices": {
-		english: "Inflation and price price indicess",
+		english: "Inflation and price indices",
 		welsh:   "Mynegeion chwyddiant a phrisiau",
 	},
 	"investments-pensions-and-trusts": {
@@ -255,19 +255,6 @@ func getNavItems(lang string) (*[]models.TopicNonReferential, string) {
 					Uri: "/businessindustryandtrade/constructionindustry",
 				},
 				{
-					Title:       "International trade",
-					Description: "Trade in goods and services across the UK's international borders, including total imports and exports, the types of goods and services traded and general trends in international trade. ",
-					Name:        "international-trade",
-					Label:       labels["international-trade"][lang],
-					Links: &models.TopicLinks{
-						Self: &models.LinkObject{
-							ID:   "internationaltrade",
-							HRef: "/topics/internationaltrade",
-						},
-					},
-					Uri: "/businessindustryandtrade/internationaltrade",
-				},
-				{
 					Title:       "IT and internet industry",
 					Description: "Internet sales by businesses in the UK (total value and as a percentage of all retail sales) and the percentage of businesses that have a website and broadband connection. These figures indicate the importance of the internet to UK businesses.",
 					Name:        "it-and-internet-industry",
@@ -279,6 +266,19 @@ func getNavItems(lang string) (*[]models.TopicNonReferential, string) {
 						},
 					},
 					Uri: "/businessindustryandtrade/itandinternetindustry",
+				},
+				{
+					Title:       "International trade",
+					Description: "Trade in goods and services across the UK's international borders, including total imports and exports, the types of goods and services traded and general trends in international trade. ",
+					Name:        "international-trade",
+					Label:       labels["international-trade"][lang],
+					Links: &models.TopicLinks{
+						Self: &models.LinkObject{
+							ID:   "internationaltrade",
+							HRef: "/topics/internationaltrade",
+						},
+					},
+					Uri: "/businessindustryandtrade/internationaltrade",
 				},
 				{
 					Title:       "Manufacturing and production industry",
@@ -490,7 +490,7 @@ func getNavItems(lang string) (*[]models.TopicNonReferential, string) {
 					},
 					Uri:   "/employmentandlabourmarket/peoplenotinwork",
 					Name:  "people-not-in-work",
-					Label: labels["people-bot-in-work"][lang],
+					Label: labels["people-not-in-work"][lang],
 				},
 			},
 		},

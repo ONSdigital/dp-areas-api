@@ -42,7 +42,7 @@ func Get() (*Config, error) {
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
-		EnablePrivateEndpoints:     true,
+		EnablePrivateEndpoints:     false,
 		EnablePermissionsAuth:      false,
 		MongoConfig: MongoConfig{
 			ClusterEndpoint:               "localhost:27017",
