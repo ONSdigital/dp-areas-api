@@ -6,6 +6,7 @@ import (
 	"arearelationshipimport/filewriter"
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
 	"strings"
@@ -63,6 +64,10 @@ func (ai *AreaImporter) ImportForTable(ctx context.Context, tbl string) {
 	if err != nil {
 		fmt.Printf("error occurred while writing file to destination. error: %+v", err)
 	}
+
+	defer func(fileToClose *os.File) {
+		_ = fileToClose.Close()
+	}(file)
 
 	fmt.Printf("Total imported %s: %d \n", tbl, insertedRows)
 }
