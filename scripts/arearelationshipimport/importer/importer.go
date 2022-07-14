@@ -24,11 +24,11 @@ func NewAreaImporter(config *config.ImportConfig, source filereader.FileReader, 
 
 func (ai *AreaImporter) ConfirmConfigsFromUser() bool {
 	var s string
-	print := color.New(color.FgHiYellow, color.Bold, color.BgWhite)
+	print := color.New(color.FgHiWhite, color.Bold, color.BgRed)
 	if ai.config.GetShouldUseS3Source() {
-		print.Println("Using S3 storage")
+		print.Println("***************************** Importing from S3 storage *****************************")
 	} else {
-		print.Println("Using local storage")
+		print.Println("**************************** Importing from local storage ****************************")
 	}
 
 	fmt.Printf("StartImport Config %+v \n", ai.config)
