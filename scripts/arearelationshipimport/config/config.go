@@ -1,6 +1,9 @@
 package config
 
-import "github.com/kelseyhightower/envconfig"
+import (
+	"github.com/kelseyhightower/envconfig"
+	"os"
+)
 
 type ImportConfig struct {
 	DatabaseURIString     string `envconfig:"DATABASE_URI_STRING" required:"true" json:"DatabaseURIString,omitempty"`
@@ -10,7 +13,6 @@ type ImportConfig struct {
 	AWSSecretKey          string `envconfig:"AWS_SECRET_KEY" required:"true" json:"AWSSecretKey,omitempty"`
 	S3Bucket              string `envconfig:"S3_BUCKET" required:"true" json:"S3Bucket,omitempty"`
 	S3Region              string `envconfig:"S3_REGION" required:"true" json:"S3Region,omitempty"`
-	TempPath              string `envconfig:"TEMP_PATH" required:"true" json:"TempPath,omitempty"`
 	ShouldUseS3Source     bool   `envconfig:"SHOULD_USE_S3_SOURCE" required:"true" json:"ShouldUseS3Source"`
 }
 
@@ -33,7 +35,7 @@ func (ic *ImportConfig) GetDatabaseURI() string {
 }
 
 func (ic *ImportConfig) GetTempPath() string {
-	return ic.TempPath
+	return os.TempDir()
 }
 
 func (ic *ImportConfig) GetS3AreaRelationshipDir() string {
