@@ -33,8 +33,6 @@ var areaTypeAndCode = map[string]string{
 	"W05": "Electoral Wards",
 }
 
-// http://127.0.0.1:25500/v1/areas/
-// /Users/indra/Docs/ons/Code_History_Database_(December_2021)_UK/ChangeHistory.csv
 type Config struct {
 	CSVFilePath   string `envconfig:"CSV_FILE_PATH" required:"true"`
 	AreaUpdateUrl string `envconfig:"AREA_UPDATE_URL" required:"true"`
@@ -72,20 +70,20 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 			continue
 		}
 		if line[1] == "" {
-			errors = append(errors, "found area info with empty name: "+line[0])
+			errors = append(errors, "Empty area name for the code: "+line[0])
 			continue
 		}
 
 		_, areaTypeFound := areaTypeAndCode[line[8]]
 		if !areaTypeFound {
-			errors = append(errors, "area type not drive for: "+line[0])
+			errors = append(errors, "Empty area type for the code: "+line[0])
 			continue
 		}
 
 		const layout = "02/01/2006 15:04:05"
 		active_from, err := time.Parse(layout, line[5])
 		if err != nil {
-			log.Fatal("Could not parse time:", err)
+			log.Fatal("Parse time error:", err)
 		}
 		active_to, _ := time.Parse(layout, line[6])
 
@@ -113,10 +111,10 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 
 		resp, err := importAreaInfo(config, areaInfo)
 		if err != nil {
-			log.Fatal("Could not parse time:", err)
+			log.Fatal("Parse time error:", err)
 		}
 
-		success = append(success, "api response for line[0]: "+resp.Status)
+		success = append(success, "Api response for line[0]: "+resp.Status)
 
 	}
 
@@ -124,9 +122,9 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 		for _, v := range areaChildInfo {
 			resp, err := importAreaInfo(config, v)
 			if err != nil {
-				log.Fatal("Could not parse time:", err)
+				log.Fatal("Parse time error:", err)
 			}
-			success = append(success, "api response for line[0]: "+resp.Status)
+			success = append(success, "Api response for line[0]: "+resp.Status)
 		}
 	}
 	logs := logs{
