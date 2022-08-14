@@ -2,8 +2,9 @@ package models
 
 import (
 	"context"
-	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 	"net/http"
+
+	errs "github.com/ONSdigital/dp-areas-api/apierrors"
 )
 
 type ErrorResponse struct {
@@ -27,7 +28,6 @@ func NewDBReadError(ctx context.Context, err error) *ErrorResponse {
 	}
 	responseErr := NewError(ctx, err, AreaDataIdGetError, err.Error())
 	return NewErrorResponse(http.StatusInternalServerError, nil, responseErr)
-
 }
 
 func NewBodyReadError(ctx context.Context, err error) *ErrorResponse {

@@ -65,15 +65,12 @@ func (a *AreaParams) ValidateAreaRequest(ctx context.Context) []error {
 	if a.AreaName == nil {
 		validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameDetailsNotProvidedError, AreaNameDetailsNotProvidedErrorDescription))
 	} else {
-
 		if a.AreaName.Name == "" {
 			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameNotProvidedError, AreaNameNotProvidedErrorDescription))
 		}
-
 		if a.AreaName.ActiveFrom == nil {
 			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameActiveFromNotProvidedError, AreaNameActiveFromNotProvidedErrorDescription))
 		}
-
 		if a.AreaName.ActiveTo == nil {
 			validationErrs = append(validationErrs, NewValidationError(ctx, AreaNameActiveToNotProvidedError, AreaNameActiveToNotProvidedErrorDescription))
 		}
@@ -95,10 +92,14 @@ func (a *AreaParams) SetAreaType(ctx context.Context) {
 type AreasDataResults struct {
 	Code          string           `json:"code"`
 	Name          *string          `json:"name"`
-	GeometricData [][][2]float64   `json:"geometry"`
+	GeometricData GeoData          `json:"geometry"`
 	Visible       *bool            `json:"visible"`
 	AreaType      *string          `json:"area_type"`
 	Ancestors     []AreasAncestors `json:"ancestors"`
+}
+
+type GeoData struct {
+	Coordinates [][][][2]float64 `json:"coordinates"`
 }
 
 // BoundaryDataResults represents the structure for a boundary in api v1.

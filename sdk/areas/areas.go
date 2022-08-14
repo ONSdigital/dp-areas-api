@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -66,28 +66,29 @@ func (c *Client) Checker(ctx context.Context, check *health.CheckState) error {
 }
 
 // GetArea returns area information for a given area ID
-func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, areaID, acceptLang string) (areaDetails AreaDetails, err error) {
+func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, areaID, acceptLang string) (AreaDetails, error) {
+	var areaDetails AreaDetails
 	uri := fmt.Sprintf("%s/v1/areas/%s", c.hcCli.URL, areaID)
 	clientlog.Do(ctx, "retrieving area", service, uri)
 	resp, err := c.doGetWithAuthHeaders(ctx, userAuthToken, serviceAuthToken, collectionID, uri, nil, "", acceptLang)
 	if err != nil {
-		return
+		return areaDetails, nil
 	}
 	defer closeResponseBody(ctx, resp)
 
 	if resp.StatusCode != http.StatusOK {
 		err = NewAreaAPIResponse(resp, uri)
-		return
+		return areaDetails, err
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return
+		return areaDetails, nil
 	}
 
 	var body map[string]interface{}
 	if err = json.Unmarshal(b, &body); err != nil {
-		return
+		return areaDetails, nil
 	}
 
 	// TODO: Authentication will sort this problem out for us. Currently
@@ -96,12 +97,12 @@ func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, c
 	if next, ok := body["next"]; ok && (serviceAuthToken != "" || userAuthToken != "") {
 		b, err = json.Marshal(next)
 		if err != nil {
-			return
+			return areaDetails, nil
 		}
 	}
 
 	err = json.Unmarshal(b, &areaDetails)
-	return
+	return areaDetails, err
 }
 
 // GetRelations gets the child areas
@@ -121,7 +122,7 @@ func (c *Client) GetRelations(ctx context.Context, userAuthToken, serviceAuthTok
 		return
 	}
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return
 	}
@@ -136,7 +137,7 @@ func NewAreaAPIResponse(resp *http.Response, uri string) (e *ErrInvalidAreaAPIRe
 		uri:        uri,
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			e.body = "Client failed to read area body"
 			return
@@ -160,7 +161,7 @@ func addCollectionIDHeader(r *http.Request, collectionID string) {
 // If url.Values are provided, they will be added as query parameters in the URL.
 // NOTE: Only one of the tokens 'userAuthToken' or 'serviceAuthToken' needs to have a value.
 func (c *Client) doGetWithAuthHeaders(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, uri string, values url.Values, ifMatch, acceptLang string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	req, err := http.NewRequest(http.MethodGet, uri, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -169,8 +170,12 @@ func (c *Client) doGetWithAuthHeaders(ctx context.Context, userAuthToken, servic
 		req.URL.RawQuery = values.Encode()
 	}
 
-	headers.SetIfMatch(req, ifMatch)
-	headers.SetAcceptedLang(req, acceptLang)
+	if err := headers.SetIfMatch(req, ifMatch); err != nil {
+		log.Warn(ctx, fmt.Sprintf("error setting headers: %s", err.Error()))
+	}
+	if err := headers.SetAcceptedLang(req, acceptLang); err != nil {
+		log.Warn(ctx, fmt.Sprintf("error setting headers: %s", err.Error()))
+	}
 	addCollectionIDHeader(req, collectionID)
 	dprequest.AddFlorenceHeader(req, userAuthToken)
 	dprequest.AddServiceTokenHeader(req, serviceAuthToken)

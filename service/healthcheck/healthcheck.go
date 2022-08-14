@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	authErrorRegex, _ = regexp.Compile(authError)
+	authErrorRegex = regexp.MustCompile(authError)
 )
 
 func RDSHealthCheck(ctx context.Context, cfg *config.Config, rds api.RDSAreaStore) health.Checker {
@@ -29,9 +29,9 @@ func RDSHealthCheck(ctx context.Context, cfg *config.Config, rds api.RDSAreaStor
 		if err != nil && authErrorRegex.MatchString(err.Error()) {
 			log.Error(context.Background(), "Attempting to re-connect to rds instance", err)
 			rds.Init(ctx, cfg)
-			err := rds.Ping(ctx)
-			if err != nil {
-				log.Error(context.Background(), "Attempting to re-connect to rds instance on PAM fail", err)
+			pingErr := rds.Ping(ctx)
+			if pingErr != nil {
+				log.Error(context.Background(), "Attempting to re-connect to rds instance on PAM fail", pingErr)
 			}
 		}
 

@@ -114,15 +114,11 @@ func TestGetHTTPServer(t *testing.T) {
 			})
 		})
 	})
-
 }
 
 func TestGetHealthCheck(t *testing.T) {
-
 	Convey("Given a service list that returns a mocked healthchecker", t, func() {
-
 		hcMock := &mock.HealthCheckerMock{}
-
 		newServiceMock := &mock.InitialiserMock{
 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 				return hcMock, nil

@@ -115,7 +115,6 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 		}
 
 		success = append(success, "Api response for line[0]: "+resp.Status)
-
 	}
 
 	if len(areaChildInfo) > 0 {
@@ -127,19 +126,21 @@ func importChangeHistoryAreaInfo(config *Config) logs {
 			success = append(success, "Api response for line[0]: "+resp.Status)
 		}
 	}
-	logs := logs{
+	statusLogs := logs{
 		errors:  errors,
 		success: success,
 	}
-	return logs
+	return statusLogs
 }
 func getConfig() *Config {
 	conf := &Config{}
-	envconfig.Process("", conf)
+	if err := envconfig.Process("", conf); err != nil {
+		log.Fatalf("error processing configuration %+v:", err)
+	}
 	return conf
 }
 func importAreaInfo(config *Config, areaInfo models.AreaParams) (*http.Response, error) {
-	json, err := json.Marshal(areaInfo)
+	marshalledJSON, err := json.Marshal(areaInfo)
 
 	if err != nil {
 		return nil, err
@@ -147,7 +148,7 @@ func importAreaInfo(config *Config, areaInfo models.AreaParams) (*http.Response,
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest(http.MethodPut, config.AreaUpdateUrl+areaInfo.Code, bytes.NewBuffer(json))
+	req, err := http.NewRequest(http.MethodPut, config.AreaUpdateUrl+areaInfo.Code, bytes.NewBuffer(marshalledJSON))
 	if err != nil {
 		return nil, err
 	}

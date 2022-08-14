@@ -4,23 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 
-	"github.com/ONSdigital/log.go/v2/log"
-
 	"github.com/ONSdigital/dp-areas-api/models"
+	"github.com/ONSdigital/dp-areas-api/models/DBRelationalData"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
 const (
 	acceptLanguageHeaderMatchString = "en|cy"
-)
-
-var (
-	queryStr = "select id, code, active from areas_basic where id=$1"
 )
 
 // getBoundary is a handler that gets boundary for an ID - currently from stubbed data
@@ -50,7 +45,7 @@ func (api *API) getBoundary(ctx context.Context, _ http.ResponseWriter, req *htt
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
 }
 
-//getBoundaryAreaData is a handler that gets a boundary data by ID
+// getBoundaryAreaData is a handler that gets a boundary data by ID
 func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
@@ -62,7 +57,7 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	} else if m, _ := regexp.MatchString(acceptLanguageHeaderMatchString, req.Header.Get(models.AcceptLanguageHeaderName)); !m {
 		validationErrs = append(validationErrs, models.NewValidationError(ctx, models.AcceptLanguageHeaderError, models.AcceptLanguageHeaderInvalidDescription))
 	}
-	//handle errors
+	// handle errors
 	if len(validationErrs) != 0 {
 		return nil, models.NewErrorResponse(http.StatusNotFound, nil, validationErrs...)
 	}
@@ -92,7 +87,7 @@ func (api *API) getAreaData(ctx context.Context, _ http.ResponseWriter, req *htt
 	return models.NewSuccessResponse(areaData, http.StatusOK, nil), nil
 }
 
-//getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
+// getAreaRelationships is a handler that gets area relationship by ID - currently from stubbed data
 func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
 	vars := mux.Vars(req)
 	areaID := vars["id"]
@@ -125,7 +120,6 @@ func (api *API) getAreaRelationships(ctx context.Context, w http.ResponseWriter,
 	}
 
 	return models.NewSuccessResponse(jsonResponse, http.StatusOK, nil), nil
-
 }
 
 func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http.Request) (*models.SuccessResponse, *models.ErrorResponse) {
@@ -140,7 +134,7 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 	logData := log.Data{"area code": areaCode}
 	log.Info(ctx, "received request to upsert area", logData)
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, models.NewBodyReadError(ctx, err)
 	}
@@ -170,5 +164,4 @@ func (api *API) updateArea(ctx context.Context, w http.ResponseWriter, req *http
 	} else {
 		return models.NewSuccessResponse(nil, http.StatusOK, nil), nil
 	}
-
 }

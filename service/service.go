@@ -2,19 +2,17 @@ package service
 
 import (
 	"context"
-	s3 "github.com/ONSdigital/dp-s3/v2"
 
 	"github.com/ONSdigital/dp-areas-api/api"
 	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/models"
 	"github.com/ONSdigital/dp-areas-api/models/DBRelationalSchema"
-
 	"github.com/ONSdigital/dp-areas-api/pgx"
+	health "github.com/ONSdigital/dp-areas-api/service/healthcheck"
+	s3 "github.com/ONSdigital/dp-s3/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-
-	health "github.com/ONSdigital/dp-areas-api/service/healthcheck"
 )
 
 // Service contains all the configs, server and clients to run the dp-areas-api API
@@ -37,9 +35,7 @@ type Service struct {
 
 // Run the service
 func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
-
 	log.Info(ctx, "running service")
-
 	log.Info(ctx, "using service configuration", log.Data{"config": cfg})
 
 	// Get HTTP Server and ... // ADD CODE: Add any middleware that your service requires
