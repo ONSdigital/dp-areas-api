@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api/geodata"
@@ -74,7 +73,7 @@ func initialiseStubbedAreaData(_ context.Context) (map[string]models.AreasDataRe
 	for _, geoDataFile := range fls {
 		var data models.AreasDataResults
 		if err := json.Unmarshal([]byte(geoDataFile), &data); err != nil {
-			log.Fatalf("error unmarshalling geo data %+v", err)
+			return nil, err
 		}
 		geoData[data.Code] = data
 	}

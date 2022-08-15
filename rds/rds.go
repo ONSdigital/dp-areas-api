@@ -377,7 +377,7 @@ func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
 }
 
 func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
-	var ancestors []*models.AreasAncestors
+	var ancestors []models.AreasAncestors
 
 	rows, err := r.conn.Query(context.Background(), getAncestors, areaCode)
 	if err != nil {
@@ -387,12 +387,7 @@ func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
 	for rows.Next() {
 		var rs models.AreasAncestors
 		rows.Scan(&rs.Id, &rs.Name)
-		ancestors = append(ancestors, &rs)
+		ancestors = append(ancestors, rs)
 	}
-
-	a := make([]models.AreasAncestors, len(ancestors))
-	for index, data := range ancestors {
-		a[index] = *data
-	}
-	return a, nil
+	return ancestors, nil
 }
