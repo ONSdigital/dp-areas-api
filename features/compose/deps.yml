@@ -1,0 +1,13 @@
+version: '3.3'
+
+services:
+  rds:
+    image: confluentinc/cp-zookeeper:6.0.0
+    expose:
+      - 2181
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    logging:
+      driver: none
