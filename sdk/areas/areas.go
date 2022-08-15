@@ -72,7 +72,7 @@ func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, c
 	clientlog.Do(ctx, "retrieving area", service, uri)
 	resp, err := c.doGetWithAuthHeaders(ctx, userAuthToken, serviceAuthToken, collectionID, uri, nil, "", acceptLang)
 	if err != nil {
-		return areaDetails, nil
+		return areaDetails, err
 	}
 	defer closeResponseBody(ctx, resp)
 
@@ -83,12 +83,12 @@ func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, c
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return areaDetails, nil
+		return areaDetails, err
 	}
 
 	var body map[string]interface{}
-	if err = json.Unmarshal(b, &body); err != nil {
-		return areaDetails, nil
+	if unmarshalErr := json.Unmarshal(b, &body); unmarshalErr != nil {
+		return areaDetails, unmarshalErr
 	}
 
 	// TODO: Authentication will sort this problem out for us. Currently
@@ -97,7 +97,7 @@ func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, c
 	if next, ok := body["next"]; ok && (serviceAuthToken != "" || userAuthToken != "") {
 		b, err = json.Marshal(next)
 		if err != nil {
-			return areaDetails, nil
+			return areaDetails, err
 		}
 	}
 
