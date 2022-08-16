@@ -2,12 +2,10 @@ version: '3.3'
 
 services:
   rds:
-    image: confluentinc/cp-zookeeper:6.0.0
-    expose:
-      - 2181
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
     environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    logging:
-      driver: none
+      POSTGRES_USER:      "user"
+      POSTGRES_PASSWORD:  "password"
+      POSTGRES_DB:        "db"

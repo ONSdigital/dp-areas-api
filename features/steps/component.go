@@ -7,6 +7,8 @@ import (
 
 	"github.com/ONSdigital/dp-areas-api/service"
 	componenttest "github.com/ONSdigital/dp-component-test"
+
+	"github.com/cucumber/godog"
 )
 
 var (
@@ -44,4 +46,7 @@ func (c *Component) Reset() {
 func (c *Component) Close() {
 	c.AuthServiceInjector.Close()
 	c.RDSInjector.Close()
+}
+
+func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 }

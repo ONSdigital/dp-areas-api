@@ -4,19 +4,15 @@ import (
 	"context"
 	"flag"
 	"io"
-	"log"
 	"os"
 	"testing"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 
-	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/features/steps"
 	dplogs "github.com/ONSdigital/log.go/v2/log"
 )
-
-const componentLogFile = "component-output.txt"
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 var quietComponentFlag = flag.Bool("quiet-component", false, "perform component tests with dp logging disabled")
@@ -48,38 +44,17 @@ func TestComponent(t *testing.T) {
 	if *componentFlag || *quietComponentFlag {
 		status := 0
 
-		cfg, err := config.Get()
-		if err != nil {
-			t.Fatalf("failed to get service config: %s", err)
-		}
-
 		var output io.Writer = os.Stdout
-
-		if cfg.ComponentTestUseLogFile {
-			logfile, err := os.Create(componentLogFile)
-			if err != nil {
-				t.Fatalf("could not create logs file: %s", err)
-			}
-
-			defer func() {
-				if err := logfile.Close(); err != nil {
-					log.Printf("failed to close log file: %s", err)
-				}
-			}()
-
-			output = logfile
-			dplogs.SetDestination(logfile, nil)
-		}
 
 		if *quietComponentFlag {
 			dplogs.SetDestination(io.Discard, io.Discard)
 		}
 
 		var opts = godog.Options{
-			Output: colors.Colored(output),
-			Format: "pretty",
-			Paths:  flag.Args(),
-			//			TestingT: t,
+			Output:   colors.Colored(output),
+			Format:   "pretty",
+			Paths:    flag.Args(),
+			TestingT: t,
 		}
 
 		ct := &ComponentTest{
