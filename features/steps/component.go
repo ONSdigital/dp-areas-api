@@ -49,4 +49,24 @@ func (c *Component) Close() {
 }
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^I GET "([^"]*)"$`, c.iGET)
+	ctx.Step(`^I should receive the following JSON response:$`, c.iShouldReceiveTheFollowingJSONResponse)
+	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, c.theHTTPStatusCodeShouldBe)
+	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, c.theResponseHeaderShouldBe)
+}
+
+func (c *Component) iGET(arg1 string) error {
+	return godog.ErrPending
+}
+
+func (c *Component) iShouldReceiveTheFollowingJSONResponse(arg1 *godog.DocString) error {
+	return godog.ErrPending
+}
+
+func (c *Component) theHTTPStatusCodeShouldBe(arg1 string) error {
+	return godog.ErrPending
+}
+
+func (c *Component) theResponseHeaderShouldBe(arg1, arg2 string) error {
+	return godog.ErrPending
 }

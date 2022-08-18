@@ -1,4 +1,5 @@
 Feature: Get Data for Boundary
+
   Scenario: Get boundary data successfully
     When I GET "/boundaries/E92000001"
     Then I should receive the following JSON response:
