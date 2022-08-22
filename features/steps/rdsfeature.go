@@ -9,7 +9,7 @@ import (
 
 type RDSFeature struct {
 	componenttest.ErrorFeature
-	client rds.RDS
+	Client rds.RDS
 	cfg    *config.Config
 }
 
@@ -18,7 +18,7 @@ func NewRDSFeature(ef componenttest.ErrorFeature, cfg *config.Config) *RDSFeatur
 		ErrorFeature: ef,
 	}
 
-	if err := rf.client.Init(context.Background(), cfg); err != nil {
+	if err := rf.Client.Init(context.Background(), cfg); err != nil {
 		return nil
 	}
 
@@ -27,8 +27,4 @@ func NewRDSFeature(ef componenttest.ErrorFeature, cfg *config.Config) *RDSFeatur
 
 func (rf *RDSFeature) Reset() {}
 
-func (rf *RDSFeature) Close() { rf.client.Close() }
-
-func (r RDSFeature) insertIntoDatabase() {
-
-}
+func (rf *RDSFeature) Close() { rf.Client.Close() }

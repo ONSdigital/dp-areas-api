@@ -1,7 +1,7 @@
 Feature: Get Data for Boundary
 
   Scenario: Get boundary data successfully
-    When I GET "/boundaries/E92000001"
+    When I GET "http://localhost:2200/v1/boundaries/E92000001" for "England"
     Then I should receive the following JSON response:
     """
     {

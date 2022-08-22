@@ -1,6 +1,15 @@
 package steps
 
 import (
+	"context"
+	"fmt"
+	"github.com/ONSdigital/dp-areas-api/api"
+	"github.com/ONSdigital/dp-areas-api/config"
+	"github.com/ONSdigital/dp-areas-api/models"
+	"github.com/gorilla/mux"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
@@ -23,16 +32,25 @@ type Component struct {
 	APIInjector         *componenttest.APIFeature
 	RDSInjector         *RDSFeature
 
-	svc *service.Service
+	svc      *service.Service
+	api      *api.API
+	response *httptest.ResponseRecorder
+	payload  []byte
 }
 
 func NewComponent(t *testing.T) *Component {
+	cfg, err := config.Get()
+	if err != nil {
+		return nil
+	}
+
 	component := &Component{
 		ErrorFeature:        componenttest.ErrorFeature{TB: t},
 		AuthServiceInjector: componenttest.NewAuthorizationFeature(),
-		RDSInjector:         &RDSFeature{},
+		RDSInjector:         NewRDSFeature(componenttest.ErrorFeature{TB: t}, cfg),
 	}
 
+	component.RDSInjector = NewRDSFeature(component.ErrorFeature, cfg)
 	return component
 }
 
@@ -49,24 +67,74 @@ func (c *Component) Close() {
 }
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^I GET "([^"]*)"$`, c.iGET)
+	ctx.Step(`^I GET "([^"]*)"$`, c.iGETFor)
 	ctx.Step(`^I should receive the following JSON response:$`, c.iShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, c.theHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, c.theResponseHeaderShouldBe)
 }
 
-func (c *Component) iGET(arg1 string) error {
-	return godog.ErrPending
+func (c *Component) iGETFor(arg1, arg2 string) error {
+	// Setup
+	r := mux.NewRouter()
+	ctx := context.Background()
+	cfg, err := config.Get()
+	if err != nil {
+		return err
+	}
+
+	c.api, err = api.Setup(ctx, cfg, r, &c.RDSInjector.Client)
+	if err != nil {
+		return err
+	}
+
+	req := httptest.NewRequest(http.MethodGet, arg1, nil)
+	req.Header.Set(models.AcceptLanguageHeaderName, "en")
+	c.response = httptest.NewRecorder()
+
+	c.api.Router.ServeHTTP(c.response, req)
+	c.payload, err = io.ReadAll(c.response.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Component) iShouldReceiveTheFollowingJSONResponse(arg1 *godog.DocString) error {
-	return godog.ErrPending
+	//returnedBoundary := models.BoundaryDataResults{}
+	//err := json.Unmarshal(c.payload, &returnedBoundary)
+	//if err != nil {
+	//	return err
+	//}
+
+	if string(c.payload) != arg1.Content {
+		return fmt.Errorf("payload does not match expected response: payload[%s] | expected[%s]",
+			string(c.payload), arg1.Content)
+	}
+
+	return nil
 }
 
 func (c *Component) theHTTPStatusCodeShouldBe(arg1 string) error {
-	return godog.ErrPending
+	expectedStatusCode, err := strconv.Atoi(arg1)
+	if err != nil {
+		return err
+	}
+
+	if c.response.Code != expectedStatusCode {
+		return fmt.Errorf("expected status code [%v] but received [%v]",
+			expectedStatusCode, c.response.Code)
+	}
+
+	return nil
 }
 
 func (c *Component) theResponseHeaderShouldBe(arg1, arg2 string) error {
-	return godog.ErrPending
+	h := c.response.Header().Get(arg1)
+	if h != arg2 {
+		return fmt.Errorf("expected response header key [%s] value to be [%s] but got [%s]",
+			arg1, arg2, h)
+	}
+
+	return nil
 }
