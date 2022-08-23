@@ -14,7 +14,6 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-
 //go:generate moq -out mock/row.go -pkg mock . PGXRow
 
 // PGXRow interface to mock pgx.Row for adding tests to repository layer
@@ -35,7 +34,6 @@ type PGXRows interface {
 type PGXTransaction interface {
 	pgx.Tx
 }
-
 
 //go:generate moq -out mock/pgx.go -pkg mock . PGXPool
 

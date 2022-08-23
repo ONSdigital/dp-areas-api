@@ -29,13 +29,13 @@ const (
 )
 
 var (
-	EnglandName             = "England"
-	WalesName               = "Wales"
-	SheffieldName           = "Sheffield"
-	isVisible               = true
-	countryAreaType         = "Country"
-	latitude        float64 = 53.65955162358695
-	longitude       float64 = -1.434126224128561
+	EnglandName     = "England"
+	WalesName       = "Wales"
+	SheffieldName   = "Sheffield"
+	isVisible       = true
+	countryAreaType = "Country"
+	latitude        = 53.65955162358695
+	longitude       = -1.434126224128561
 )
 
 var mu sync.Mutex
@@ -62,10 +62,13 @@ func TestGetBoundaryDataReturnsOk(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/boundaries/%s", EnglandAreaData), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
+		geodata := models.GeoData{
+			Coordinates: testGeometricData(),
+		}
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
-				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
+				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: geodata, Visible: &isVisible, AreaType: &countryAreaType}, nil
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
@@ -93,10 +96,13 @@ func TestGetBoundaryDataWithUnknownIDReturnsNotFound(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/boundaries/%s", "E92000002"), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
+		geodata := models.GeoData{
+			Coordinates: testGeometricData(),
+		}
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
-				return &models.AreasDataResults{Code: "E92000002", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
+				return &models.AreasDataResults{Code: "E92000002", Name: &EnglandName, GeometricData: geodata, Visible: &isVisible, AreaType: &countryAreaType}, nil
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
@@ -118,10 +124,12 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:2200/v1/areas/%s", EnglandAreaData), nil)
 		r.Header.Set(models.AcceptLanguageHeaderName, "en")
 		w := httptest.NewRecorder()
-
+		geodata := models.GeoData{
+			Coordinates: testGeometricData(),
+		}
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{
 			GetAreaFunc: func(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
-				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: testGeometricData(), Visible: &isVisible, AreaType: &countryAreaType}, nil
+				return &models.AreasDataResults{Code: "E92000001", Name: &EnglandName, GeometricData: geodata, Visible: &isVisible, AreaType: &countryAreaType}, nil
 			},
 			GetAncestorsFunc: func(areaCode string) ([]models.AreasAncestors, error) {
 				return ancestors[WalesAreaData], nil
@@ -130,7 +138,6 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -139,7 +146,7 @@ func TestGetAreaDataReturnsOkForEngland(t *testing.T) {
 				So(w.Code, ShouldEqual, http.StatusOK)
 				So(err, ShouldBeNil)
 				So(returnedArea.Code, ShouldEqual, EnglandAreaData)
-				So(returnedArea.GeometricData[0][0], ShouldResemble, [2]float64{longitude, latitude})
+				So(returnedArea.GeometricData.Coordinates[0][0][0], ShouldResemble, [2]float64{longitude, latitude})
 				So(*returnedArea.Name, ShouldEqual, "England")
 				So(*returnedArea.AreaType, ShouldEqual, "Country")
 				So(*returnedArea.Visible, ShouldEqual, true)
@@ -166,7 +173,6 @@ func TestGetAreaDataReturnsOkForWales(t *testing.T) {
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -197,11 +203,9 @@ func TestGetAreaDataReturnsValidationErrors(t *testing.T) {
 		areaApi.Router.ServeHTTP(w, r)
 
 		Convey("When request area data is served", func() {
-
 			Convey("Then 404 http status should be returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
-
 		})
 	})
 }
@@ -213,9 +217,7 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then validation failure details returned - 1 validation error generated", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -227,7 +229,6 @@ func TestGetAreaDataReturnsValidationError(t *testing.T) {
 				So(error["code"], ShouldEqual, models.AcceptLanguageHeaderError)
 				So(error["description"], ShouldEqual, models.AcceptLanguageHeaderNotFoundDescription)
 			})
-
 		})
 	})
 }
@@ -258,9 +259,7 @@ func TestGetAreaRelationshipsReturnsOk(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area relationship data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -286,9 +285,7 @@ func TestGetAreaRelationshipsFailsForInvalidIds(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then an 404 response is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 			})
@@ -326,9 +323,7 @@ func TestGetAreaRelationshipsWithParameterReturnsOk(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request child area relationship data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -354,9 +349,7 @@ func TestGetAreaRelationshipsWithParameterFailsForInvalidIds(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then an 404 response is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusNotFound)
 				payload, _ := ioutil.ReadAll(w.Body)
@@ -385,9 +378,7 @@ func TestGetAreaDataReturnsOKWithOrderedAncestryList(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -421,9 +412,7 @@ func TestGetAreaDataReturnsOkForEmptyAncestorsList(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then an OK response is returned", func() {
 				payload, err := ioutil.ReadAll(w.Body)
 				So(err, ShouldBeNil)
@@ -455,9 +444,7 @@ func TestGetAreaDataFailsForAncestorsDataError(t *testing.T) {
 			},
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data is served", func() {
-
 			Convey("Then an internal server error is returned", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -481,9 +468,7 @@ func TestUpdateAreaData(t *testing.T) {
 			UpsertAreaFunc: func(ctx context.Context, area models.AreaParams) (bool, error) { return true, nil },
 		})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When request area data from rds instance is served", func() {
-
 			Convey("Then an 201 response is returned", func() {
 				So(w.Code, ShouldEqual, http.StatusCreated)
 			})
@@ -499,9 +484,7 @@ func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When update area is served", func() {
-
 			Convey("Then validation errors are returned", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -512,7 +495,6 @@ func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 				So(error["code"], ShouldEqual, models.AreaNameDetailsNotProvidedError)
 				So(error["description"], ShouldEqual, models.AreaNameDetailsNotProvidedErrorDescription)
 			})
-
 		})
 	})
 
@@ -523,9 +505,7 @@ func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 
 		areaApi, _ := GetAPIWithRDSMocks(&mock.RDSAreaStoreMock{})
 		areaApi.Router.ServeHTTP(w, r)
-
 		Convey("When update area is served", func() {
-
 			Convey("Then validation errors are returned", func() {
 				payload, _ := ioutil.ReadAll(w.Body)
 				var responseBody map[string]interface{}
@@ -544,19 +524,21 @@ func TestUpdateAreaDataReturnsValidationError(t *testing.T) {
 				So(validToError["code"], ShouldEqual, models.AreaNameActiveToNotProvidedError)
 				So(validToError["description"], ShouldEqual, models.AreaNameActiveToNotProvidedErrorDescription)
 			})
-
 		})
 	})
 }
 
-func testGeometricData() [][][2]float64 {
-	var gd [][][2]float64
-	gd = make([][][2]float64, 1)
+func testGeometricData() [][][][2]float64 {
+	var gd [][][][2]float64
+	gd = make([][][][2]float64, 1)
 
 	for i := range gd {
-		gd[i] = make([][2]float64, 1)
-		for _ = range gd[i] {
-			gd[0][0] = [2]float64{longitude, latitude}
+		gd[i] = make([][][2]float64, 1)
+		for j := range gd[i] {
+			gd[i][j] = make([][2]float64, 1)
+			for _ = range gd[i][j] {
+				gd[0][0][0] = [2]float64{longitude, latitude}
+			}
 		}
 	}
 	return gd

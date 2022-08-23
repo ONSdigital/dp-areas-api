@@ -3,17 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
-	s3 "github.com/ONSdigital/dp-s3/v2"
 	"net/http"
 
 	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/rds"
-
 	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/ONSdigital/log.go/v2/log"
-
+	"github.com/ONSdigital/dp-areas-api/rds"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	s3 "github.com/ONSdigital/dp-s3/v2"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -52,17 +50,16 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 }
 
 func (e *ExternalServiceList) getRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
-	rds, err := e.Init.DoGetRDSDB(ctx, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create rds client: %+v", err)
+	dbRds, dbErr := e.Init.DoGetRDSDB(ctx, cfg)
+	if dbErr != nil {
+		return nil, fmt.Errorf("failed to create rds client: %+v", dbErr)
 	}
 	e.RDS = true
-	return rds, nil
+	return dbRds, nil
 }
 
 func (e *ExternalServiceList) getS3Client(cfg *config.Config) (*s3.Client, error) {
 	return s3.NewClientWithCredentials(cfg.AWSRegion, cfg.S3Bucket, cfg.AWSAccessKey, cfg.AWSSecretKey)
-
 }
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
@@ -74,13 +71,13 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 
 // DoGetRDSDB returns a RDSClient
 func (e *Init) DoGetRDSDB(ctx context.Context, cfg *config.Config) (api.RDSAreaStore, error) {
-	rds := &rds.RDS{}
-	err := rds.Init(ctx, cfg)
+	dbRds := &rds.RDS{}
+	err := dbRds.Init(ctx, cfg)
 	if err != nil {
 		log.Error(ctx, "failed to initialise rds", err)
 		return nil, err
 	}
-	return rds, nil
+	return dbRds, nil
 }
 
 // DoGetHealthCheck creates a healthcheck with versionInfo

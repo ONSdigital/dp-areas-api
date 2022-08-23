@@ -15,7 +15,6 @@ import (
 
 func TestRDS_GetArea(t *testing.T) {
 	Convey("Given an valid area code", t, func() {
-
 		rowMock := &pgxMock.PGXRowMock{
 			ScanFunc: func(dest ...interface{}) error {
 				walesName := "Wales"
@@ -39,12 +38,11 @@ func TestRDS_GetArea(t *testing.T) {
 		area, err := rds.GetArea(context.Background(), "W92000004")
 
 		Convey("When GetArea is invoked", func() {
-
 			Convey("Then area details are returned", func() {
 				So(err, ShouldBeNil)
 				So(area.Code, ShouldEqual, "W92000004")
 				So(*area.Name, ShouldEqual, "Wales")
-				So(area.GeometricData, ShouldBeNil)
+				So(area.GeometricData.Coordinates, ShouldBeNil)
 				So(*area.Visible, ShouldEqual, true)
 				So(*area.AreaType, ShouldEqual, "Country")
 			})
@@ -52,7 +50,6 @@ func TestRDS_GetArea(t *testing.T) {
 	})
 
 	Convey("Given an invalid area code", t, func() {
-
 		rowMock := &pgxMock.PGXRowMock{
 			ScanFunc: func(dest ...interface{}) error {
 				return errors.New("no rows in result set")
@@ -68,7 +65,6 @@ func TestRDS_GetArea(t *testing.T) {
 		area, err := rds.GetArea(context.Background(), "123")
 
 		Convey("When GetArea is invoked", func() {
-
 			Convey("Then an error is returned", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "no rows in result set")
@@ -80,7 +76,6 @@ func TestRDS_GetArea(t *testing.T) {
 
 func TestRDS_ValidateArea(t *testing.T) {
 	Convey("Given valid area code", t, func() {
-
 		rowMock := &pgxMock.PGXRowMock{
 			ScanFunc: func(dest ...interface{}) error {
 				code := dest[0].(*string)
@@ -99,15 +94,12 @@ func TestRDS_ValidateArea(t *testing.T) {
 		err := rds.ValidateArea("W92000004")
 
 		Convey("When area code is validated", func() {
-
 			Convey("Then nil is returned", func() {
 				So(err, ShouldBeNil)
 			})
 		})
 	})
-
 	Convey("Given an invalid area code", t, func() {
-
 		rowMock := &pgxMock.PGXRowMock{
 			ScanFunc: func(dest ...interface{}) error {
 				return errors.New("no rows in result set")
@@ -121,9 +113,7 @@ func TestRDS_ValidateArea(t *testing.T) {
 				},
 			}}
 		err := rds.ValidateArea("invalid")
-
 		Convey("When invalid area  code is validated", func() {
-
 			Convey("Then error is returned", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "no rows in result set")
@@ -168,9 +158,7 @@ func TestRDS_GetRelationships(t *testing.T) {
 				},
 			}}
 		actualRelationships, err := rds.GetRelationships("E92000001", "")
-
 		Convey("When relationships are fetched", func() {
-
 			Convey("Then all relationships available for the area code is returned", func() {
 				So(err, ShouldBeNil)
 				So(actualRelationships, ShouldResemble, relationships)
@@ -187,9 +175,7 @@ func TestRDS_GetRelationships(t *testing.T) {
 				},
 			}}
 		actualRelationships, err := rds.GetRelationships("E92000001", "")
-
 		Convey("When failed to connect to DB", func() {
-
 			Convey("Then error is returned", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, errorMsg)
@@ -214,9 +200,7 @@ func TestRDS_GetRelationships(t *testing.T) {
 				},
 			}}
 		actualRelationships, err := rds.GetRelationships("E92000001", "")
-
 		Convey("When relationships are fetched", func() {
-
 			Convey("Then empty relationships are returned", func() {
 				So(err, ShouldBeNil)
 				So(actualRelationships, ShouldBeEmpty)
@@ -259,9 +243,7 @@ func TestRDS_GetAncestors(t *testing.T) {
 				},
 			}}
 		actualAncestors, err := rds.GetAncestors("E92000001")
-
 		Convey("When ancestors are fetched", func() {
-
 			Convey("Then all ancestors available for the area code is returned", func() {
 				So(err, ShouldBeNil)
 				So(actualAncestors, ShouldResemble, ancestors)
@@ -278,9 +260,7 @@ func TestRDS_GetAncestors(t *testing.T) {
 				},
 			}}
 		actualAncestors, err := rds.GetAncestors("E92000001")
-
 		Convey("When failed to connect to DB", func() {
-
 			Convey("Then error is returned", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, errorMsg)
@@ -305,9 +285,7 @@ func TestRDS_GetAncestors(t *testing.T) {
 				},
 			}}
 		actualAncestors, err := rds.GetAncestors("E92000001")
-
 		Convey("When ancestors are fetched", func() {
-
 			Convey("Then empty ancestors are returned", func() {
 				So(err, ShouldBeNil)
 				So(actualAncestors, ShouldBeEmpty)
@@ -317,10 +295,8 @@ func TestRDS_GetAncestors(t *testing.T) {
 }
 
 func TestRDS_UpsertArea(t *testing.T) {
-
 	Convey("Given an area details for existing area", t, func() {
 		areaCode := "E92000001"
-
 		count := 0
 		queryRowMock := &pgxMock.PGXRowsMock{
 			CloseFunc: func() {},

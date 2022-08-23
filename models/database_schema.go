@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -37,7 +39,7 @@ func (db *DatabaseSchema) BuildDatabaseSchemaModel() error {
 
 // TableSchemaBuilder builds table schema
 func (db *DatabaseSchema) TableSchemaBuilder() {
-	//as we're applied a FK constraint, order of creation is important, so build array of fixed size to preserve
+	// as we're applied a FK constraint, order of creation is important, so build array of fixed size to preserve
 	db.ExecutionList = make([]string, len(db.Tables))
 	for table := range db.Tables {
 		var (
@@ -57,9 +59,9 @@ func (db *DatabaseSchema) TableSchemaBuilder() {
 
 // cleanString cleans strings of unwanted chars matched in localised char set
 func cleanString(str string) (*string, error) {
-	reg, err := regexp.Compile("[\n\t]")
-	if err != nil {
-		return nil, err
+	reg := regexp.MustCompile("[\n\t]")
+	if reg == nil {
+		return nil, errors.New("failed to find any matching pattern")
 	}
 	cleanSchemaString := reg.ReplaceAllString(str, "")
 	return &cleanSchemaString, nil

@@ -21,7 +21,7 @@ var (
 	}
 )
 
-//API provides a struct to wrap the api around
+// API provides a struct to wrap the api around
 type API struct {
 	Router       *mux.Router
 	GeoData      map[string]models.AreasDataResults
@@ -42,7 +42,7 @@ func contextAndErrors(h baseHandler) http.HandlerFunc {
 	}
 }
 
-//Setup function sets up the api and returns an api
+// Setup function sets up the api and returns an api
 func Setup(ctx context.Context, cfg *config.Config, r *mux.Router, rdsStore RDSAreaStore) (*API, error) {
 	// initialised stubbed geo data
 	geoData, err := initialiseStubbedAreaData(ctx)
@@ -72,7 +72,9 @@ func initialiseStubbedAreaData(_ context.Context) (map[string]models.AreasDataRe
 	geoData := make(map[string]models.AreasDataResults, 2)
 	for _, geoDataFile := range fls {
 		var data models.AreasDataResults
-		json.Unmarshal([]byte(geoDataFile), &data)
+		if err := json.Unmarshal([]byte(geoDataFile), &data); err != nil {
+			return nil, err
+		}
 		geoData[data.Code] = data
 	}
 	return geoData, nil

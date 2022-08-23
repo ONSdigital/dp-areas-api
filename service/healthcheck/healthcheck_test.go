@@ -25,7 +25,6 @@ func TestGetHealthCheck(t *testing.T) {
 	cfg, _ := config.Get()
 
 	Convey("dp-areas-api healthchecker reports healthy", t, func() {
-
 		m.PingFunc = func(ctx context.Context) error {
 			return nil
 		}

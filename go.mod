@@ -5,6 +5,7 @@ go 1.17
 retract v1.13.0
 
 require (
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.138.0
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
 	github.com/ONSdigital/dp-s3/v2 v2.0.0-beta.4
@@ -21,7 +22,6 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.138.0 // indirect
 	github.com/ONSdigital/dp-net/v2 v2.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220104163920-15ed2e8cf2bd // indirect

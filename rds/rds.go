@@ -63,30 +63,28 @@ func (r *RDS) ValidateArea(areaCode string) error {
 func (r *RDS) GetArea(ctx context.Context, areaId string) (*models.AreasDataResults, error) {
 	area := models.AreasDataResults{}
 	var BoundaryDataBlob string
-	GeometricData := make([][][2]float64, 0)
+	GeometricData := make([][][][2]float64, 0)
 
 	err := r.conn.QueryRow(ctx, getArea, areaId).Scan(&area.Code, &area.Name, &BoundaryDataBlob, &area.Visible, &area.AreaType)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(BoundaryDataBlob) != 0 {
+	if BoundaryDataBlob != "" {
 		err = json.Unmarshal([]byte(BoundaryDataBlob), &GeometricData)
 
 		if err != nil {
 			return nil, err
 		}
-		area.GeometricData = GeometricData
+		area.GeometricData.Coordinates = GeometricData
 	}
 
 	return &area, nil
 }
 
-func (r *RDS) GetRelationships(areaCode string, relationshipParameter string) ([]*models.AreaBasicData, error) {
+func (r *RDS) GetRelationships(areaCode, relationshipParameter string) ([]*models.AreaBasicData, error) {
 	var relationships []*models.AreaBasicData
-
 	if relationshipParameter == "" {
-
 		rows, err := r.conn.Query(context.Background(), getRelationShipAreas, areaCode)
 		if err != nil {
 			return nil, err
@@ -379,7 +377,7 @@ func (r *RDS) insertAreaRelationshipTestData(ctx context.Context) error {
 }
 
 func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
-	var ancestors []*models.AreasAncestors
+	var ancestors []models.AreasAncestors
 
 	rows, err := r.conn.Query(context.Background(), getAncestors, areaCode)
 	if err != nil {
@@ -389,13 +387,7 @@ func (r *RDS) GetAncestors(areaCode string) ([]models.AreasAncestors, error) {
 	for rows.Next() {
 		var rs models.AreasAncestors
 		rows.Scan(&rs.Id, &rs.Name)
-		ancestors = append(ancestors, &rs)
+		ancestors = append(ancestors, rs)
 	}
-
-	var a []models.AreasAncestors
-	for _, data := range ancestors {
-		a = append(a, *data)
-	}
-
-	return a, nil
+	return ancestors, nil
 }

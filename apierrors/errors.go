@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-//A list of error messages for Areas API
+// A list of error messages for Areas API
 var (
 	ErrAreaNotFound             = errors.New("Area not found")
 	ErrVersionNotFound          = errors.New("Version not found")

@@ -20,7 +20,7 @@ func (e *Error) Error() string {
 	return e.Code + ": " + e.Description
 }
 
-func NewError(ctx context.Context, cause error, code string, description string) *Error {
+func NewError(ctx context.Context, cause error, code, description string) *Error {
 	err := &Error{
 		Cause:       cause,
 		Code:        code,
@@ -30,7 +30,7 @@ func NewError(ctx context.Context, cause error, code string, description string)
 	return err
 }
 
-func NewValidationError(ctx context.Context, code string, description string) *Error {
+func NewValidationError(ctx context.Context, code, description string) *Error {
 	err := &Error{
 		Cause:       errors.New(code),
 		Code:        code,

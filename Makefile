@@ -26,6 +26,10 @@ debug:
 test:
 	go test -race -cover ./...
 
+lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+	golangci-lint run ./...
+
 .PHONY: convey
 convey:
 	goconvey -excludedDirs="ci,build" ./...

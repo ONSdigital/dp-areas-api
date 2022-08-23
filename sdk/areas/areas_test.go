@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -197,7 +196,6 @@ func TestClient_HealthChecker(t *testing.T) {
 }
 
 func TestClient_GetArea(t *testing.T) {
-
 	areaBody := `{
 		  "code": "E92000001",
 		  "date_end": null,
@@ -246,7 +244,6 @@ func TestClient_GetArea(t *testing.T) {
 }
 
 func TestClient_GetRelations(t *testing.T) {
-
 	relationsBody := `[
 			{
 				"area_code": "E12000001",
@@ -321,12 +318,4 @@ func newAreasClient(clienter *dphttp.ClienterMock) *Client {
 	healthClient := health.NewClientWithClienter("", testHost, clienter)
 	areasClient := NewWithHealthClient(healthClient)
 	return areasClient
-}
-
-func getAncestry(ancestors ...string) string {
-	var data []string
-	for _, a := range ancestors {
-		data = append(data, a)
-	}
-	return fmt.Sprintf(`[%s]`, strings.Join(data, ","))
 }
