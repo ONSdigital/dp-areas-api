@@ -67,28 +67,27 @@ func (c *Client) Checker(ctx context.Context, check *health.CheckState) error {
 
 // GetArea returns area information for a given area ID
 func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, areaID, acceptLang string) (AreaDetails, error) {
-	var areaDetails AreaDetails
 	uri := fmt.Sprintf("%s/v1/areas/%s", c.hcCli.URL, areaID)
 	clientlog.Do(ctx, "retrieving area", service, uri)
 	resp, err := c.doGetWithAuthHeaders(ctx, userAuthToken, serviceAuthToken, collectionID, uri, nil, "", acceptLang)
 	if err != nil {
-		return areaDetails, err
+		return AreaDetails{}, err
 	}
 	defer closeResponseBody(ctx, resp)
 
 	if resp.StatusCode != http.StatusOK {
 		err = NewAreaAPIResponse(resp, uri)
-		return areaDetails, err
+		return AreaDetails{}, err
 	}
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return areaDetails, err
+		return AreaDetails{}, err
 	}
 
 	var body map[string]interface{}
 	if unmarshalErr := json.Unmarshal(b, &body); unmarshalErr != nil {
-		return areaDetails, unmarshalErr
+		return AreaDetails{}, unmarshalErr
 	}
 
 	// TODO: Authentication will sort this problem out for us. Currently
@@ -97,10 +96,11 @@ func (c *Client) GetArea(ctx context.Context, userAuthToken, serviceAuthToken, c
 	if next, ok := body["next"]; ok && (serviceAuthToken != "" || userAuthToken != "") {
 		b, err = json.Marshal(next)
 		if err != nil {
-			return areaDetails, err
+			return AreaDetails{}, err
 		}
 	}
 
+	var areaDetails AreaDetails
 	err = json.Unmarshal(b, &areaDetails)
 	return areaDetails, err
 }
