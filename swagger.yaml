@@ -147,6 +147,9 @@ definitions:
         items:
           type: string
         description: "List of keywords that relate to the topic"
+      release_date:
+        type: string
+        description: "Release date of topic"
       state:
         $ref: '#/definitions/State'
       links:
