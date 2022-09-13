@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-topic-api/mongo"
-	"github.com/ONSdigital/dp-topic-api/scripts/updatetopicrelease/config"
+	"github.com/ONSdigital/dp-topic-api/scripts/config"
 	"github.com/ONSdigital/log.go/v2/log"
 	"os"
 	"strings"
