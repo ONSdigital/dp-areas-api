@@ -42,6 +42,7 @@ type Topic struct {
 	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
 	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
+	ReleaseDate string      `bson:"release_date,omitempty"   json:"release_date,release_date"`
 }
 
 // LinkObject represents a generic structure for all links

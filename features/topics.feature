@@ -62,11 +62,13 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
                 "items": [
                     {
                         "state": "published",
-                        "id": "economy"
+                        "id": "economy",
+                        "release_date": ""
                     },
                     {
                         "state": "published",
-                        "id": "business"
+                        "id": "business",
+                        "release_date": ""
                     }
                 ]
             }
@@ -92,22 +94,26 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
                     "id": "economy",
                     "current": {
                         "id": "economy",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": ""
                     },
                     "next": {
                         "id": "economy",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": ""
                     }
                 },
                 {
                     "id": "business",
                     "current": {
                         "id": "business",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": ""
                     },
                     "next": {
                         "id": "business",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": ""
                     }
                 }
                 ]

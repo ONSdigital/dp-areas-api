@@ -24,7 +24,8 @@ Feature: Behaviour of application when doing the GET /topics/{id} endpoint, usin
             """
             {
                 "state": "published",
-                "id": "economy"
+                "id": "economy",
+                "release_date": ""
             }
             """
 
@@ -71,11 +72,13 @@ Feature: Behaviour of application when doing the GET /topics/{id} endpoint, usin
                 "id": "economy",
                 "current": {
                     "id": "economy",
-                    "state": "published"
+                    "state": "published",
+                    "release_date": ""
                 },
                 "next": {
                     "id": "economy",
-                    "state": "published"
+                    "state": "published",
+                    "release_date": ""
                 }
             }
             """
