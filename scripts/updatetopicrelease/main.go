@@ -5,44 +5,48 @@ import (
 	"fmt"
 	"github.com/ONSdigital/dp-topic-api/mongo"
 	"github.com/ONSdigital/dp-topic-api/scripts/config"
-	"github.com/ONSdigital/log.go/v2/log"
 	"os"
 	"strings"
 )
 
-const serviceName = "dp-topic-api"
-
 func main() {
-	log.Namespace = serviceName
 	ctx := context.Background()
-	config, err := config.Get()
+	conf, err := config.Get()
 	if err != nil {
-		log.Error(ctx, "error getting config", err)
-		os.Exit(1)
+		fmt.Errorf("error getting config: %v", err)
 	}
 
-	if len(strings.TrimSpace(config.CollectionId)) == 0 {
-		log.Error(ctx, "collectionId is required", nil)
-		os.Exit(1)
-	}
-	if len(strings.TrimSpace(config.ReleaseDate)) == 0 {
-		log.Error(ctx, "releaseDate is required", nil)
-		os.Exit(1)
-	}
+	for true {
+		var collectionId string
+		var releaseDate string
+		fmt.Print("Enter the collection id: ")
+		fmt.Scanf("%s", &collectionId)
+		validateInputValue(collectionId)
 
-	err = updateTopicReleaseData(ctx, config, config.CollectionId, config.ReleaseDate)
-	if err != nil {
-		log.Fatal(ctx, "script fatal error while updating topic", err)
-		os.Exit(1)
+		fmt.Print("Enter the release date: ")
+		fmt.Scanf("%s", &releaseDate)
+		validateInputValue(releaseDate)
+
+		err = updateTopicReleaseData(ctx, conf.MongoConfig, collectionId, releaseDate)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error while updating topic release date")
+			os.Exit(1)
+		}
+		fmt.Printf("Collection Id %s has been updated with release date %s \n", collectionId, releaseDate)
 	}
-	fmt.Printf("Collection Id %s has been updated with release date %s", config.CollectionId, config.ReleaseDate)
 }
-func updateTopicReleaseData(ctx context.Context, c *config.Config, collectionId string, releaseDate string) error {
-	conn, err := mongo.NewDBConnection(ctx, c.MongoConfig)
+func updateTopicReleaseData(ctx context.Context, mongoConfig config.MongoConfig, collectionId string, releaseDate string) error {
+	conn, err := mongo.NewDBConnection(ctx, mongoConfig)
 	_, err = conn.UpdateReleaseDate(ctx, collectionId, releaseDate)
 	if err != nil {
-
 		return err
 	}
 	return nil
+}
+
+func validateInputValue(inputVal string) {
+	if len(strings.TrimSpace(inputVal)) == 0 {
+		fmt.Fprintf(os.Stderr, "invalid input value")
+		os.Exit(1)
+	}
 }

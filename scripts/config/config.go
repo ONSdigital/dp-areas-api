@@ -9,8 +9,6 @@ import (
 type MongoConfig = mongodb.MongoDriverConfig
 
 type Config struct {
-	CollectionId string `envconfig:"COLLECTION_ID"`
-	ReleaseDate  string `envconfig:"RELEASE_DATE"`
 	MongoConfig
 }
 
