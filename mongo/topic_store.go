@@ -152,7 +152,7 @@ func (m *Mongo) UpdateReleaseDate(ctx context.Context, id string, releaseDate st
 		{"$set", bson.D{{"release_date", releaseDate}}},
 	}
 
-	updateResult, err := m.Connection.Collection(m.ActualCollectionName(config.ContentCollection)).UpdateById(ctx, filter, update)
+	updateResult, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).UpdateById(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}

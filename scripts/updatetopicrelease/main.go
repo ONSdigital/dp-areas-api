@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/mongo"
-	"github.com/ONSdigital/dp-topic-api/scripts/config"
 	"os"
 	"strings"
 )
