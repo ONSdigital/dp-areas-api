@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -16,6 +15,7 @@ type Config struct {
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	RDSDBName                  string        `envconfig:"DBNAME"`
 	RDSDBUser                  string        `envconfig:"DBUSER"`
+	RDSDBPassword              string        `envconfig:"DBPASSWORD"`
 	RDSDBHost                  string        `envconfig:"DBHOST"`
 	RDSDBPort                  string        `envconfig:"DBPORT"`
 	AWSRegion                  string        `envconfig:"AWSREGION"`
@@ -23,11 +23,7 @@ type Config struct {
 	RDSDBMaxConnections        int           `envconfig:"RDSMAXCONNECTIONS"`
 	RDSDBMinConnections        int           `envconfig:"RDSMINCONNECTIONS"`
 	// flag to use local postres instace provided by dp-compose
-	DPPostgresLocal        bool   `envconfig:"USEPOSTGRESLOCAL"`
-	DPPostgresUserName     string `envconfig:"DPPOSTGRESUSERNAME"`
-	DPPostgresUserPassword string `envconfig:"DPPOSTGRESPASSWORD"`
-	DPPostgresLocalPort    string `envconfig:"DPPOSTGRESPORT"`
-	DPPostgresLocalDB      string `envconfig:"USEPOSTGRESDB"`
+	DPPostgresLocal bool `envconfig:"USEPOSTGRESLOCAL"`
 
 	EnablePrivateEndpoints bool   `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	S3Bucket               string `envconfig:"S3_BUCKET"`
@@ -59,10 +55,6 @@ func Get() (*Config, error) {
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		DPPostgresLocal:            true,
-		DPPostgresUserName:         "postgres",
-		DPPostgresUserPassword:     os.Getenv("DPPOSTGRESPASSWORD"),
-		DPPostgresLocalPort:        "5432",
-		DPPostgresLocalDB:          "dp-areas-api",
 		RDSDBConnectionTTL:         24 * time.Hour,
 		RDSDBMaxConnections:        4,
 		RDSDBMinConnections:        1,
@@ -81,7 +73,7 @@ func (c Config) GetDBEndpoint() string {
 
 // GetLocalDBConnectionString returns local connection string
 func (c Config) GetLocalDBConnectionString() string {
-	return fmt.Sprintf("postgres://%s:%s@localhost:%s/%s", c.DPPostgresUserName, c.DPPostgresUserPassword, c.DPPostgresLocalPort, c.DPPostgresLocalDB)
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.RDSDBUser, c.RDSDBPassword, c.RDSDBHost, c.RDSDBPort, c.RDSDBName)
 }
 
 // GetRemoteDBConnectionString returns remote connection string

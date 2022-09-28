@@ -1,8 +1,8 @@
 Feature: Get Data for Boundary
 
   Scenario: Get boundary data successfully
-    When I GET "http://localhost:2200/v1/boundaries/E92000001" for "England"
-    Then I should receive the following JSON response:
+    When I GET "/v1/boundaries/E92000001"
+    Then I should receive the following JSON response with status "200":
     """
     {
         "columns": "area_id, centroid_bng, centroid, boundary",
@@ -14,5 +14,3 @@ Feature: Get Data for Boundary
         }
     }
     """
-    And the response header "Content-Type" should be "application/json;charset=utf-8"
-    And the HTTP status code should be "200"

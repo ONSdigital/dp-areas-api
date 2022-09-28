@@ -15,11 +15,12 @@ services:
             - ../../:/dp-areas-api
         ports:
             - 27100:27100
+        depends_on:
+            - rds
         environment:
-            BIND_ADDR:              ":27100"
-            SERVICE_AUTH_TOKEN:     "testToken"
-            USEPOSTGRESLOCAL:       "true"
-            DPPOSTGRESUSERNAME:     "user"
-            DPPOSTGRESPASSWORD:     "password"
-            DPPOSTGRESPORT:         "postgres://rds:5432"
-            USEPOSTGRESDB:          "db"
+            USEPOSTGRESLOCAL:   "true"
+            DBUSER:             "test-user"
+            DBPASSWORD:         "test-password"
+            DBHOST:             "rds"
+            DBPORT:             "5432"
+            DBNAME:             "test-db"

@@ -2,22 +2,16 @@ package steps
 
 import (
 	"context"
-	"fmt"
-	"github.com/ONSdigital/dp-areas-api/api"
-	"github.com/ONSdigital/dp-areas-api/config"
-	"github.com/ONSdigital/dp-areas-api/models"
-	"github.com/gorilla/mux"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/ONSdigital/dp-areas-api/config"
 	"github.com/ONSdigital/dp-areas-api/service"
+	mocks "github.com/ONSdigital/dp-areas-api/service/mock"
 	componenttest "github.com/ONSdigital/dp-component-test"
-
-	"github.com/cucumber/godog"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
 var (
@@ -28,14 +22,11 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	AuthServiceInjector *componenttest.AuthorizationFeature
-	APIInjector         *componenttest.APIFeature
-	RDSInjector         *RDSFeature
+	AuthFeature *componenttest.AuthorizationFeature
+	APIFeature  *componenttest.APIFeature
+	RDSFeature  *RDSFeature
 
-	svc      *service.Service
-	api      *api.API
-	response *httptest.ResponseRecorder
-	payload  []byte
+	svc *service.Service
 }
 
 func NewComponent(t *testing.T) *Component {
@@ -45,96 +36,53 @@ func NewComponent(t *testing.T) *Component {
 	}
 
 	component := &Component{
-		ErrorFeature:        componenttest.ErrorFeature{TB: t},
-		AuthServiceInjector: componenttest.NewAuthorizationFeature(),
-		RDSInjector:         NewRDSFeature(componenttest.ErrorFeature{TB: t}, cfg),
+		ErrorFeature: componenttest.ErrorFeature{TB: t},
+		AuthFeature:  componenttest.NewAuthorizationFeature(),
+		RDSFeature:   NewRDSFeature(t, cfg),
+	}
+	component.APIFeature = componenttest.NewAPIFeature(component.ServiceAPIRouter)
+
+	standardInit := service.Init{}
+	initFunctions := &mocks.InitialiserMock{
+		DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
+			return &http.Server{Addr: bindAddr, Handler: router}
+		},
+		DoGetHealthCheckFunc: func(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
+			return &mocks.HealthCheckerMock{
+				AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
+				StartFunc:    func(ctx context.Context) {},
+				StopFunc:     func() {},
+			}, nil
+		},
+		DoGetRDSDBFunc: standardInit.DoGetRDSDB,
+	}
+	//component.RDSFeature.esServer.NewHandler().Get("/elasticsearch/_cluster/health").Reply(200).Body([]byte(""))
+
+	serviceList := service.NewServiceList(initFunctions)
+	component.svc, err = service.Run(context.Background(), cfg, serviceList, BuildTime, GitCommit, Version, make(chan error, 1))
+	if err != nil {
+		t.Fatalf("service failed to run: %s", err)
 	}
 
-	component.RDSInjector = NewRDSFeature(component.ErrorFeature, cfg)
 	return component
 }
 
 // Reset re-initialises the service under test and the api mocks.
 func (c *Component) Reset() {
-	c.AuthServiceInjector.Reset()
-	c.APIInjector.Reset()
-	c.RDSInjector.Reset()
+	c.AuthFeature.Reset()
+	c.APIFeature.Reset()
+	c.RDSFeature.Reset()
 }
 
 func (c *Component) Close() {
-	c.AuthServiceInjector.Close()
-	c.RDSInjector.Close()
+	c.AuthFeature.Close()
+	c.RDSFeature.Close()
+	if c.svc != nil {
+		_ = c.svc.Close(context.Background())
+		c.svc = nil
+	}
 }
 
-func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^I GET "([^"]*)"$`, c.iGETFor)
-	ctx.Step(`^I should receive the following JSON response:$`, c.iShouldReceiveTheFollowingJSONResponse)
-	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, c.theHTTPStatusCodeShouldBe)
-	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, c.theResponseHeaderShouldBe)
-}
-
-func (c *Component) iGETFor(arg1, arg2 string) error {
-	// Setup
-	r := mux.NewRouter()
-	ctx := context.Background()
-	cfg, err := config.Get()
-	if err != nil {
-		return err
-	}
-
-	c.api, err = api.Setup(ctx, cfg, r, &c.RDSInjector.Client)
-	if err != nil {
-		return err
-	}
-
-	req := httptest.NewRequest(http.MethodGet, arg1, nil)
-	req.Header.Set(models.AcceptLanguageHeaderName, "en")
-	c.response = httptest.NewRecorder()
-
-	c.api.Router.ServeHTTP(c.response, req)
-	c.payload, err = io.ReadAll(c.response.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Component) iShouldReceiveTheFollowingJSONResponse(arg1 *godog.DocString) error {
-	//returnedBoundary := models.BoundaryDataResults{}
-	//err := json.Unmarshal(c.payload, &returnedBoundary)
-	//if err != nil {
-	//	return err
-	//}
-
-	if string(c.payload) != arg1.Content {
-		return fmt.Errorf("payload does not match expected response: payload[%s] | expected[%s]",
-			string(c.payload), arg1.Content)
-	}
-
-	return nil
-}
-
-func (c *Component) theHTTPStatusCodeShouldBe(arg1 string) error {
-	expectedStatusCode, err := strconv.Atoi(arg1)
-	if err != nil {
-		return err
-	}
-
-	if c.response.Code != expectedStatusCode {
-		return fmt.Errorf("expected status code [%v] but received [%v]",
-			expectedStatusCode, c.response.Code)
-	}
-
-	return nil
-}
-
-func (c *Component) theResponseHeaderShouldBe(arg1, arg2 string) error {
-	h := c.response.Header().Get(arg1)
-	if h != arg2 {
-		return fmt.Errorf("expected response header key [%s] value to be [%s] but got [%s]",
-			arg1, arg2, h)
-	}
-
-	return nil
+func (c *Component) ServiceAPIRouter() (http.Handler, error) {
+	return c.svc.API.Router, nil
 }

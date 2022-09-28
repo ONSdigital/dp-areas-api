@@ -18,7 +18,7 @@ var componentFlag = flag.Bool("component", false, "perform component tests")
 var quietComponentFlag = flag.Bool("quiet-component", false, "perform component tests with dp logging disabled")
 
 type ComponentTest struct {
-	component *steps.Component
+	*steps.Component
 }
 
 func init() {
@@ -27,16 +27,16 @@ func init() {
 
 func (ct *ComponentTest) InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.After(func(ctx context.Context, scenario *godog.Scenario, err error) (context.Context, error) {
-		ct.component.Reset()
+		ct.Reset()
 		return ctx, nil
 	})
 }
 
 func (ct *ComponentTest) InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ct.component.RegisterSteps(ctx.ScenarioContext())
+	ct.RegisterSteps(ctx.ScenarioContext())
 
 	ctx.AfterSuite(func() {
-		ct.component.Close()
+		ct.Close()
 	})
 }
 
@@ -58,7 +58,7 @@ func TestComponent(t *testing.T) {
 		}
 
 		ct := &ComponentTest{
-			component: steps.NewComponent(t),
+			Component: steps.NewComponent(t),
 		}
 
 		status = godog.TestSuite{
