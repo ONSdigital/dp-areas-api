@@ -34,6 +34,8 @@ type Config struct {
 	AWSAccessKey           string `envconfig:"AWS_ACCESS_KEY_ID" json:"-"`     // Sensitive field which should not be output in JSON.
 	AWSSecretKey           string `envconfig:"AWS_SECRET_ACCESS_KEY" json:"-"` // Sensitive field which should not be output in JSON.
 	LoadSampleData         bool   `envconfig:"LOAD_SAMPLE_DATA"`
+
+	BuildTime string `envconfig:"BUILD_TIME"`
 }
 
 func (c Config) GetRDSEndpoint() string {
@@ -87,4 +89,13 @@ func (c Config) GetLocalDBConnectionString() string {
 // GetRemoteDBConnectionString returns remote connection string
 func (c Config) GetRemoteDBConnectionString(authToken string) string {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s pool_max_conns=%d pool_min_conns=%d pool_max_conn_lifetime=%s", c.RDSDBHost, c.RDSDBPort, c.RDSDBUser, authToken, c.RDSDBName, c.RDSDBMaxConnections, c.RDSDBMinConnections, c.RDSDBConnectionTTL)
+}
+
+// GetBuildTime get the build time from the lexical scope or from the config
+func (c *Config) GetBuildTime(b string) string {
+	if c.BuildTime != "" {
+		return c.BuildTime
+	} else {
+		return b
+	}
 }
