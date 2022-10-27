@@ -62,13 +62,11 @@ Feature: Behaviour of application when doing the GET /topics/{id}/subtopics endp
                 "items": [
                     {
                         "state": "published",
-                        "id": "changestobusiness",
-                        "release_date": ""
+                        "id": "changestobusiness"
                     },
                     {
                         "state": "published",
-                        "id": "business",
-                        "release_date": ""
+                        "id": "business"
                     }
                 ]
             }
@@ -94,26 +92,22 @@ Feature: Behaviour of application when doing the GET /topics/{id}/subtopics endp
                     "id": "changestobusiness",
                     "current": {
                         "id": "changestobusiness",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     },
                     "next": {
                         "id": "changestobusiness",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     }
                 },
                 {
                     "id": "business",
                     "current": {
                         "id": "business",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     },
                     "next": {
                         "id": "business",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     }
                 }
                 ]
