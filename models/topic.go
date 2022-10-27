@@ -128,6 +128,8 @@ func (t *Topic) StateTransitionAllowed(target string) bool {
 	return currentState.TransitionAllowed(targetState)
 }
 
+// Validate checks the topic release object has a valid timestamp that will
+// abide by standard protocol RFC3339
 func (tr *TopicRelease) Validate() (*time.Time, error) {
 	releaseDate, err := time.Parse(time.RFC3339, tr.ReleaseDate)
 	if err != nil {

@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/models"
@@ -103,6 +104,53 @@ func TestTopicStateTransitionAllowed(t *testing.T) {
 	Convey("Given an topic without state, then created state is assumed when checking for transitions", t, func() {
 		topic := models.Topic{}
 		validateTransitionsToCreated(topic)
+	})
+}
+
+func TestTopicReleaseDateValidation(t *testing.T) {
+	Convey("Given a valid topic release object", t, func() {
+		topicRelease := models.TopicRelease{
+			ReleaseDate: "2022-10-14T11:30:00Z",
+		}
+		releaseDate, err := topicRelease.Validate()
+		So(err, ShouldBeNil)
+		So(*releaseDate, ShouldHaveSameTypeAs, time.Now())
+	})
+
+	Convey("Given topic release object is empty", t, func() {
+		topicRelease := models.TopicRelease{}
+		releaseDate, err := topicRelease.Validate()
+		So(err, ShouldEqual, apierrors.ErrInvalidReleaseDate)
+		So(releaseDate, ShouldBeNil)
+	})
+
+	Convey("Given topic release object has empty release date value", t, func() {
+		topicRelease := models.TopicRelease{
+			ReleaseDate: "",
+		}
+		releaseDate, err := topicRelease.Validate()
+		So(err, ShouldEqual, apierrors.ErrInvalidReleaseDate)
+		So(releaseDate, ShouldBeNil)
+	})
+
+	Convey("Given topic release object has a non RFC3339 format date value", t, func() {
+		Convey("Where the release date is missing timezone location notation", func() {
+			topicRelease := models.TopicRelease{
+				ReleaseDate: "2022-10-14T11:30:00",
+			}
+			releaseDate, err := topicRelease.Validate()
+			So(err, ShouldEqual, apierrors.ErrInvalidReleaseDate)
+			So(releaseDate, ShouldBeNil)
+		})
+
+		Convey("Where the release date is not in the correct structure", func() {
+			topicRelease := models.TopicRelease{
+				ReleaseDate: "10-10-2022T14.09.10Z",
+			}
+			releaseDate, err := topicRelease.Validate()
+			So(err, ShouldEqual, apierrors.ErrInvalidReleaseDate)
+			So(releaseDate, ShouldBeNil)
+		})
 	})
 }
 
