@@ -73,6 +73,26 @@ func (cli *Client) GetRootTopicsPublic(ctx context.Context, reqHeaders Headers) 
 	return &rootTopics, nil
 }
 
+// GetTopicPublic gets the publicly available topics
+func (cli *Client) GetTopicPublic(ctx context.Context, reqHeaders Headers, id string) (*models.Topic, apiError.Error) {
+	path := fmt.Sprintf("%s/topics/%s", cli.hcCli.URL, id)
+
+	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	if apiErr != nil {
+		return nil, apiErr
+	}
+
+	var topic models.Topic
+
+	if err := json.Unmarshal(b, &topic); err != nil {
+		return nil, apiError.StatusError{
+			Err: fmt.Errorf("failed to unmarshal topic - error is: %v", err),
+		}
+	}
+
+	return &topic, nil
+}
+
 // GetSubtopicsPublic gets the public list of subtopics of a topic for Web which returns the Current document(s) in the response
 func (cli *Client) GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
