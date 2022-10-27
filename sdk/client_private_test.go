@@ -127,6 +127,97 @@ func TestGetRootTopicsPrivate(t *testing.T) {
 	})
 }
 
+func TestGetTopicPrivate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	Convey("Given the private topic is returned successfully", t, func() {
+		body, err := json.Marshal(testPrivateTopic1)
+		if err != nil {
+			t.Errorf("failed to setup test data, error: %v", err)
+		}
+
+		httpClient := newMockHTTPClient(
+			&http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(body)),
+			},
+			nil)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetTopicPrivate is called", func() {
+			respTopic, err := topicAPIClient.GetTopicPrivate(ctx, Headers{
+				ServiceAuthToken: "valid-service-token",
+			}, "1234")
+
+			Convey("Then the expected private topic is returned", func() {
+				So(*respTopic, ShouldResemble, testPrivateTopic1)
+
+				Convey("And no error is returned", func() {
+					So(err, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1234")
+					})
+				})
+			})
+		})
+	})
+
+	Convey("Given a 500 response from topic api", t, func() {
+		httpClient := newMockHTTPClient(&http.Response{StatusCode: http.StatusInternalServerError}, nil)
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetTopicPrivate is called", func() {
+			respTopic, err := topicAPIClient.GetTopicPrivate(ctx, Headers{}, "1234")
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
+
+				Convey("And the expected private topic should be nil", func() {
+					So(respTopic, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1234")
+					})
+				})
+			})
+		})
+	})
+
+	Convey("Given the client returns an unexpected error", t, func() {
+		clientError := errors.New("unexpected error")
+		httpClient := newMockHTTPClient(&http.Response{}, clientError)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When GetTopicPrivate is called", func() {
+			respTopic, err := topicAPIClient.GetTopicPrivate(ctx, Headers{}, "1234")
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
+
+				Convey("And the expected private topic should be nil", func() {
+					So(respTopic, ShouldBeNil)
+
+					Convey("And client.Do should be called once with the expected parameters", func() {
+						doCalls := httpClient.DoCalls()
+						So(doCalls, ShouldHaveLength, 1)
+						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1234")
+					})
+				})
+			})
+		})
+	})
+}
+
 func TestGetSubtopicsPrivate(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
