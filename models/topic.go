@@ -11,8 +11,8 @@ import (
 // PrivateSubtopics used for returning both Next and Current document(s) in REST API response
 type PrivateSubtopics struct {
 	Count        int              `bson:"count,omitempty"        json:"count"`
-	Offset       int              `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit        int              `bson:"limit,omitempty"        json:"limit"`
+	Offset       int              `bson:"offset_index,omitempty" json:"offset_index"`
 	TotalCount   int              `bson:"total_count,omitempty"  json:"total_count"`
 	PrivateItems *[]TopicResponse `bson:"items,omitempty"        json:"items"`
 }
@@ -20,8 +20,8 @@ type PrivateSubtopics struct {
 // PublicSubtopics used for returning just the Current document(s) in REST API response
 type PublicSubtopics struct {
 	Count       int      `bson:"count,omitempty"        json:"count"`
-	Offset      int      `bson:"offset_index,omitempty" json:"offset_index"`
 	Limit       int      `bson:"limit,omitempty"        json:"limit"`
+	Offset      int      `bson:"offset_index,omitempty" json:"offset_index"`
 	TotalCount  int      `bson:"total_count,omitempty"  json:"total_count"`
 	PublicItems *[]Topic `bson:"items,omitempty"        json:"items"`
 }
@@ -31,8 +31,8 @@ type PublicSubtopics struct {
 // the 'Next' over the 'Current' document, so that 'Current' is whats always returned in the web view.
 type TopicResponse struct {
 	ID      string `bson:"id,omitempty"       json:"id,omitempty"`
-	Next    *Topic `bson:"next,omitempty"     json:"next,omitempty"`
 	Current *Topic `bson:"current,omitempty"  json:"current,omitempty"`
+	Next    *Topic `bson:"next,omitempty"     json:"next,omitempty"`
 }
 
 // Topic represents topic schema as it is stored in mongoDB
@@ -43,12 +43,12 @@ type TopicResponse struct {
 type Topic struct {
 	ID          string      `bson:"id,omitempty"             json:"id,omitempty"`
 	Description string      `bson:"description,omitempty"    json:"description,omitempty"`
-	Title       string      `bson:"title,omitempty"          json:"title,omitempty"`
 	Keywords    []string    `bson:"keywords,omitempty"       json:"keywords,omitempty"`
-	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
 	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
-	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 	ReleaseDate string      `bson:"release_date,omitempty"   json:"release_date,omitempty"`
+	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
+	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
+	Title       string      `bson:"title,omitempty"          json:"title,omitempty"`
 }
 
 // TopicRelease represents the incoming request structure containing release content
@@ -64,9 +64,9 @@ type LinkObject struct {
 
 // TopicLinks represents a list of specific links related to the topic resource
 type TopicLinks struct {
+	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
 	Self      *LinkObject `bson:"self,omitempty"       json:"self,omitempty"`
 	Subtopics *LinkObject `bson:"subtopics,omitempty"  json:"subtopics,omitempty"`
-	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
 }
 
 // CreateReleaseDate manages the creation of a release date object from a reader
