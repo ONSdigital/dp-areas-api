@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/dp-topic-api/store"
 	"sync"
+	"time"
 )
 
 var (
@@ -45,7 +46,7 @@ var _ store.MongoDB = &MongoDBMock{}
 //             GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 // 	               panic("mock out the GetTopic method")
 //             },
-//             UpdateReleaseDateFunc: func(ctx context.Context, id string, releaseDate string) error {
+//             UpdateReleaseDateFunc: func(ctx context.Context, id string, releaseDate time.Time) error {
 // 	               panic("mock out the UpdateReleaseDate method")
 //             },
 //         }
@@ -71,7 +72,7 @@ type MongoDBMock struct {
 	GetTopicFunc func(ctx context.Context, id string) (*models.TopicResponse, error)
 
 	// UpdateReleaseDateFunc mocks the UpdateReleaseDate method.
-	UpdateReleaseDateFunc func(ctx context.Context, id string, releaseDate string) error
+	UpdateReleaseDateFunc func(ctx context.Context, id string, releaseDate time.Time) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -117,7 +118,7 @@ type MongoDBMock struct {
 			// ID is the id argument value.
 			ID string
 			// ReleaseDate is the releaseDate argument value.
-			ReleaseDate string
+			ReleaseDate time.Time
 		}
 	}
 }
@@ -298,14 +299,14 @@ func (mock *MongoDBMock) GetTopicCalls() []struct {
 }
 
 // UpdateReleaseDate calls UpdateReleaseDateFunc.
-func (mock *MongoDBMock) UpdateReleaseDate(ctx context.Context, id string, releaseDate string) error {
+func (mock *MongoDBMock) UpdateReleaseDate(ctx context.Context, id string, releaseDate time.Time) error {
 	if mock.UpdateReleaseDateFunc == nil {
 		panic("MongoDBMock.UpdateReleaseDateFunc: method is nil but MongoDB.UpdateReleaseDate was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
 		ID          string
-		ReleaseDate string
+		ReleaseDate time.Time
 	}{
 		Ctx:         ctx,
 		ID:          id,
@@ -323,12 +324,12 @@ func (mock *MongoDBMock) UpdateReleaseDate(ctx context.Context, id string, relea
 func (mock *MongoDBMock) UpdateReleaseDateCalls() []struct {
 	Ctx         context.Context
 	ID          string
-	ReleaseDate string
+	ReleaseDate time.Time
 } {
 	var calls []struct {
 		Ctx         context.Context
 		ID          string
-		ReleaseDate string
+		ReleaseDate time.Time
 	}
 	lockMongoDBMockUpdateReleaseDate.RLock()
 	calls = mock.calls.UpdateReleaseDate

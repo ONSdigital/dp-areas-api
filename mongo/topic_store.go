@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/api"
@@ -146,15 +147,19 @@ func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (
 }
 
 // UpdateReleaseDate update releaseDate of document by its topic ID
-func (m *Mongo) UpdateReleaseDate(ctx context.Context, id, releaseDate string) error {
-	filter := bson.M{"_id": id}
+func (m *Mongo) UpdateReleaseDate(ctx context.Context, id string, releaseDate time.Time) error {
+	selector := bson.M{"id": id}
 	update := bson.M{
 		"$set": bson.M{"next.release_date": releaseDate},
 	}
 
-	_, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).UpdateById(ctx, filter, update)
+	result, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Update(ctx, selector, update)
 	if err != nil {
 		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return errs.ErrTopicNotFound
 	}
 
 	return nil

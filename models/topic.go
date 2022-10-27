@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 )
@@ -71,8 +72,12 @@ type TopicLinks struct {
 // CreateReleaseDate manages the creation of a release date object from a reader
 func ReadReleaseDate(r io.Reader) (*TopicRelease, error) {
 	var topicRelease TopicRelease
+
 	err := json.NewDecoder(r).Decode(&topicRelease)
-	if err != nil {
+	switch {
+	case err == io.EOF:
+		return nil, apierrors.ErrEmptyRequestBody
+	case err != nil:
 		return nil, apierrors.ErrUnableToReadMessage
 	}
 
@@ -121,4 +126,13 @@ func (t *Topic) StateTransitionAllowed(target string) bool {
 		return false
 	}
 	return currentState.TransitionAllowed(targetState)
+}
+
+func (tr *TopicRelease) Validate() (*time.Time, error) {
+	releaseDate, err := time.Parse(time.RFC3339, tr.ReleaseDate)
+	if err != nil {
+		return nil, apierrors.ErrInvalidReleaseDate
+	}
+
+	return &releaseDate, nil
 }

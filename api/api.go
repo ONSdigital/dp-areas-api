@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -167,6 +166,7 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 		log.Error(ctx, "request unsuccessful", err, data)
 		return err
 	}
+
 	return nil
 }
 
@@ -178,7 +178,7 @@ func ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	// Get Body bytes
-	payload, err := ioutil.ReadAll(body)
+	payload, err := io.ReadAll(body)
 	if err != nil {
 		handleError(ctx, w, apierrors.ErrUnableToReadMessage, data)
 		return err
@@ -206,7 +206,9 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 			apierrors.ErrUnableToParseJSON,
 			apierrors.ErrTopicInvalidState:
 			status = http.StatusInternalServerError
-		case apierrors.ErrContentUnrecognisedParameter:
+		case apierrors.ErrContentUnrecognisedParameter,
+			apierrors.ErrEmptyRequestBody,
+			apierrors.ErrInvalidReleaseDate:
 			status = http.StatusBadRequest
 		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden

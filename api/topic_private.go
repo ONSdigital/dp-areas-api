@@ -133,17 +133,19 @@ func (api *API) putTopicReleaseDatePrivateHandler(w http.ResponseWriter, req *ht
 		return
 	}
 
-	// get topic from mongoDB by id
-	topic, err := api.dataStore.Backend.UpdateReleaseDate(ctx, id, topicRelease.ReleaseDate)
+	releaseDate, err := topicRelease.Validate()
 	if err != nil {
 		handleError(ctx, w, err, logdata)
 		return
 	}
 
-	// User has valid authentication to get raw topic document
-	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
-		// WriteJSONBody has already logged the error
+	// get topic from mongoDB by id
+	if err := api.dataStore.Backend.UpdateReleaseDate(ctx, id, *releaseDate); err != nil {
+		handleError(ctx, w, err, logdata)
 		return
 	}
-	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
+
+	w.WriteHeader(http.StatusOK)
+
+	log.Info(ctx, "request successful", logdata)
 }
