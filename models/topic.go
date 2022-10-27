@@ -45,7 +45,7 @@ type Topic struct {
 	Description string      `bson:"description,omitempty"    json:"description,omitempty"`
 	Keywords    []string    `bson:"keywords,omitempty"       json:"keywords,omitempty"`
 	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
-	ReleaseDate string      `bson:"release_date,omitempty"   json:"release_date,omitempty"`
+	ReleaseDate *time.Time  `bson:"release_date,omitempty"   json:"release_date,omitempty"`
 	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
 	Title       string      `bson:"title,omitempty"          json:"title,omitempty"`
