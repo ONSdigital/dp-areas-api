@@ -69,3 +69,18 @@ func (cli *Client) GetSubtopicsPrivate(ctx context.Context, reqHeaders Headers, 
 
 	return &subtopics, nil
 }
+
+type Result struct {
+}
+
+// PutTopicReleasePrivate inserts the release date into the topic next object ready for publishing
+func (cli *Client) PutTopicReleasePrivate(ctx context.Context, reqHeaders Headers, id string, payload []byte) apiError.Error {
+	path := fmt.Sprintf("%s/topics/%s/release-date", cli.hcCli.URL, id)
+
+	_, apiErr := cli.callTopicAPI(ctx, path, http.MethodPut, reqHeaders, payload)
+	if apiErr != nil {
+		return apiErr
+	}
+
+	return nil
+}

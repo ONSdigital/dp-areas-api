@@ -14,16 +14,17 @@ import (
 )
 
 var (
-	lockClienterMockChecker              sync.RWMutex
-	lockClienterMockGetNavigationPublic  sync.RWMutex
-	lockClienterMockGetRootTopicsPrivate sync.RWMutex
-	lockClienterMockGetRootTopicsPublic  sync.RWMutex
-	lockClienterMockGetSubtopicsPrivate  sync.RWMutex
-	lockClienterMockGetSubtopicsPublic   sync.RWMutex
-	lockClienterMockGetTopicPrivate      sync.RWMutex
-	lockClienterMockGetTopicPublic       sync.RWMutex
-	lockClienterMockHealth               sync.RWMutex
-	lockClienterMockURL                  sync.RWMutex
+	lockClienterMockChecker                sync.RWMutex
+	lockClienterMockGetNavigationPublic    sync.RWMutex
+	lockClienterMockGetRootTopicsPrivate   sync.RWMutex
+	lockClienterMockGetRootTopicsPublic    sync.RWMutex
+	lockClienterMockGetSubtopicsPrivate    sync.RWMutex
+	lockClienterMockGetSubtopicsPublic     sync.RWMutex
+	lockClienterMockGetTopicPrivate        sync.RWMutex
+	lockClienterMockGetTopicPublic         sync.RWMutex
+	lockClienterMockHealth                 sync.RWMutex
+	lockClienterMockPutTopicReleasePrivate sync.RWMutex
+	lockClienterMockURL                    sync.RWMutex
 )
 
 // Ensure, that ClienterMock does implement sdk.Clienter.
@@ -63,6 +64,9 @@ var _ sdk.Clienter = &ClienterMock{}
 //             HealthFunc: func() *health.Client {
 // 	               panic("mock out the Health method")
 //             },
+//             PutTopicReleasePrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error {
+// 	               panic("mock out the PutTopicReleasePrivate method")
+//             },
 //             URLFunc: func() string {
 // 	               panic("mock out the URL method")
 //             },
@@ -99,6 +103,9 @@ type ClienterMock struct {
 
 	// HealthFunc mocks the Health method.
 	HealthFunc func() *health.Client
+
+	// PutTopicReleasePrivateFunc mocks the PutTopicReleasePrivate method.
+	PutTopicReleasePrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error
 
 	// URLFunc mocks the URL method.
 	URLFunc func() string
@@ -169,6 +176,17 @@ type ClienterMock struct {
 		}
 		// Health holds details about calls to the Health method.
 		Health []struct {
+		}
+		// PutTopicReleasePrivate holds details about calls to the PutTopicReleasePrivate method.
+		PutTopicReleasePrivate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ReqHeaders is the reqHeaders argument value.
+			ReqHeaders sdk.Headers
+			// ID is the id argument value.
+			ID string
+			// TopicRelease is the topicRelease argument value.
+			TopicRelease []byte
 		}
 		// URL holds details about calls to the URL method.
 		URL []struct {
@@ -491,6 +509,49 @@ func (mock *ClienterMock) HealthCalls() []struct {
 	lockClienterMockHealth.RLock()
 	calls = mock.calls.Health
 	lockClienterMockHealth.RUnlock()
+	return calls
+}
+
+// PutTopicReleasePrivate calls PutTopicReleasePrivateFunc.
+func (mock *ClienterMock) PutTopicReleasePrivate(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error {
+	if mock.PutTopicReleasePrivateFunc == nil {
+		panic("ClienterMock.PutTopicReleasePrivateFunc: method is nil but Clienter.PutTopicReleasePrivate was just called")
+	}
+	callInfo := struct {
+		Ctx          context.Context
+		ReqHeaders   sdk.Headers
+		ID           string
+		TopicRelease []byte
+	}{
+		Ctx:          ctx,
+		ReqHeaders:   reqHeaders,
+		ID:           id,
+		TopicRelease: topicRelease,
+	}
+	lockClienterMockPutTopicReleasePrivate.Lock()
+	mock.calls.PutTopicReleasePrivate = append(mock.calls.PutTopicReleasePrivate, callInfo)
+	lockClienterMockPutTopicReleasePrivate.Unlock()
+	return mock.PutTopicReleasePrivateFunc(ctx, reqHeaders, id, topicRelease)
+}
+
+// PutTopicReleasePrivateCalls gets all the calls that were made to PutTopicReleasePrivate.
+// Check the length with:
+//     len(mockedClienter.PutTopicReleasePrivateCalls())
+func (mock *ClienterMock) PutTopicReleasePrivateCalls() []struct {
+	Ctx          context.Context
+	ReqHeaders   sdk.Headers
+	ID           string
+	TopicRelease []byte
+} {
+	var calls []struct {
+		Ctx          context.Context
+		ReqHeaders   sdk.Headers
+		ID           string
+		TopicRelease []byte
+	}
+	lockClienterMockPutTopicReleasePrivate.RLock()
+	calls = mock.calls.PutTopicReleasePrivate
+	lockClienterMockPutTopicReleasePrivate.RUnlock()
 	return calls
 }
 
