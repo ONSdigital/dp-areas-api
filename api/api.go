@@ -105,6 +105,12 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		api.isAuthenticated(
 			api.isAuthorised(readPermission, api.getNavigationHandler)),
 	)
+
+	api.put(
+		"/topics/{id}/release-date",
+		api.isAuthenticated(
+			api.isAuthorised(updatePermission, api.putTopicReleaseDatePrivateHandler)),
+	)
 }
 
 // isAuthenticated wraps a http handler func in another http handler func that checks the caller is authenticated to

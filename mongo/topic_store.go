@@ -145,17 +145,17 @@ func (m *Mongo) GetContent(ctx context.Context, id string, queryTypeFlags int) (
 	return &content, nil
 }
 
-// UpdateReleaseDate update releaseDate of document by its ID
-func (m *Mongo) UpdateReleaseDate(ctx context.Context, id string, releaseDate string) (*mongodriver.CollectionUpdateResult, error) {
+// UpdateReleaseDate update releaseDate of document by its topic ID
+func (m *Mongo) UpdateReleaseDate(ctx context.Context, id, releaseDate string) error {
 	filter := bson.M{"_id": id}
-	update := bson.D{
-		{"$set", bson.D{{"release_date", releaseDate}}},
+	update := bson.M{
+		"$set": bson.M{"next.release_date": releaseDate},
 	}
 
-	updateResult, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).UpdateById(ctx, filter, update)
+	_, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).UpdateById(ctx, filter, update)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return updateResult, nil
+	return nil
 }

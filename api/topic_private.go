@@ -117,3 +117,33 @@ func (api *API) getSubtopicsPrivateByID(ctx context.Context, id string, logdata 
 	}
 	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
 }
+
+func (api *API) putTopicReleaseDatePrivateHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	vars := mux.Vars(req)
+	id := vars["id"]
+	logdata := log.Data{
+		"topic_id": id,
+		"function": "putTopicReleaseDatePrivateHandler",
+	}
+
+	topicRelease, err := models.ReadReleaseDate(req.Body)
+	if err != nil {
+		handleError(ctx, w, err, logdata)
+		return
+	}
+
+	// get topic from mongoDB by id
+	topic, err := api.dataStore.Backend.UpdateReleaseDate(ctx, id, topicRelease.ReleaseDate)
+	if err != nil {
+		handleError(ctx, w, err, logdata)
+		return
+	}
+
+	// User has valid authentication to get raw topic document
+	if err := WriteJSONBody(ctx, topic, w, logdata); err != nil {
+		// WriteJSONBody has already logged the error
+		return
+	}
+	log.Info(ctx, "request successful", logdata) // NOTE: name of function is in logdata
+}

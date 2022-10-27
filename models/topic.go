@@ -1,6 +1,11 @@
 package models
 
-import "github.com/ONSdigital/dp-topic-api/apierrors"
+import (
+	"encoding/json"
+	"io"
+
+	"github.com/ONSdigital/dp-topic-api/apierrors"
+)
 
 // PrivateSubtopics used for returning both Next and Current document(s) in REST API response
 type PrivateSubtopics struct {
@@ -42,7 +47,12 @@ type Topic struct {
 	State       string      `bson:"state,omitempty"          json:"state,omitempty"`
 	Links       *TopicLinks `bson:"links,omitempty"          json:"links,omitempty"`
 	SubtopicIds []string    `bson:"subtopics_ids,omitempty"  json:"-"`
-	ReleaseDate string      `bson:"release_date,omitempty"   json:"release_date,release_date"`
+	ReleaseDate string      `bson:"release_date,omitempty"   json:"release_date,omitempty"`
+}
+
+// TopicRelease represents the incoming request structure containing release content
+type TopicRelease struct {
+	ReleaseDate string `json:"release_date"`
 }
 
 // LinkObject represents a generic structure for all links
@@ -56,6 +66,17 @@ type TopicLinks struct {
 	Self      *LinkObject `bson:"self,omitempty"       json:"self,omitempty"`
 	Subtopics *LinkObject `bson:"subtopics,omitempty"  json:"subtopics,omitempty"`
 	Content   *LinkObject `bson:"content,omitempty"    json:"content,omitempty"`
+}
+
+// CreateReleaseDate manages the creation of a release date object from a reader
+func ReadReleaseDate(r io.Reader) (*TopicRelease, error) {
+	var topicRelease TopicRelease
+	err := json.NewDecoder(r).Decode(&topicRelease)
+	if err != nil {
+		return nil, apierrors.ErrUnableToReadMessage
+	}
+
+	return &topicRelease, nil
 }
 
 // Validate checks that a topic struct complies with the state constraints, if provided. TODO may want to add more in future

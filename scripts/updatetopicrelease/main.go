@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ONSdigital/dp-topic-api/config"
-	"github.com/ONSdigital/dp-topic-api/mongo"
 	"os"
 	"strings"
+
+	"github.com/ONSdigital/dp-topic-api/config"
+	"github.com/ONSdigital/dp-topic-api/mongo"
 )
 
 func main() {
@@ -37,8 +38,7 @@ func main() {
 }
 func updateTopicReleaseData(ctx context.Context, mongoConfig config.MongoConfig, collectionId string, releaseDate string) error {
 	conn, err := mongo.NewDBConnection(ctx, mongoConfig)
-	_, err = conn.UpdateReleaseDate(ctx, collectionId, releaseDate)
-	if err != nil {
+	if err = conn.UpdateReleaseDate(ctx, collectionId, releaseDate); err != nil {
 		return err
 	}
 	return nil
