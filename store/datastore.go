@@ -13,8 +13,8 @@ type DataStore struct {
 	Backend Storer
 }
 
-//go:generate moq -out datastoretest/mongo.go -pkg storetest . MongoDB
-//go:generate moq -out datastoretest/datastore.go -pkg storetest . Storer
+//go:generate moq -out mock/mongo.go -pkg mock . MongoDB
+//go:generate moq -out mock/datastore.go -pkg mock . Storer
 
 // dataMongoDB represents the required methods to access data from mongoDB
 type dataMongoDB interface {
