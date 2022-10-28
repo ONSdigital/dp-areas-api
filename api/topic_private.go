@@ -168,7 +168,10 @@ func (api *API) putTopicStatePrivateHandler(w http.ResponseWriter, req *http.Req
 	}
 
 	if state == models.StatePublished.String() {
-		// TODO - should lock resource, or put this in a mongo db transaction
+		// TODO - should lock resource, put this in a mongo db transaction or use eTags to
+		// check if the resource has changed since initial request - as it is not a public
+		// endpoint and is not currently used by the publishing system we can ignore this for
+		// now
 		log.Info(ctx, "attempting to publish topic", logdata)
 
 		// get topic
