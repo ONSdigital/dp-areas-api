@@ -15,7 +15,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/service/mock"
 	serviceMock "github.com/ONSdigital/dp-topic-api/service/mock"
 	"github.com/ONSdigital/dp-topic-api/store"
-	storeMock "github.com/ONSdigital/dp-topic-api/store/datastoretest"
+	storeMock "github.com/ONSdigital/dp-topic-api/store/mock"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )

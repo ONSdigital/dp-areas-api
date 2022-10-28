@@ -32,6 +32,12 @@ parameters:
     in: query
     type: string
     required: false
+  state:
+    name: state
+    description: "An update to the topics release date"
+    type: string
+    in: path
+    required: true
   update_release_date:
     name: release_date
     description: "An update to the topics release date"
@@ -64,7 +70,7 @@ paths:
       tags:
         - "Private"
       summary: "Update the topic release_date"
-      description: "Updates a topics release date against the next nested objected. Unavailable to view by public endpoints until published, ('next' object overwrites 'current' object)"
+      description: "Updates a topics release date against the next nested object. Unavailable to view by public endpoints until published, ('next' object overwrites 'current' object)"
       parameters:
         - $ref: '#/parameters/id'
         - $ref: '#/parameters/update_release_date'
@@ -79,7 +85,27 @@ paths:
           description: | 
             Bad request, messages could be 1 of the following:
             * request body empty
-            * invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
+            * invalid topic release date, must use **RFC3339** format
+        500:
+          $ref: '#/responses/InternalError'
+  /topics/{id}/state/{state}:
+    put:
+      tags:
+        - "Private"
+      summary: "Update the topic state"
+      description: "Updates a topics state against the next nested object. If state is equal to 'published' than the next object copies over to current object"
+      parameters:
+        - $ref: '#/parameters/id'
+        - $ref: '#/parameters/state'
+      responses:
+        200:
+          description: "Success"
+        401:
+          $ref: '#/responses/Unauthorised'
+        404:
+          description: "Topic not found"
+        400:
+          description: "topic state is not a valid state name"
         500:
           $ref: '#/responses/InternalError'
   /topics/{id}/subtopics:

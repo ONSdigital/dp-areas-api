@@ -12,7 +12,7 @@ import (
 	"github.com/ONSdigital/dp-topic-api/apierrors"
 	"github.com/ONSdigital/dp-topic-api/config"
 	"github.com/ONSdigital/dp-topic-api/models"
-	storeMock "github.com/ONSdigital/dp-topic-api/store/datastoretest"
+	storeMock "github.com/ONSdigital/dp-topic-api/store/mock"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

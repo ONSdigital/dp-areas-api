@@ -135,12 +135,12 @@ Feature: Behaviour of application when doing the PUT /topics/{id}/release_date e
             invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
             """
 
-    Scenario: [Test #22] Invalid Topic id in PUT /topics/businessindustryandtrad/release-date in private mode
+    Scenario: [Test #22] Invalid Topic id in PUT /topics/invalid-id/release-date in private mode
         Given private endpoints are enabled
         And I am identified as "user@ons.gov.uk"
         And I am authorised
 
-        When I PUT "/topics/businessindustryandtrad/release-date"
+        When I PUT "/topics/invalid-id/release-date"
             """
             {
                 "release_date": "2022-11-02T09:30:00Z"

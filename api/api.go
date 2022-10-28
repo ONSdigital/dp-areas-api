@@ -110,6 +110,12 @@ func (api *API) enablePrivateTopicEndpoints(ctx context.Context) {
 		api.isAuthenticated(
 			api.isAuthorised(updatePermission, api.putTopicReleaseDatePrivateHandler)),
 	)
+
+	api.put(
+		"/topics/{id}/state/{state}",
+		api.isAuthenticated(
+			api.isAuthorised(updatePermission, api.putTopicStatePrivateHandler)),
+	)
 }
 
 // isAuthenticated wraps a http handler func in another http handler func that checks the caller is authenticated to
@@ -203,12 +209,12 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error, data log
 			apierrors.ErrNotFound:
 			status = http.StatusNotFound
 		case apierrors.ErrUnableToReadMessage,
-			apierrors.ErrUnableToParseJSON,
-			apierrors.ErrTopicInvalidState:
+			apierrors.ErrUnableToParseJSON:
 			status = http.StatusInternalServerError
 		case apierrors.ErrContentUnrecognisedParameter,
 			apierrors.ErrEmptyRequestBody,
-			apierrors.ErrInvalidReleaseDate:
+			apierrors.ErrInvalidReleaseDate,
+			apierrors.ErrTopicInvalidState:
 			status = http.StatusBadRequest
 		case apierrors.ErrTopicStateTransitionNotAllowed:
 			status = http.StatusForbidden

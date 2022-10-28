@@ -139,7 +139,7 @@ func (api *API) putTopicReleaseDatePrivateHandler(w http.ResponseWriter, req *ht
 		return
 	}
 
-	// get topic from mongoDB by id
+	// update topic next.release_date in mongo db
 	if err := api.dataStore.Backend.UpdateReleaseDate(ctx, id, *releaseDate); err != nil {
 		handleError(ctx, w, err, logdata)
 		return
@@ -148,4 +148,67 @@ func (api *API) putTopicReleaseDatePrivateHandler(w http.ResponseWriter, req *ht
 	w.WriteHeader(http.StatusOK)
 
 	log.Info(ctx, "request successful", logdata)
+}
+
+func (api *API) putTopicStatePrivateHandler(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	vars := mux.Vars(req)
+	id := vars["id"]
+	state := vars["state"]
+	logdata := log.Data{
+		"topic_id": id,
+		"state":    state,
+		"function": "putTopicStatePrivateHandler",
+	}
+
+	_, err := models.ParseState(state)
+	if err != nil {
+		handleError(ctx, w, err, logdata)
+		return
+	}
+
+	if state == models.StatePublished.String() {
+		// TODO - should lock resource, put this in a mongo db transaction or use eTags to
+		// check if the resource has changed since initial request - as it is not a public
+		// endpoint and is not currently used by the publishing system we can ignore this for
+		// now
+		log.Info(ctx, "attempting to publish topic", logdata)
+
+		// get topic
+		topic, err := api.dataStore.Backend.GetTopic(ctx, id)
+		if err != nil {
+			handleError(ctx, w, err, logdata)
+			return
+		}
+
+		// set next state
+		topic.Next.State = state
+
+		// update local copy of topic
+		newTopic := syncNextAndCurrentTopic(topic)
+
+		// update topic in mongo db
+		if err := api.dataStore.Backend.UpdateTopic(ctx, id, newTopic); err != nil {
+			handleError(ctx, w, err, logdata)
+			return
+		}
+	} else {
+		// update topic next.state in mongo db
+		if err := api.dataStore.Backend.UpdateState(ctx, id, state); err != nil {
+			handleError(ctx, w, err, logdata)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	log.Info(ctx, "request successful", logdata)
+}
+
+func syncNextAndCurrentTopic(topic *models.TopicResponse) *models.TopicResponse {
+	return &models.TopicResponse{
+		ID:      topic.ID,
+		Next:    topic.Next,
+		Current: topic.Next,
+	}
 }
