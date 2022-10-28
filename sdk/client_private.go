@@ -14,14 +14,14 @@ import (
 func (cli *Client) GetRootTopicsPrivate(ctx context.Context, reqHeaders Headers) (*models.PrivateSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics", cli.hcCli.URL)
 
-	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	respInfo, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
 	if apiErr != nil {
 		return nil, apiErr
 	}
 
 	var rootTopics models.PrivateSubtopics
 
-	if err := json.Unmarshal(b, &rootTopics); err != nil {
+	if err := json.Unmarshal(respInfo.Body, &rootTopics); err != nil {
 		return nil, apiError.StatusError{
 			Err: fmt.Errorf("failed to unmarshal rootTopics - error is: %v", err),
 		}
@@ -34,14 +34,14 @@ func (cli *Client) GetRootTopicsPrivate(ctx context.Context, reqHeaders Headers)
 func (cli *Client) GetTopicPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.TopicResponse, apiError.Error) {
 	path := fmt.Sprintf("%s/topics/%s", cli.hcCli.URL, id)
 
-	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	respInfo, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
 	if apiErr != nil {
 		return nil, apiErr
 	}
 
 	var topic models.TopicResponse
 
-	if err := json.Unmarshal(b, &topic); err != nil {
+	if err := json.Unmarshal(respInfo.Body, &topic); err != nil {
 		return nil, apiError.StatusError{
 			Err: fmt.Errorf("failed to unmarshal topic - error is: %v", err),
 		}
@@ -54,18 +54,35 @@ func (cli *Client) GetTopicPrivate(ctx context.Context, reqHeaders Headers, id s
 func (cli *Client) GetSubtopicsPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
 	path := fmt.Sprintf("%s/topics/%s/subtopics", cli.hcCli.URL, id)
 
-	b, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
+	respInfo, apiErr := cli.callTopicAPI(ctx, path, http.MethodGet, reqHeaders, nil)
 	if apiErr != nil {
 		return nil, apiErr
 	}
 
 	var subtopics models.PrivateSubtopics
 
-	if err := json.Unmarshal(b, &subtopics); err != nil {
+	if err := json.Unmarshal(respInfo.Body, &subtopics); err != nil {
 		return nil, apiError.StatusError{
 			Err: fmt.Errorf("failed to unmarshal subtopics - error is: %v", err),
 		}
 	}
 
 	return &subtopics, nil
+}
+
+type Result struct {
+}
+
+// PutTopicReleasePrivate inserts the release date into the topic next object ready for publishing
+func (cli *Client) PutTopicReleasePrivate(ctx context.Context, reqHeaders Headers, id string, payload []byte) (*ResponseInfo, apiError.Error) {
+	path := fmt.Sprintf("%s/topics/%s/release-date", cli.hcCli.URL, id)
+
+	respInfo, apiErr := cli.callTopicAPI(ctx, path, http.MethodPut, reqHeaders, payload)
+	if apiErr != nil {
+		return respInfo, apiErr
+	}
+
+	fmt.Printf("got here last with: %v", respInfo)
+
+	return respInfo, nil
 }

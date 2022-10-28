@@ -12,6 +12,7 @@ schemes:
   - http
 tags:
   - name: "Public"
+  - name: "Private"
 parameters:
   id:
     name: id
@@ -31,6 +32,13 @@ parameters:
     in: query
     type: string
     required: false
+  update_release_date:
+    name: release_date
+    description: "An update to the topics release date"
+    in: body
+    required: true
+    schema:
+      $ref: "#/definitions/TopicRelease"
 paths:
   /topics/{id}:
     get:
@@ -49,6 +57,29 @@ paths:
             $ref: '#/definitions/Topic'
         404:
           description: "Topic not found"
+        500:
+          $ref: '#/responses/InternalError'
+  /topics/{id}/release-date:
+    put:
+      tags:
+        - "Private"
+      summary: "Update the topic release_date"
+      description: "Updates a topics release date against the next nested objected. Unavailable to view by public endpoints until published, ('next' object overwrites 'current' object)"
+      parameters:
+        - $ref: '#/parameters/id'
+        - $ref: '#/parameters/update_release_date'
+      responses:
+        200:
+          description: "Success"
+        401:
+          $ref: '#/responses/Unauthorised'
+        404:
+          description: "Topic not found"
+        400:
+          description: | 
+            Bad request, messages could be 1 of the following:
+            * request body empty
+            * invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
         500:
           $ref: '#/responses/InternalError'
   /topics/{id}/subtopics:
@@ -277,6 +308,14 @@ definitions:
                 description: "The URL to the resource"
       items:
         $ref: '#/definitions/ListOfNavigationItems'
+  TopicRelease:
+    type: object
+    description: "Object containing topic release details"
+    properties:
+      release_date:
+        description: "The release date formatted to abide by RFC3339"
+        type: string
+        example: "2022-10-10T08:30:00Z"
   ListOfNavigationItems:
     type: array
     description: "A list of navigation items"

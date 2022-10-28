@@ -5,12 +5,26 @@ package mocks
 
 import (
 	"context"
-	healthcheck "github.com/ONSdigital/dp-api-clients-go/v2/health"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-topic-api/models"
 	"github.com/ONSdigital/dp-topic-api/sdk"
-	apiError "github.com/ONSdigital/dp-topic-api/sdk/errors"
+	"github.com/ONSdigital/dp-topic-api/sdk/errors"
 	"sync"
+)
+
+var (
+	lockClienterMockChecker                sync.RWMutex
+	lockClienterMockGetNavigationPublic    sync.RWMutex
+	lockClienterMockGetRootTopicsPrivate   sync.RWMutex
+	lockClienterMockGetRootTopicsPublic    sync.RWMutex
+	lockClienterMockGetSubtopicsPrivate    sync.RWMutex
+	lockClienterMockGetSubtopicsPublic     sync.RWMutex
+	lockClienterMockGetTopicPrivate        sync.RWMutex
+	lockClienterMockGetTopicPublic         sync.RWMutex
+	lockClienterMockHealth                 sync.RWMutex
+	lockClienterMockPutTopicReleasePrivate sync.RWMutex
+	lockClienterMockURL                    sync.RWMutex
 )
 
 // Ensure, that ClienterMock does implement sdk.Clienter.
@@ -19,73 +33,79 @@ var _ sdk.Clienter = &ClienterMock{}
 
 // ClienterMock is a mock implementation of sdk.Clienter.
 //
-// 	func TestSomethingThatUsesClienter(t *testing.T) {
+//     func TestSomethingThatUsesClienter(t *testing.T) {
 //
-// 		// make and configure a mocked sdk.Clienter
-// 		mockedClienter := &ClienterMock{
-// 			CheckerFunc: func(ctx context.Context, check *health.CheckState) error {
-// 				panic("mock out the Checker method")
-// 			},
-// 			GetNavigationPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error) {
-// 				panic("mock out the GetNavigationPublic method")
-// 			},
-// 			GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error) {
-// 				panic("mock out the GetRootTopicsPrivate method")
-// 			},
-// 			GetRootTopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error) {
-// 				panic("mock out the GetRootTopicsPublic method")
-// 			},
-// 			GetSubtopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
-// 				panic("mock out the GetSubtopicsPrivate method")
-// 			},
-// 			GetSubtopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error) {
-// 				panic("mock out the GetSubtopicsPublic method")
-// 			},
-// 			GetTopicPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, apiError.Error) {
-// 				panic("mock out the GetTopicPrivate method")
-// 			},
-// 			GetTopicPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, apiError.Error) {
-// 				panic("mock out the GetTopicPublic method")
-// 			},
-// 			HealthFunc: func() *healthcheck.Client {
-// 				panic("mock out the Health method")
-// 			},
-// 			URLFunc: func() string {
-// 				panic("mock out the URL method")
-// 			},
-// 		}
+//         // make and configure a mocked sdk.Clienter
+//         mockedClienter := &ClienterMock{
+//             CheckerFunc: func(ctx context.Context, check *healthcheck.CheckState) error {
+// 	               panic("mock out the Checker method")
+//             },
+//             GetNavigationPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, errors.Error) {
+// 	               panic("mock out the GetNavigationPublic method")
+//             },
+//             GetRootTopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, errors.Error) {
+// 	               panic("mock out the GetRootTopicsPrivate method")
+//             },
+//             GetRootTopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, errors.Error) {
+// 	               panic("mock out the GetRootTopicsPublic method")
+//             },
+//             GetSubtopicsPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, errors.Error) {
+// 	               panic("mock out the GetSubtopicsPrivate method")
+//             },
+//             GetSubtopicsPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, errors.Error) {
+// 	               panic("mock out the GetSubtopicsPublic method")
+//             },
+//             GetTopicPrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, errors.Error) {
+// 	               panic("mock out the GetTopicPrivate method")
+//             },
+//             GetTopicPublicFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, errors.Error) {
+// 	               panic("mock out the GetTopicPublic method")
+//             },
+//             HealthFunc: func() *health.Client {
+// 	               panic("mock out the Health method")
+//             },
+//             PutTopicReleasePrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error) {
+// 	               panic("mock out the PutTopicReleasePrivate method")
+//             },
+//             URLFunc: func() string {
+// 	               panic("mock out the URL method")
+//             },
+//         }
 //
-// 		// use mockedClienter in code that requires sdk.Clienter
-// 		// and then make assertions.
+//         // use mockedClienter in code that requires sdk.Clienter
+//         // and then make assertions.
 //
-// 	}
+//     }
 type ClienterMock struct {
 	// CheckerFunc mocks the Checker method.
-	CheckerFunc func(ctx context.Context, check *health.CheckState) error
+	CheckerFunc func(ctx context.Context, check *healthcheck.CheckState) error
 
 	// GetNavigationPublicFunc mocks the GetNavigationPublic method.
-	GetNavigationPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error)
+	GetNavigationPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, errors.Error)
 
 	// GetRootTopicsPrivateFunc mocks the GetRootTopicsPrivate method.
-	GetRootTopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error)
+	GetRootTopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, errors.Error)
 
 	// GetRootTopicsPublicFunc mocks the GetRootTopicsPublic method.
-	GetRootTopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error)
+	GetRootTopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, errors.Error)
 
 	// GetSubtopicsPrivateFunc mocks the GetSubtopicsPrivate method.
-	GetSubtopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error)
+	GetSubtopicsPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, errors.Error)
 
 	// GetSubtopicsPublicFunc mocks the GetSubtopicsPublic method.
-	GetSubtopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error)
+	GetSubtopicsPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, errors.Error)
 
 	// GetTopicPrivateFunc mocks the GetTopicPrivate method.
-	GetTopicPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, apiError.Error)
+	GetTopicPrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, errors.Error)
 
 	// GetTopicPublicFunc mocks the GetTopicPublic method.
-	GetTopicPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, apiError.Error)
+	GetTopicPublicFunc func(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, errors.Error)
 
 	// HealthFunc mocks the Health method.
-	HealthFunc func() *healthcheck.Client
+	HealthFunc func() *health.Client
+
+	// PutTopicReleasePrivateFunc mocks the PutTopicReleasePrivate method.
+	PutTopicReleasePrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error)
 
 	// URLFunc mocks the URL method.
 	URLFunc func() string
@@ -97,7 +117,7 @@ type ClienterMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Check is the check argument value.
-			Check *health.CheckState
+			Check *healthcheck.CheckState
 		}
 		// GetNavigationPublic holds details about calls to the GetNavigationPublic method.
 		GetNavigationPublic []struct {
@@ -161,37 +181,38 @@ type ClienterMock struct {
 		// Health holds details about calls to the Health method.
 		Health []struct {
 		}
+		// PutTopicReleasePrivate holds details about calls to the PutTopicReleasePrivate method.
+		PutTopicReleasePrivate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ReqHeaders is the reqHeaders argument value.
+			ReqHeaders sdk.Headers
+			// ID is the id argument value.
+			ID string
+			// TopicRelease is the topicRelease argument value.
+			TopicRelease []byte
+		}
 		// URL holds details about calls to the URL method.
 		URL []struct {
 		}
 	}
-	lockChecker              sync.RWMutex
-	lockGetNavigationPublic  sync.RWMutex
-	lockGetRootTopicsPrivate sync.RWMutex
-	lockGetRootTopicsPublic  sync.RWMutex
-	lockGetSubtopicsPrivate  sync.RWMutex
-	lockGetSubtopicsPublic   sync.RWMutex
-	lockGetTopicPrivate      sync.RWMutex
-	lockGetTopicPublic       sync.RWMutex
-	lockHealth               sync.RWMutex
-	lockURL                  sync.RWMutex
 }
 
 // Checker calls CheckerFunc.
-func (mock *ClienterMock) Checker(ctx context.Context, check *health.CheckState) error {
+func (mock *ClienterMock) Checker(ctx context.Context, check *healthcheck.CheckState) error {
 	if mock.CheckerFunc == nil {
 		panic("ClienterMock.CheckerFunc: method is nil but Clienter.Checker was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
-		Check *health.CheckState
+		Check *healthcheck.CheckState
 	}{
 		Ctx:   ctx,
 		Check: check,
 	}
-	mock.lockChecker.Lock()
+	lockClienterMockChecker.Lock()
 	mock.calls.Checker = append(mock.calls.Checker, callInfo)
-	mock.lockChecker.Unlock()
+	lockClienterMockChecker.Unlock()
 	return mock.CheckerFunc(ctx, check)
 }
 
@@ -200,20 +221,20 @@ func (mock *ClienterMock) Checker(ctx context.Context, check *health.CheckState)
 //     len(mockedClienter.CheckerCalls())
 func (mock *ClienterMock) CheckerCalls() []struct {
 	Ctx   context.Context
-	Check *health.CheckState
+	Check *healthcheck.CheckState
 } {
 	var calls []struct {
 		Ctx   context.Context
-		Check *health.CheckState
+		Check *healthcheck.CheckState
 	}
-	mock.lockChecker.RLock()
+	lockClienterMockChecker.RLock()
 	calls = mock.calls.Checker
-	mock.lockChecker.RUnlock()
+	lockClienterMockChecker.RUnlock()
 	return calls
 }
 
 // GetNavigationPublic calls GetNavigationPublicFunc.
-func (mock *ClienterMock) GetNavigationPublic(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, apiError.Error) {
+func (mock *ClienterMock) GetNavigationPublic(ctx context.Context, reqHeaders sdk.Headers, options sdk.Options) (*models.Navigation, errors.Error) {
 	if mock.GetNavigationPublicFunc == nil {
 		panic("ClienterMock.GetNavigationPublicFunc: method is nil but Clienter.GetNavigationPublic was just called")
 	}
@@ -226,9 +247,9 @@ func (mock *ClienterMock) GetNavigationPublic(ctx context.Context, reqHeaders sd
 		ReqHeaders: reqHeaders,
 		Options:    options,
 	}
-	mock.lockGetNavigationPublic.Lock()
+	lockClienterMockGetNavigationPublic.Lock()
 	mock.calls.GetNavigationPublic = append(mock.calls.GetNavigationPublic, callInfo)
-	mock.lockGetNavigationPublic.Unlock()
+	lockClienterMockGetNavigationPublic.Unlock()
 	return mock.GetNavigationPublicFunc(ctx, reqHeaders, options)
 }
 
@@ -245,14 +266,14 @@ func (mock *ClienterMock) GetNavigationPublicCalls() []struct {
 		ReqHeaders sdk.Headers
 		Options    sdk.Options
 	}
-	mock.lockGetNavigationPublic.RLock()
+	lockClienterMockGetNavigationPublic.RLock()
 	calls = mock.calls.GetNavigationPublic
-	mock.lockGetNavigationPublic.RUnlock()
+	lockClienterMockGetNavigationPublic.RUnlock()
 	return calls
 }
 
 // GetRootTopicsPrivate calls GetRootTopicsPrivateFunc.
-func (mock *ClienterMock) GetRootTopicsPrivate(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, apiError.Error) {
+func (mock *ClienterMock) GetRootTopicsPrivate(ctx context.Context, reqHeaders sdk.Headers) (*models.PrivateSubtopics, errors.Error) {
 	if mock.GetRootTopicsPrivateFunc == nil {
 		panic("ClienterMock.GetRootTopicsPrivateFunc: method is nil but Clienter.GetRootTopicsPrivate was just called")
 	}
@@ -263,9 +284,9 @@ func (mock *ClienterMock) GetRootTopicsPrivate(ctx context.Context, reqHeaders s
 		Ctx:        ctx,
 		ReqHeaders: reqHeaders,
 	}
-	mock.lockGetRootTopicsPrivate.Lock()
+	lockClienterMockGetRootTopicsPrivate.Lock()
 	mock.calls.GetRootTopicsPrivate = append(mock.calls.GetRootTopicsPrivate, callInfo)
-	mock.lockGetRootTopicsPrivate.Unlock()
+	lockClienterMockGetRootTopicsPrivate.Unlock()
 	return mock.GetRootTopicsPrivateFunc(ctx, reqHeaders)
 }
 
@@ -280,14 +301,14 @@ func (mock *ClienterMock) GetRootTopicsPrivateCalls() []struct {
 		Ctx        context.Context
 		ReqHeaders sdk.Headers
 	}
-	mock.lockGetRootTopicsPrivate.RLock()
+	lockClienterMockGetRootTopicsPrivate.RLock()
 	calls = mock.calls.GetRootTopicsPrivate
-	mock.lockGetRootTopicsPrivate.RUnlock()
+	lockClienterMockGetRootTopicsPrivate.RUnlock()
 	return calls
 }
 
 // GetRootTopicsPublic calls GetRootTopicsPublicFunc.
-func (mock *ClienterMock) GetRootTopicsPublic(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, apiError.Error) {
+func (mock *ClienterMock) GetRootTopicsPublic(ctx context.Context, reqHeaders sdk.Headers) (*models.PublicSubtopics, errors.Error) {
 	if mock.GetRootTopicsPublicFunc == nil {
 		panic("ClienterMock.GetRootTopicsPublicFunc: method is nil but Clienter.GetRootTopicsPublic was just called")
 	}
@@ -298,9 +319,9 @@ func (mock *ClienterMock) GetRootTopicsPublic(ctx context.Context, reqHeaders sd
 		Ctx:        ctx,
 		ReqHeaders: reqHeaders,
 	}
-	mock.lockGetRootTopicsPublic.Lock()
+	lockClienterMockGetRootTopicsPublic.Lock()
 	mock.calls.GetRootTopicsPublic = append(mock.calls.GetRootTopicsPublic, callInfo)
-	mock.lockGetRootTopicsPublic.Unlock()
+	lockClienterMockGetRootTopicsPublic.Unlock()
 	return mock.GetRootTopicsPublicFunc(ctx, reqHeaders)
 }
 
@@ -315,14 +336,14 @@ func (mock *ClienterMock) GetRootTopicsPublicCalls() []struct {
 		Ctx        context.Context
 		ReqHeaders sdk.Headers
 	}
-	mock.lockGetRootTopicsPublic.RLock()
+	lockClienterMockGetRootTopicsPublic.RLock()
 	calls = mock.calls.GetRootTopicsPublic
-	mock.lockGetRootTopicsPublic.RUnlock()
+	lockClienterMockGetRootTopicsPublic.RUnlock()
 	return calls
 }
 
 // GetSubtopicsPrivate calls GetSubtopicsPrivateFunc.
-func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, apiError.Error) {
+func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PrivateSubtopics, errors.Error) {
 	if mock.GetSubtopicsPrivateFunc == nil {
 		panic("ClienterMock.GetSubtopicsPrivateFunc: method is nil but Clienter.GetSubtopicsPrivate was just called")
 	}
@@ -335,9 +356,9 @@ func (mock *ClienterMock) GetSubtopicsPrivate(ctx context.Context, reqHeaders sd
 		ReqHeaders: reqHeaders,
 		ID:         id,
 	}
-	mock.lockGetSubtopicsPrivate.Lock()
+	lockClienterMockGetSubtopicsPrivate.Lock()
 	mock.calls.GetSubtopicsPrivate = append(mock.calls.GetSubtopicsPrivate, callInfo)
-	mock.lockGetSubtopicsPrivate.Unlock()
+	lockClienterMockGetSubtopicsPrivate.Unlock()
 	return mock.GetSubtopicsPrivateFunc(ctx, reqHeaders, id)
 }
 
@@ -354,14 +375,14 @@ func (mock *ClienterMock) GetSubtopicsPrivateCalls() []struct {
 		ReqHeaders sdk.Headers
 		ID         string
 	}
-	mock.lockGetSubtopicsPrivate.RLock()
+	lockClienterMockGetSubtopicsPrivate.RLock()
 	calls = mock.calls.GetSubtopicsPrivate
-	mock.lockGetSubtopicsPrivate.RUnlock()
+	lockClienterMockGetSubtopicsPrivate.RUnlock()
 	return calls
 }
 
 // GetSubtopicsPublic calls GetSubtopicsPublicFunc.
-func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, apiError.Error) {
+func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.PublicSubtopics, errors.Error) {
 	if mock.GetSubtopicsPublicFunc == nil {
 		panic("ClienterMock.GetSubtopicsPublicFunc: method is nil but Clienter.GetSubtopicsPublic was just called")
 	}
@@ -374,9 +395,9 @@ func (mock *ClienterMock) GetSubtopicsPublic(ctx context.Context, reqHeaders sdk
 		ReqHeaders: reqHeaders,
 		ID:         id,
 	}
-	mock.lockGetSubtopicsPublic.Lock()
+	lockClienterMockGetSubtopicsPublic.Lock()
 	mock.calls.GetSubtopicsPublic = append(mock.calls.GetSubtopicsPublic, callInfo)
-	mock.lockGetSubtopicsPublic.Unlock()
+	lockClienterMockGetSubtopicsPublic.Unlock()
 	return mock.GetSubtopicsPublicFunc(ctx, reqHeaders, id)
 }
 
@@ -393,14 +414,14 @@ func (mock *ClienterMock) GetSubtopicsPublicCalls() []struct {
 		ReqHeaders sdk.Headers
 		ID         string
 	}
-	mock.lockGetSubtopicsPublic.RLock()
+	lockClienterMockGetSubtopicsPublic.RLock()
 	calls = mock.calls.GetSubtopicsPublic
-	mock.lockGetSubtopicsPublic.RUnlock()
+	lockClienterMockGetSubtopicsPublic.RUnlock()
 	return calls
 }
 
 // GetTopicPrivate calls GetTopicPrivateFunc.
-func (mock *ClienterMock) GetTopicPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, apiError.Error) {
+func (mock *ClienterMock) GetTopicPrivate(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.TopicResponse, errors.Error) {
 	if mock.GetTopicPrivateFunc == nil {
 		panic("ClienterMock.GetTopicPrivateFunc: method is nil but Clienter.GetTopicPrivate was just called")
 	}
@@ -413,9 +434,9 @@ func (mock *ClienterMock) GetTopicPrivate(ctx context.Context, reqHeaders sdk.He
 		ReqHeaders: reqHeaders,
 		ID:         id,
 	}
-	mock.lockGetTopicPrivate.Lock()
+	lockClienterMockGetTopicPrivate.Lock()
 	mock.calls.GetTopicPrivate = append(mock.calls.GetTopicPrivate, callInfo)
-	mock.lockGetTopicPrivate.Unlock()
+	lockClienterMockGetTopicPrivate.Unlock()
 	return mock.GetTopicPrivateFunc(ctx, reqHeaders, id)
 }
 
@@ -432,14 +453,14 @@ func (mock *ClienterMock) GetTopicPrivateCalls() []struct {
 		ReqHeaders sdk.Headers
 		ID         string
 	}
-	mock.lockGetTopicPrivate.RLock()
+	lockClienterMockGetTopicPrivate.RLock()
 	calls = mock.calls.GetTopicPrivate
-	mock.lockGetTopicPrivate.RUnlock()
+	lockClienterMockGetTopicPrivate.RUnlock()
 	return calls
 }
 
 // GetTopicPublic calls GetTopicPublicFunc.
-func (mock *ClienterMock) GetTopicPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, apiError.Error) {
+func (mock *ClienterMock) GetTopicPublic(ctx context.Context, reqHeaders sdk.Headers, id string) (*models.Topic, errors.Error) {
 	if mock.GetTopicPublicFunc == nil {
 		panic("ClienterMock.GetTopicPublicFunc: method is nil but Clienter.GetTopicPublic was just called")
 	}
@@ -452,9 +473,9 @@ func (mock *ClienterMock) GetTopicPublic(ctx context.Context, reqHeaders sdk.Hea
 		ReqHeaders: reqHeaders,
 		ID:         id,
 	}
-	mock.lockGetTopicPublic.Lock()
+	lockClienterMockGetTopicPublic.Lock()
 	mock.calls.GetTopicPublic = append(mock.calls.GetTopicPublic, callInfo)
-	mock.lockGetTopicPublic.Unlock()
+	lockClienterMockGetTopicPublic.Unlock()
 	return mock.GetTopicPublicFunc(ctx, reqHeaders, id)
 }
 
@@ -471,22 +492,22 @@ func (mock *ClienterMock) GetTopicPublicCalls() []struct {
 		ReqHeaders sdk.Headers
 		ID         string
 	}
-	mock.lockGetTopicPublic.RLock()
+	lockClienterMockGetTopicPublic.RLock()
 	calls = mock.calls.GetTopicPublic
-	mock.lockGetTopicPublic.RUnlock()
+	lockClienterMockGetTopicPublic.RUnlock()
 	return calls
 }
 
 // Health calls HealthFunc.
-func (mock *ClienterMock) Health() *healthcheck.Client {
+func (mock *ClienterMock) Health() *health.Client {
 	if mock.HealthFunc == nil {
 		panic("ClienterMock.HealthFunc: method is nil but Clienter.Health was just called")
 	}
 	callInfo := struct {
 	}{}
-	mock.lockHealth.Lock()
+	lockClienterMockHealth.Lock()
 	mock.calls.Health = append(mock.calls.Health, callInfo)
-	mock.lockHealth.Unlock()
+	lockClienterMockHealth.Unlock()
 	return mock.HealthFunc()
 }
 
@@ -497,9 +518,52 @@ func (mock *ClienterMock) HealthCalls() []struct {
 } {
 	var calls []struct {
 	}
-	mock.lockHealth.RLock()
+	lockClienterMockHealth.RLock()
 	calls = mock.calls.Health
-	mock.lockHealth.RUnlock()
+	lockClienterMockHealth.RUnlock()
+	return calls
+}
+
+// PutTopicReleasePrivate calls PutTopicReleasePrivateFunc.
+func (mock *ClienterMock) PutTopicReleasePrivate(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error) {
+	if mock.PutTopicReleasePrivateFunc == nil {
+		panic("ClienterMock.PutTopicReleasePrivateFunc: method is nil but Clienter.PutTopicReleasePrivate was just called")
+	}
+	callInfo := struct {
+		Ctx          context.Context
+		ReqHeaders   sdk.Headers
+		ID           string
+		TopicRelease []byte
+	}{
+		Ctx:          ctx,
+		ReqHeaders:   reqHeaders,
+		ID:           id,
+		TopicRelease: topicRelease,
+	}
+	lockClienterMockPutTopicReleasePrivate.Lock()
+	mock.calls.PutTopicReleasePrivate = append(mock.calls.PutTopicReleasePrivate, callInfo)
+	lockClienterMockPutTopicReleasePrivate.Unlock()
+	return mock.PutTopicReleasePrivateFunc(ctx, reqHeaders, id, topicRelease)
+}
+
+// PutTopicReleasePrivateCalls gets all the calls that were made to PutTopicReleasePrivate.
+// Check the length with:
+//     len(mockedClienter.PutTopicReleasePrivateCalls())
+func (mock *ClienterMock) PutTopicReleasePrivateCalls() []struct {
+	Ctx          context.Context
+	ReqHeaders   sdk.Headers
+	ID           string
+	TopicRelease []byte
+} {
+	var calls []struct {
+		Ctx          context.Context
+		ReqHeaders   sdk.Headers
+		ID           string
+		TopicRelease []byte
+	}
+	lockClienterMockPutTopicReleasePrivate.RLock()
+	calls = mock.calls.PutTopicReleasePrivate
+	lockClienterMockPutTopicReleasePrivate.RUnlock()
 	return calls
 }
 
@@ -510,9 +574,9 @@ func (mock *ClienterMock) URL() string {
 	}
 	callInfo := struct {
 	}{}
-	mock.lockURL.Lock()
+	lockClienterMockURL.Lock()
 	mock.calls.URL = append(mock.calls.URL, callInfo)
-	mock.lockURL.Unlock()
+	lockClienterMockURL.Unlock()
 	return mock.URLFunc()
 }
 
@@ -523,8 +587,8 @@ func (mock *ClienterMock) URLCalls() []struct {
 } {
 	var calls []struct {
 	}
-	mock.lockURL.RLock()
+	lockClienterMockURL.RLock()
 	calls = mock.calls.URL
-	mock.lockURL.RUnlock()
+	lockClienterMockURL.RUnlock()
 	return calls
 }

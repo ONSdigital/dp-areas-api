@@ -34,6 +34,10 @@ var (
 		Current: &testPublicTopic2,
 		Next:    &testPublicTopic2,
 	}
+
+	topicRelease = models.TopicRelease{
+		ReleaseDate: "2022-11-11T09:30:00Z",
+	}
 )
 
 func TestGetRootTopicsPrivate(t *testing.T) {
@@ -304,6 +308,96 @@ func TestGetSubtopicsPrivate(t *testing.T) {
 						So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/subtopics")
 					})
 				})
+			})
+		})
+	})
+}
+
+func TestPutTopicReleasePrivate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	body, err := json.Marshal(topicRelease)
+	if err != nil {
+		t.Errorf("failed to setup test data, error: %v", err)
+	}
+
+	Convey("Given private put topic release is successful", t, func() {
+		httpClient := newMockHTTPClient(
+			&http.Response{
+				StatusCode: http.StatusOK,
+				Body:       nil,
+				Header:     nil,
+			},
+			nil)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When PutTopicReleasePrivate is called", func() {
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{
+				ServiceAuthToken: "valid-service-token",
+			}, "1357", body)
+
+			Convey("Then it succeeds with no errors returned", func() {
+				So(err, ShouldBeNil)
+				So(respInfo, ShouldNotBeNil)
+				So(respInfo.Status, ShouldEqual, http.StatusOK)
+				So(respInfo.Body, ShouldBeNil)
+				So(respInfo.Headers, ShouldBeNil)
+			})
+
+			Convey("And client.Do should be called once with the expected parameters", func() {
+				doCalls := httpClient.DoCalls()
+				So(doCalls, ShouldHaveLength, 1)
+				So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/release-date")
+			})
+		})
+	})
+
+	Convey("Given a 500 response from topic api", t, func() {
+		httpClient := newMockHTTPClient(&http.Response{StatusCode: http.StatusInternalServerError}, nil)
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When PutTopicReleasePrivate is called", func() {
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
+				So(respInfo, ShouldNotBeNil)
+				So(respInfo.Body, ShouldBeNil)
+				So(respInfo.Headers, ShouldBeNil)
+				So(respInfo.Status, ShouldEqual, http.StatusInternalServerError)
+			})
+
+			Convey("And client.Do should be called once with the expected parameters", func() {
+				doCalls := httpClient.DoCalls()
+				So(doCalls, ShouldHaveLength, 1)
+				So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/release-date")
+			})
+		})
+	})
+
+	Convey("Given the client returns an unexpected error", t, func() {
+		clientError := errors.New("unexpected error")
+		httpClient := newMockHTTPClient(&http.Response{}, clientError)
+
+		topicAPIClient := newTopicAPIClient(t, httpClient)
+
+		Convey("When PutTopicReleasePrivate is called", func() {
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
+
+			Convey("Then an error should be returned ", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
+				So(respInfo, ShouldBeNil)
+			})
+
+			Convey("And client.Do should be called once with the expected parameters", func() {
+				doCalls := httpClient.DoCalls()
+				So(doCalls, ShouldHaveLength, 1)
+				So(doCalls[0].Req.URL.Path, ShouldEqual, "/topics/1357/release-date")
+
 			})
 		})
 	})

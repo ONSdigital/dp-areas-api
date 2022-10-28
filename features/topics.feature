@@ -28,11 +28,13 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
                     "id": "economy",
                     "current": {
                         "id": "economy",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": "2022-10-10T09:30:00Z"
                     },
                     "next": {
                         "id": "economy",
-                        "state": "published"
+                        "state": "published",
+                        "release_date": "2022-10-10T09:30:00Z"
                     }
                 },
                 {
@@ -63,12 +65,11 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
                     {
                         "state": "published",
                         "id": "economy",
-                        "release_date": ""
+                        "release_date": "2022-10-10T09:30:00Z"
                     },
                     {
                         "state": "published",
-                        "id": "business",
-                        "release_date": ""
+                        "id": "business"
                     }
                 ]
             }
@@ -95,25 +96,23 @@ Feature: Behaviour of application when doing the GET /topics endpoint, using a s
                     "current": {
                         "id": "economy",
                         "state": "published",
-                        "release_date": ""
+                        "release_date": "2022-10-10T09:30:00Z"
                     },
                     "next": {
                         "id": "economy",
                         "state": "published",
-                        "release_date": ""
+                        "release_date": "2022-10-10T09:30:00Z"
                     }
                 },
                 {
                     "id": "business",
                     "current": {
                         "id": "business",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     },
                     "next": {
                         "id": "business",
-                        "state": "published",
-                        "release_date": ""
+                        "state": "published"
                     }
                 }
                 ]
