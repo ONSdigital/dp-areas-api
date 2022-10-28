@@ -69,7 +69,7 @@ type TopicLinks struct {
 	Subtopics *LinkObject `bson:"subtopics,omitempty"  json:"subtopics,omitempty"`
 }
 
-// CreateReleaseDate manages the creation of a release date object from a reader
+// ReadReleaseDate manages the creation of a release date object from a reader
 func ReadReleaseDate(r io.Reader) (*TopicRelease, error) {
 	var topicRelease TopicRelease
 

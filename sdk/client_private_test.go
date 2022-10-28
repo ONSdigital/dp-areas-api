@@ -327,18 +327,23 @@ func TestPutTopicReleasePrivate(t *testing.T) {
 			&http.Response{
 				StatusCode: http.StatusOK,
 				Body:       nil,
+				Header:     nil,
 			},
 			nil)
 
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When PutTopicReleasePrivate is called", func() {
-			err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{
 				ServiceAuthToken: "valid-service-token",
 			}, "1357", body)
 
 			Convey("Then it succeeds with no errors returned", func() {
 				So(err, ShouldBeNil)
+				So(respInfo, ShouldNotBeNil)
+				So(respInfo.Status, ShouldEqual, http.StatusOK)
+				So(respInfo.Body, ShouldBeNil)
+				So(respInfo.Headers, ShouldBeNil)
 			})
 
 			Convey("And client.Do should be called once with the expected parameters", func() {
@@ -354,12 +359,15 @@ func TestPutTopicReleasePrivate(t *testing.T) {
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When PutTopicReleasePrivate is called", func() {
-			err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
-
+				So(respInfo, ShouldNotBeNil)
+				So(respInfo.Body, ShouldBeNil)
+				So(respInfo.Headers, ShouldBeNil)
+				So(respInfo.Status, ShouldEqual, http.StatusInternalServerError)
 			})
 
 			Convey("And client.Do should be called once with the expected parameters", func() {
@@ -377,11 +385,12 @@ func TestPutTopicReleasePrivate(t *testing.T) {
 		topicAPIClient := newTopicAPIClient(t, httpClient)
 
 		Convey("When PutTopicReleasePrivate is called", func() {
-			err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
+			respInfo, err := topicAPIClient.PutTopicReleasePrivate(ctx, Headers{}, "1357", body)
 
 			Convey("Then an error should be returned ", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Status(), ShouldEqual, http.StatusInternalServerError)
+				So(respInfo, ShouldBeNil)
 			})
 
 			Convey("And client.Do should be called once with the expected parameters", func() {

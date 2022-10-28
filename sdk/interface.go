@@ -20,7 +20,7 @@ type Clienter interface {
 	GetSubtopicsPublic(ctx context.Context, reqHeaders Headers, id string) (*models.PublicSubtopics, apiError.Error)
 	GetTopicPrivate(ctx context.Context, reqHeaders Headers, id string) (*models.TopicResponse, apiError.Error)
 	GetTopicPublic(ctx context.Context, reqHeaders Headers, id string) (*models.Topic, apiError.Error)
-	PutTopicReleasePrivate(ctx context.Context, reqHeaders Headers, id string, topicRelease []byte) apiError.Error
+	PutTopicReleasePrivate(ctx context.Context, reqHeaders Headers, id string, topicRelease []byte) (*ResponseInfo, apiError.Error)
 	Health() *healthcheck.Client
 	URL() string
 }

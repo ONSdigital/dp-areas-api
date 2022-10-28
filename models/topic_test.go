@@ -10,6 +10,8 @@ import (
 )
 
 func TestTopicValidation(t *testing.T) {
+	t.Parallel()
+
 	Convey("Given an empty topic, it is successfully validated", t, func() {
 		topic := models.Topic{
 			State: models.StateCreated.String(),
@@ -43,6 +45,8 @@ func TestTopicValidation(t *testing.T) {
 }
 
 func TestTopicValidateTransitionFrom(t *testing.T) {
+	t.Parallel()
+
 	Convey("Given an existing topic in an created state", t, func() {
 		existing := &models.Topic{
 			State: models.StateCreated.String(),
@@ -89,6 +93,8 @@ func TestTopicValidateTransitionFrom(t *testing.T) {
 }
 
 func TestTopicStateTransitionAllowed(t *testing.T) {
+	t.Parallel()
+
 	Convey("Given an topic in created state", t, func() {
 		topic := models.Topic{
 			State: models.StateCreated.String(),
@@ -108,6 +114,8 @@ func TestTopicStateTransitionAllowed(t *testing.T) {
 }
 
 func TestTopicReleaseDateValidation(t *testing.T) {
+	t.Parallel()
+
 	Convey("Given a valid topic release object", t, func() {
 		topicRelease := models.TopicRelease{
 			ReleaseDate: "2022-10-14T11:30:00Z",

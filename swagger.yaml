@@ -79,7 +79,7 @@ paths:
           description: | 
             Bad request, messages could be 1 of the following:
             * request body empty
-            * invalid topic release date, must use **RFC3339** format
+            * invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
         500:
           $ref: '#/responses/InternalError'
   /topics/{id}/subtopics:

@@ -64,7 +64,7 @@ var _ sdk.Clienter = &ClienterMock{}
 //             HealthFunc: func() *health.Client {
 // 	               panic("mock out the Health method")
 //             },
-//             PutTopicReleasePrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error {
+//             PutTopicReleasePrivateFunc: func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error) {
 // 	               panic("mock out the PutTopicReleasePrivate method")
 //             },
 //             URLFunc: func() string {
@@ -105,7 +105,7 @@ type ClienterMock struct {
 	HealthFunc func() *health.Client
 
 	// PutTopicReleasePrivateFunc mocks the PutTopicReleasePrivate method.
-	PutTopicReleasePrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error
+	PutTopicReleasePrivateFunc func(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error)
 
 	// URLFunc mocks the URL method.
 	URLFunc func() string
@@ -525,7 +525,7 @@ func (mock *ClienterMock) HealthCalls() []struct {
 }
 
 // PutTopicReleasePrivate calls PutTopicReleasePrivateFunc.
-func (mock *ClienterMock) PutTopicReleasePrivate(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) errors.Error {
+func (mock *ClienterMock) PutTopicReleasePrivate(ctx context.Context, reqHeaders sdk.Headers, id string, topicRelease []byte) (*sdk.ResponseInfo, errors.Error) {
 	if mock.PutTopicReleasePrivateFunc == nil {
 		panic("ClienterMock.PutTopicReleasePrivateFunc: method is nil but Clienter.PutTopicReleasePrivate was just called")
 	}

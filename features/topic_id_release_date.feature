@@ -114,7 +114,7 @@ Feature: Behaviour of application when doing the PUT /topics/{id}/release_date e
         And the response header "Content-Type" should be "text/plain; charset=utf-8"
         And I should receive the following response:
             """
-            invalid topic release date, must use RFC3339 format
+            invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
             """
 
     Scenario: [Test #21] Invalid release date in PUT /topics/businessindustryandtrade/release-date in private mode
@@ -132,7 +132,7 @@ Feature: Behaviour of application when doing the PUT /topics/{id}/release_date e
         And the response header "Content-Type" should be "text/plain; charset=utf-8"
         And I should receive the following response:
             """
-            invalid topic release date, must use RFC3339 format
+            invalid topic release date, must have the following format: 2022-05-22T09:21:45Z
             """
 
     Scenario: [Test #22] Invalid Topic id in PUT /topics/businessindustryandtrad/release-date in private mode

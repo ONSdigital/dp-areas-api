@@ -10,7 +10,7 @@ var (
 	ErrContentUnrecognisedParameter   = errors.New("content query not recognised")
 	ErrEmptyRequestBody               = errors.New("request body empty")
 	ErrInternalServer                 = errors.New("internal error")
-	ErrInvalidReleaseDate             = errors.New("invalid topic release date, must use RFC3339 format")
+	ErrInvalidReleaseDate             = errors.New("invalid topic release date, must have the following format: 2022-05-22T09:21:45Z")
 	ErrNotFound                       = errors.New("not found")
 	ErrTopicInvalidState              = errors.New("topic state is not a valid state name")
 	ErrTopicNotFound                  = errors.New("topic not found")
