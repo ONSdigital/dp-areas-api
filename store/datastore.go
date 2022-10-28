@@ -22,6 +22,8 @@ type dataMongoDB interface {
 	CheckTopicExists(ctx context.Context, id string) error
 	GetContent(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error)
 	UpdateReleaseDate(ctx context.Context, id string, releaseDate time.Time) error
+	UpdateState(ctx context.Context, id, state string) error
+	UpdateTopic(ctx context.Context, id string, topic *models.TopicResponse) error
 }
 
 // MongoDB represents all the required methods from mongo DB

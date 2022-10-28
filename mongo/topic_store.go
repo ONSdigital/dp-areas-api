@@ -151,6 +151,54 @@ func (m *Mongo) UpdateReleaseDate(ctx context.Context, id string, releaseDate ti
 	selector := bson.M{"id": id}
 	update := bson.M{
 		"$set": bson.M{"next.release_date": releaseDate},
+		"$setOnInsert": bson.M{
+			"last_updated": time.Now(),
+		},
+	}
+
+	result, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Update(ctx, selector, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return errs.ErrTopicNotFound
+	}
+
+	return nil
+}
+
+// UpdateState updates state field against next object
+func (m *Mongo) UpdateState(ctx context.Context, id, state string) error {
+	selector := bson.M{"id": id}
+	update := bson.M{
+		"$set": bson.M{"next.state": state},
+		"$setOnInsert": bson.M{
+			"last_updated": time.Now(),
+		},
+	}
+
+	result, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Update(ctx, selector, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return errs.ErrTopicNotFound
+	}
+
+	return nil
+}
+
+// UpdateTopic replaces the topic in mongodb with a new instance
+func (m *Mongo) UpdateTopic(ctx context.Context, id string, topic *models.TopicResponse) error {
+	// Update topic in mongo
+	selector := bson.M{"id": id}
+	update := bson.M{
+		"$set": topic,
+		"$setOnInsert": bson.M{
+			"last_updated": time.Now(),
+		},
 	}
 
 	result, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Update(ctx, selector, update)
