@@ -157,6 +157,7 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=1800")
 
 	// Marshal provided model
 	payload, err := json.Marshal(v)
@@ -182,6 +183,7 @@ func ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=1800")
 
 	// Get Body bytes
 	payload, err := io.ReadAll(body)
