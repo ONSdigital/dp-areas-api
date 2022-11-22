@@ -48,7 +48,7 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 		dataStore:              dataStore,
 		permissions:            permissions,
 		enablePrivateEndpoints: cfg.EnablePrivateEndpoints,
-		navigationCacheMaxAge:  fmt.Sprintf("%d", cfg.NavigationCacheMaxAge.Seconds()),
+		navigationCacheMaxAge:  fmt.Sprintf("%f", cfg.NavigationCacheMaxAge.Seconds()),
 	}
 
 	if cfg.EnablePrivateEndpoints {
