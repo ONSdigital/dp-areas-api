@@ -5,6 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-topic-api/config"
+	"github.com/ONSdigital/dp-topic-api/mocks"
+	"github.com/ONSdigital/dp-topic-api/store"
+	storetest "github.com/ONSdigital/dp-topic-api/store/mock"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -83,4 +88,19 @@ func TestWriteJSONBody(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestAPISetup(t *testing.T) {
+	Convey("Excercise setUp", t, func() {
+		ctx := context.Background()
+		cfg, err := config.Get()
+		So(err, ShouldBeNil)
+		mockedDataStore := &storetest.StorerMock{}
+		permissions := mocks.NewAuthHandlerMock()
+
+		api := Setup(ctx, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, permissions)
+		So(api.navigationCacheMaxAge, ShouldResemble, 1800)
+
+	})
+
 }
