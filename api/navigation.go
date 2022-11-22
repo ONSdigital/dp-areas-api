@@ -192,6 +192,7 @@ func (api *API) getNavigationHandler(w http.ResponseWriter, req *http.Request) {
 		nav.Items, nav.Description = getNavItems(english)
 	}
 
+	w.Header().Set("Cache-Control", "public, max-age="+api.navigationCacheMaxAge)
 	if err := WriteJSONBody(ctx, nav, w, logdata); err != nil {
 		// WriteJSONBody has already logged the error
 		return

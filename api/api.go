@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -37,6 +38,7 @@ type API struct {
 	dataStore              store.DataStore
 	permissions            AuthHandler
 	enablePrivateEndpoints bool
+	navigationCacheMaxAge  string
 }
 
 // Setup function sets up the api and returns an api
@@ -46,6 +48,7 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 		dataStore:              dataStore,
 		permissions:            permissions,
 		enablePrivateEndpoints: cfg.EnablePrivateEndpoints,
+		navigationCacheMaxAge:  fmt.Sprintf("%d", cfg.NavigationCacheMaxAge.Seconds()),
 	}
 
 	if cfg.EnablePrivateEndpoints {
@@ -157,7 +160,6 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=1800")
 
 	// Marshal provided model
 	payload, err := json.Marshal(v)

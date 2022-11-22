@@ -19,6 +19,7 @@ type Config struct {
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnablePermissionsAuth      bool          `envconfig:"ENABLE_PERMISSIONS_AUTHZ"`
+	NavigationCacheMaxAge      time.Duration `envconfig:"NAVIGATION_CACHE_MAX_AGE"`
 	MongoConfig
 }
 
@@ -41,6 +42,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    10 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
+		NavigationCacheMaxAge:      30 * time.Minute,
 		ZebedeeURL:                 "http://localhost:8082",
 		EnablePrivateEndpoints:     true,
 		EnablePermissionsAuth:      false,
