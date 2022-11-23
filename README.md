@@ -9,6 +9,8 @@ Enables greater flexibility in creating journeys through the website
 
 ### Dependencies
 
+* Mongo db (can use [dp-compose](https://github.com/ONSdigital/dp-compose) to stand up an instance in docker container, this requires docker)
+* Once you have a working mongo db instance, you will want to populate your database with topics; **TODO** further instructions/scripts needed
 * No further dependencies other than those defined in `go.mod`
 
 ### Configuration
@@ -32,6 +34,12 @@ Enables greater flexibility in creating journeys through the website
 | ZEBEDEE_URL                  | http://localhost:8082                             | The URL to Zebedee (for authentication)
 | ENABLE_PRIVATE_ENDPOINTS     | false                                             | Enable private endpoints for the API
 | ENABLE_PERMISSIONS_AUTHZ     | false                                             | Enable/disable user/service permissions checking for private endpoints
+
+### Environments
+
+Any data issues in any of the ONS environments, please visit [dp-operations](https://github.com/ONSdigital/dp-operations) repository for guides
+
+- [Updating Release Date and Publishing Topic Guide](https://github.com/ONSdigital/dp-operations/blob/main/data-fixes/update-topic-release-date.md#update-topic-release-date)
 
 ### Contributing
 
