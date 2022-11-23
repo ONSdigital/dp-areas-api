@@ -52,6 +52,9 @@ func TestRun(t *testing.T) {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 
+		// Enable private endpoints
+		cfg.EnablePrivateEndpoints = true
+
 		mongoDbMock := &storeMock.MongoDBMock{
 			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 		}
