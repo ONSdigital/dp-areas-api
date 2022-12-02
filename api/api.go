@@ -180,12 +180,12 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 }
 
 // ReadJSONBody reads the bytes from the provided body, and marshals it to the provided model interface.
-func ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http.ResponseWriter, data log.Data) error {
+func (api *API) ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http.ResponseWriter, data log.Data) error {
 	defer body.Close()
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=1800")
+	w.Header().Set("Cache-Control", "public, max-age="+api.navigationCacheMaxAge)
 
 	// Get Body bytes
 	payload, err := io.ReadAll(body)

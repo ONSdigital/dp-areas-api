@@ -90,16 +90,20 @@ func TestWriteJSONBody(t *testing.T) {
 	})
 }
 
-func TestAPISetup(t *testing.T) {
+func TestNavigationCacheMaxAge(t *testing.T) {
 	Convey("Excercise setUp", t, func() {
 		ctx := context.Background()
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		mockedDataStore := &storetest.StorerMock{}
 		permissions := mocks.NewAuthHandlerMock()
-
 		api := Setup(ctx, cfg, mux.NewRouter(), store.DataStore{Backend: mockedDataStore}, permissions)
-		So(api.navigationCacheMaxAge, ShouldResemble, 1800)
+
+		So(api.navigationCacheMaxAge, ShouldResemble, fmt.Sprintf("%f", cfg.NavigationCacheMaxAge.Seconds()))
+
+		//w := httptest.NewRecorder()
+		//b := io.ReadCloser(reader, closer)
+		//err := api.ReadJSONBody(ctx, b, v, w, logdata)
 
 	})
 
