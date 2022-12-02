@@ -180,7 +180,7 @@ func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, da
 }
 
 // ReadJSONBody reads the bytes from the provided body, and marshals it to the provided model interface.
-func (api *API) ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http.ResponseWriter, data log.Data) error {
+func ReadJSONBody(ctx context.Context, body io.ReadCloser, v interface{}, w http.ResponseWriter, data log.Data) error {
 	defer body.Close()
 
 	// Set headers
