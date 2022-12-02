@@ -185,7 +185,6 @@ func (api *API) ReadJSONBody(ctx context.Context, body io.ReadCloser, v interfac
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age="+api.navigationCacheMaxAge)
 
 	// Get Body bytes
 	payload, err := io.ReadAll(body)
