@@ -13,14 +13,14 @@ type MongoConfig = mongodb.MongoDriverConfig
 // Config represents service config for dp-topic-api
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
-	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
-	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
-	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
-	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
 	EnablePermissionsAuth      bool          `envconfig:"ENABLE_PERMISSIONS_AUTHZ"`
-	NavigationCacheMaxAge      time.Duration `envconfig:"NAVIGATION_CACHE_MAX_AGE"`
+	EnablePrivateEndpoints     bool          `envconfig:"ENABLE_PRIVATE_ENDPOINTS"`
+	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
+	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	MongoConfig
+	NavigationCacheMaxAge time.Duration `envconfig:"NAVIGATION_CACHE_MAX_AGE"`
+	ZebedeeURL            string        `envconfig:"ZEBEDEE_URL"`
 }
 
 var cfg *Config
@@ -39,13 +39,11 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                   "localhost:25300",
-		GracefulShutdownTimeout:    10 * time.Second,
-		HealthCheckInterval:        30 * time.Second,
-		HealthCheckCriticalTimeout: 90 * time.Second,
-		NavigationCacheMaxAge:      30 * time.Minute,
-		ZebedeeURL:                 "http://localhost:8082",
-		EnablePrivateEndpoints:     true,
 		EnablePermissionsAuth:      false,
+		EnablePrivateEndpoints:     true,
+		GracefulShutdownTimeout:    10 * time.Second,
+		HealthCheckCriticalTimeout: 90 * time.Second,
+		HealthCheckInterval:        30 * time.Second,
 		MongoConfig: MongoConfig{
 			ClusterEndpoint:               "localhost:27017",
 			Username:                      "",
@@ -61,6 +59,8 @@ func Get() (*Config, error) {
 				IsSSL: false,
 			},
 		},
+		NavigationCacheMaxAge: 30 * time.Minute,
+		ZebedeeURL:            "http://localhost:8082",
 	}
 
 	return cfg, envconfig.Process("", cfg)

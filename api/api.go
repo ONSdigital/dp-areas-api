@@ -46,9 +46,9 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 	api := &API{
 		Router:                 router,
 		dataStore:              dataStore,
-		permissions:            permissions,
 		enablePrivateEndpoints: cfg.EnablePrivateEndpoints,
 		navigationCacheMaxAge:  fmt.Sprintf("%f", cfg.NavigationCacheMaxAge.Seconds()),
+		permissions:            permissions,
 	}
 
 	if cfg.EnablePrivateEndpoints {
@@ -68,11 +68,11 @@ func Setup(ctx context.Context, cfg *config.Config, router *mux.Router, dataStor
 
 // enablePublicEndpoints register only the public GET endpoints.
 func (api *API) enablePublicEndpoints(ctx context.Context) {
+	api.get("/navigation", api.getNavigationHandler)
 	api.get("/topics", api.getRootTopicsPublicHandler)
 	api.get("/topics/{id}", api.getTopicPublicHandler)
-	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 	api.get("/topics/{id}/content", api.getContentPublicHandler)
-	api.get("/navigation", api.getNavigationHandler)
+	api.get("/topics/{id}/subtopics", api.getSubtopicsPublicHandler)
 }
 
 // enablePrivateTopicEndpoints register the topics endpoints with the appropriate authentication and authorisation
