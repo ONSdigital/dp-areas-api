@@ -164,6 +164,9 @@ paths:
           description: "Provides a hierarchical list of navigation items with their links, copy and localisation references"
           schema:
             $ref: '#/definitions/Navigation'
+          headers:
+            Cache-Control:
+              default:  "public, max-age=1800"
         500:
           $ref: '#/responses/InternalError'
 responses:
