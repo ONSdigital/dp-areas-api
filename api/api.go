@@ -36,9 +36,9 @@ type AuthHandler interface {
 type API struct {
 	Router                 *mux.Router
 	dataStore              store.DataStore
-	permissions            AuthHandler
 	enablePrivateEndpoints bool
 	navigationCacheMaxAge  string
+	permissions            AuthHandler
 }
 
 // Setup function sets up the api and returns an api
