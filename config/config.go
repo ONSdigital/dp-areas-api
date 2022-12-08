@@ -52,7 +52,7 @@ func Get() (*Config, error) {
 			Collections:                   map[string]string{TopicsCollection: "topics", ContentCollection: "content"},
 			ReplicaSet:                    "",
 			IsStrongReadConcernEnabled:    false,
-			IsWriteConcernMajorityEnabled: true,
+			IsWriteConcernMajorityEnabled: false,
 			ConnectTimeout:                5 * time.Second,
 			QueryTimeout:                  15 * time.Second,
 			TLSConnectionConfig: mongodb.TLSConnectionConfig{

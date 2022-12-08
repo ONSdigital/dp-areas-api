@@ -40,7 +40,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.MongoConfig.IsStrongReadConcernEnabled, ShouldEqual, false)
 				So(cfg.MongoConfig.IsWriteConcernMajorityEnabled, ShouldEqual, true)
 				So(cfg.ZebedeeURL, ShouldEqual, "http://localhost:8082")
-				So(cfg.EnablePrivateEndpoints, ShouldEqual, true)
+				So(cfg.EnablePrivateEndpoints, ShouldEqual, false)
 				So(cfg.EnablePermissionsAuth, ShouldBeFalse)
 			})
 
