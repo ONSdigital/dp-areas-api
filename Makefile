@@ -32,9 +32,9 @@ lint: generate-prod
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 	golangci-lint run ./...
 
-.PHONY: test
+generate-prod:
 test:
-	go test -race -cover ./...
+	go test -race -cover -tags 'production' ./...
 
 .PHONY: test-component
 test-component:
