@@ -72,7 +72,6 @@ type ContentLinks struct {
 
 // Validate checks that a content struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Content) Validate() error {
-
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
@@ -83,7 +82,6 @@ func (t *Content) Validate() error {
 
 // ValidateTransitionFrom checks that this content state can be validly transitioned from the existing state
 func (t *Content) ValidateTransitionFrom(existing *Content) error {
-
 	// check that state transition is allowed, only if state is provided
 	if t.State != "" {
 		if !existing.StateTransitionAllowed(t.State) {
@@ -115,7 +113,7 @@ func (t *Content) StateTransitionAllowed(target string) bool {
 }
 
 // AppendLinkInfo appends to list more links sorted by HRef
-func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink *[]TypeLinkObject, id string, state string) {
+func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink *[]TypeLinkObject, id, state string) {
 	if itemLink == nil {
 		return
 	}
@@ -138,7 +136,7 @@ func (contentList *ContentResponseAPI) AppendLinkInfo(typeName string, itemLink 
 	// Iterate through alphabeticaly sorted 'hrefs' and use each one to select corresponding title
 	for _, href := range hrefs {
 		// build up data items into structure
-		var cItem ContentItem = ContentItem{
+		var cItem = ContentItem{
 			Title: title[href],
 			Type:  typeName,
 			Links: &ContentLinks{

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -18,11 +18,8 @@ import (
 )
 
 func TestWriteJSONBody(t *testing.T) {
-
 	Convey("Exercise WriteJSONBody", t, func() {
-
 		Convey("Given a GOOD recorder to write to, with valid data", func() {
-
 			ctx := context.Background()
 			logdata := log.Data{
 				"content_id": "ok",
@@ -34,7 +31,7 @@ func TestWriteJSONBody(t *testing.T) {
 			Convey("Then the expected write success is seen", func() {
 				So(err, ShouldBeNil)
 				So(w.Code, ShouldEqual, http.StatusOK)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				var retType string
 				err = json.Unmarshal(payload, &retType)
@@ -44,7 +41,6 @@ func TestWriteJSONBody(t *testing.T) {
 		})
 
 		Convey("Given a GOOD recorder to write to, with invalid data", func() {
-
 			ctx := context.Background()
 			logdata := log.Data{
 				"content_id": "broken JSON",
@@ -57,14 +53,13 @@ func TestWriteJSONBody(t *testing.T) {
 				res := fmt.Sprintf("%+v\n", err)
 				So(res, ShouldResemble, "json: unsupported value: +Inf\n")
 				So(w.Code, ShouldEqual, http.StatusInternalServerError)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(string(payload), ShouldResemble, "internal error\n")
 			})
 		})
 
 		Convey("Given a Broken Recorder to write to, with valid data", func() {
-
 			ctx := context.Background()
 			logdata := log.Data{
 				"content_id": "broken write",
@@ -77,7 +72,7 @@ func TestWriteJSONBody(t *testing.T) {
 			Convey("Then the expected write failure is seen", func() {
 				errorResult := errors.New("broken write")
 				So(err, ShouldResemble, errorResult)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(string(payload), ShouldContainSubstring, "This is the broken write")
 			})

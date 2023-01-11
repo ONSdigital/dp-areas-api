@@ -11,19 +11,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const topicRoot = "topic_root" // access specific document to retrieve list
+
 // getRootTopicsPublicHandler is a handler that gets a public list of top level root topics by a specific id from MongoDB for Web
 func (api *API) getRootTopicsPublicHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	id := "topic_root" // access specific document to retrieve list
 	logdata := log.Data{
 		"request_id": ctx.Value(dprequest.RequestIdKey),
-		"topic_id":   id,
+		"topic_id":   topicRoot,
 		"function":   "getTopicsListPublicHandler",
 	}
 
 	// The mongo document with id: `topic_root` contains the list of subtopics,
 	// so we directly return that list
-	api.getSubtopicsPublicByID(ctx, id, logdata, w)
+	api.getSubtopicsPublicByID(ctx, topicRoot, logdata, w)
 }
 
 // getTopicPublicHandler is a handler that gets a topic by its id from MongoDB for Web
@@ -37,7 +38,7 @@ func (api *API) getTopicPublicHandler(w http.ResponseWriter, req *http.Request) 
 		"function":   "getTopicPublicHandler",
 	}
 
-	if id == "topic_root" {
+	if id == topicRoot {
 		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}
@@ -68,7 +69,7 @@ func (api *API) getSubtopicsPublicHandler(w http.ResponseWriter, req *http.Reque
 		"function":   "getSubtopicsPublicHandler",
 	}
 
-	if id == "topic_root" {
+	if id == topicRoot {
 		handleError(ctx, w, apierrors.ErrTopicNotFound, logdata)
 		return
 	}

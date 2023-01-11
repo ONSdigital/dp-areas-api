@@ -56,7 +56,7 @@ var stateTransitionTable = []stateTransition{
 
 // String returns the string representation of a state
 func (s State) String() string {
-	var name string = ""
+	var name string
 
 	// search for state in table to find name
 	for _, aState := range stateTransitionTable {

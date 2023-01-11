@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +23,6 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = true
 		Convey("And a topic API with mongoDB returning 'created' and 'full' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -44,7 +43,7 @@ func TestGetTopicPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected topic is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.TopicResponse{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -71,7 +70,6 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = true
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -83,7 +81,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 						return dbTopic3(models.StatePublished), nil
 					case "4":
 						return dbTopic4(models.StatePublished), nil
-					case "topic_root":
+					case topicRoot:
 						return dbTopic1(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
@@ -102,7 +100,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PrivateSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -122,7 +120,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-document is returned with status code 200, and document with ID 4 is returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PrivateSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -141,7 +139,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no sub-documents are returned and we get status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusInternalServerError)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("internal error\n"))
 				})
@@ -156,7 +154,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no sub-documents are returned and we get status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("not found\n"))
 				})
@@ -180,7 +178,7 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 
 					So(err, ShouldBeNil)
@@ -192,7 +190,6 @@ func TestGetSubtopicsPrivateHandler(t *testing.T) {
 					So((*retTopic.PrivateItems)[1].Current.ID, ShouldEqual, "3")
 				})
 			})
-
 		})
 	})
 }
@@ -203,7 +200,6 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = true
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -211,7 +207,7 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 						return dbTopic2(models.StatePublished), nil
 					case "3":
 						return dbTopic3(models.StatePublished), nil
-					case "topic_root":
+					case topicRoot:
 						return dbTopic1(models.StatePublished), nil
 					default:
 						return nil, apierrors.ErrTopicNotFound
@@ -230,7 +226,7 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PrivateSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -250,7 +246,7 @@ func TestGetTopicsListPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 
 					retTopic := models.TopicResponse{}

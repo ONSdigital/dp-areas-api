@@ -23,7 +23,6 @@ func NewRecorder() *BrokeRecorder {
 // Write implements http.ResponseWriter. The data in buf is written to
 // rw.Body, if not nil.
 func (rw *BrokeRecorder) Write(data []byte) (n int, err error) {
-	//	rw.writeHeader(buf, "")
 	if rw.Body == nil {
 		b := make([]byte, 0)
 		rw.Body = bytes.NewBuffer(b)

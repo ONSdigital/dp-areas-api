@@ -22,7 +22,6 @@ func TestContentValidation(t *testing.T) {
 		content := models.Content{}
 		err := content.Validate()
 		So(err, ShouldResemble, apierrors.ErrTopicInvalidState)
-
 	})
 
 	Convey("Given an content with a state that does not correspond to any expected state, it fails to validate with the expected error", t, func() {
@@ -139,7 +138,7 @@ func TestAppendLinkInfo(t *testing.T) {
 
 	Convey("Given an empty list of article Links in published state", t, func() {
 		var result models.ContentResponseAPI
-		var articleObjects []models.TypeLinkObject = []models.TypeLinkObject{}
+		var articleObjects []models.TypeLinkObject
 
 		result.AppendLinkInfo("spotlight", &articleObjects, "9", "published")
 		fmt.Printf("%+v", result)
@@ -155,7 +154,7 @@ func TestAppendLinkInfo(t *testing.T) {
 
 	Convey("Given a list containing one spotlight Link in published state", t, func() {
 		var result models.ContentResponseAPI
-		var spotlightObjects []models.TypeLinkObject = []models.TypeLinkObject{
+		var spotlightObjects = []models.TypeLinkObject{
 			{
 				HRef:  "/a 1st",
 				Title: "first",
@@ -181,7 +180,7 @@ func TestAppendLinkInfo(t *testing.T) {
 
 	Convey("Given a list containing two spotlight Links in published state arranged by Href in non alphabetical order ", t, func() {
 		var result models.ContentResponseAPI
-		var spotlightObjects []models.TypeLinkObject = []models.TypeLinkObject{
+		var spotlightObjects = []models.TypeLinkObject{
 			{
 				HRef:  "/b 2nd",
 				Title: "second",

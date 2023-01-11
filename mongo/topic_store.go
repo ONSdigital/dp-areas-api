@@ -72,7 +72,6 @@ func (m *Mongo) GetTopic(ctx context.Context, id string) (*models.TopicResponse,
 
 // CheckTopicExists checks that the topic exists
 func (m *Mongo) CheckTopicExists(ctx context.Context, id string) error {
-
 	count, err := m.Connection.Collection(m.ActualCollectionName(config.TopicsCollection)).Count(ctx, bson.M{"id": id})
 	if err != nil {
 		return err

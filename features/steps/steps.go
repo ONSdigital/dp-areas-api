@@ -15,12 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (f *TopicComponent) iHaveTheseTopics(topicsWriteJson *godog.DocString) error {
+func (f *TopicComponent) iHaveTheseTopics(topicsWriteJSON *godog.DocString) error {
 	ctx := context.Background()
-	topics := []componentModels.TopicWrite{}
+	var topics []componentModels.TopicWrite
 	m := f.MongoClient
 
-	err := json.Unmarshal([]byte(topicsWriteJson.Content), &topics)
+	err := json.Unmarshal([]byte(topicsWriteJSON.Content), &topics)
 	if err != nil {
 		return err
 	}
@@ -48,12 +48,12 @@ func (f *TopicComponent) putTopicInDatabase(ctx context.Context, mongoCollection
 	return nil
 }
 
-func (f *TopicComponent) iHaveTheseContents(contentJson *godog.DocString) error {
+func (f *TopicComponent) iHaveTheseContents(contentJSON *godog.DocString) error {
 	ctx := context.Background()
-	collection := []models.ContentResponse{}
+	var collection []models.ContentResponse
 	m := f.MongoClient
 
-	err := json.Unmarshal([]byte(contentJson.Content), &collection)
+	err := json.Unmarshal([]byte(contentJSON.Content), &collection)
 	if err != nil {
 		return err
 	}

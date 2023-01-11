@@ -86,7 +86,6 @@ func ReadReleaseDate(r io.Reader) (*TopicRelease, error) {
 
 // Validate checks that a topic struct complies with the state constraints, if provided. TODO may want to add more in future
 func (t *Topic) Validate() error {
-
 	if _, err := ParseState(t.State); err != nil {
 		return apierrors.ErrTopicInvalidState
 	}
@@ -97,7 +96,6 @@ func (t *Topic) Validate() error {
 
 // ValidateTransitionFrom checks that this topic state can be validly transitioned from the existing state
 func (t *Topic) ValidateTransitionFrom(existing *Topic) error {
-
 	// check that state transition is allowed, only if state is provided
 	if t.State != "" {
 		if !existing.StateTransitionAllowed(t.State) {

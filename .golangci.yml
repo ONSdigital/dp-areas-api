@@ -41,6 +41,7 @@ linters-settings:
       - ifElseChain
       - octalLiteral
       - hugeParam
+      - unnamedResult
   funlen:
   # lines: 100
   # statements: 100

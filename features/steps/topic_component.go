@@ -30,8 +30,8 @@ type TopicComponent struct {
 	ServiceRunning bool
 }
 
+//nolint:gosec // Lint:Component testing therefore we can relax on potential attack vector.
 func NewTopicComponent(mongoURL, zebedeeURL string) (*TopicComponent, error) {
-
 	f := &TopicComponent{
 		HTTPServer:     &http.Server{},
 		errorChan:      make(chan error),
@@ -77,6 +77,8 @@ func createCredsInDB(mongoConfig *mongodriver.MongoDriverConfig) (string, string
 
 	username := "admin"
 	password, _ := uuid.NewV4()
+
+	//nolint:govet // Lint:bson.D{...} is correctly used based on example inside bson.D method.
 	createCollectionResponse := mongoConnection.RunCommand(context.TODO(), bson.D{{"create", "test"}})
 
 	if createCollectionResponse != nil {
@@ -126,7 +128,7 @@ func (f *TopicComponent) InitialiseService() (http.Handler, error) {
 	return f.HTTPServer.Handler, nil
 }
 
-func (f *TopicComponent) DoGetHealthcheckOk(_ *config.Config, _ string, _ string, _ string) (service.HealthChecker, error) {
+func (f *TopicComponent) DoGetHealthcheckOk(_ *config.Config, _, _, _ string) (service.HealthChecker, error) {
 	return &serviceMock.HealthCheckerMock{
 		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
 		StartFunc:    func(ctx context.Context) {},

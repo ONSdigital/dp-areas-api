@@ -24,7 +24,6 @@ var (
 )
 
 func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
-
 	type testEndpoint struct {
 		Method string
 		URL    string
@@ -36,7 +35,6 @@ func TestPublishedSubnetEndpointsAreDisabled(t *testing.T) {
 	}
 
 	Convey("When the API is started with private endpoints disabled and permission auth disabled", t, func() {
-
 		for endpoint, expectedStatusCode := range publishSubnetEndpoints {
 			Convey("The following endpoint "+endpoint.URL+"(Method:"+endpoint.Method+") should return 404", func() {
 				request, err := createRequestWithAuth(endpoint.Method, endpoint.URL, nil)

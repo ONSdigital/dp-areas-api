@@ -100,8 +100,8 @@ func (api *API) getContentPrivateHandler(w http.ResponseWriter, req *http.Reques
 	// User has valid authentication to get raw full content document(s)
 
 	if content.Current == nil {
-		// TODO
 		/*
+			TODO
 			In the future: when the API becomes more than read-only
 			When a document is first created, it will only have 'next' until it is published, when it gets 'current' populated.
 			So current == nil is not an error.

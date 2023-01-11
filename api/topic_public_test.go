@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,13 +18,11 @@ import (
 )
 
 func TestGetTopicPublicHandler(t *testing.T) {
-
 	Convey("Given a topic API in web mode (private endpoints disabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = false
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -45,7 +43,7 @@ func TestGetTopicPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-document topic is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.Topic{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -65,13 +63,11 @@ func TestGetTopicPublicHandler(t *testing.T) {
 }
 
 func TestGetSubtopicsPublicHandler(t *testing.T) {
-
 	Convey("Given a topic API in web mode (private endpoints disabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = false
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -99,7 +95,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PublicSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -118,7 +114,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-document is returned with status code 200, and document with ID 4 is returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PublicSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -136,7 +132,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no sub-documents are returned and we get status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
@@ -150,7 +146,7 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no sub-documents are returned and we get status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("not found\n"))
 				})
@@ -171,12 +167,11 @@ func TestGetSubtopicsPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected status code 404 is returned, because this is not avaible for public web mode", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("topic not found\n"))
 				})
 			})
-
 		})
 	})
 }
@@ -187,7 +182,6 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = false
 		Convey("And a topic API with mongoDB returning 'next' and 'current' topics", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetTopicFunc: func(ctx context.Context, id string) (*models.TopicResponse, error) {
 					switch id {
@@ -213,7 +207,7 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected sub-documents is returned with status code 200, and documents with ID's 2 & 3 returned", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retTopic := models.PublicSubtopics{}
 					err = json.Unmarshal(payload, &retTopic)
@@ -232,7 +226,7 @@ func TestGetTopicsListPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected status code 404 is returned, because this is not avaible for public web mode", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("topic not found\n"))
 				})

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -108,7 +108,7 @@ const (
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\"} ], \"articles\": [ {\"Href\": \"/article/12345\", \"Title\": \"Some article 2\"}, {\"Href\": \"/article/1234\", \"Title\": \"Some article 3\"} ], \"bulletins\": [ {\"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\"} ], \"timeseries\": [ {\"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" }, \"current\" : {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, { \"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"articles\": [ { \"Href\": \"/article/12345\", \"Title\": \"Some article 3\" }, { \"Href\": \"/article/1234\", \"Title\": \"Some article 2\" } ], \"bulletins\": [ { \"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\" } ], \"timeseries\": [ { \"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" } }"
+var mongoContentJSONResponse1 = "{\"id\": \"4\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\"} ], \"articles\": [ {\"Href\": \"/article/12345\", \"Title\": \"Some article 2\"}, {\"Href\": \"/article/1234\", \"Title\": \"Some article 3\"} ], \"bulletins\": [ {\"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\"} ], \"timeseries\": [ {\"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" }, \"current\" : {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, { \"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"articles\": [ { \"Href\": \"/article/12345\", \"Title\": \"Some article 3\" }, { \"Href\": \"/article/1234\", \"Title\": \"Some article 2\" } ], \"bulletins\": [ { \"Href\": \"/bulletins/this-month-hurray\", \"Title\": \"This Months Bulletin\" } ], \"timeseries\": [ { \"Href\": \"/timseries/KVAC\", \"Title\": \"CPIH Time series\" } ], \"state\" : \"published\" } }"
 
 // then the Get Response in Public would look like (and note article is sorted by href):
 // (in Private mode, Next & Current contain the following)
@@ -224,7 +224,7 @@ var mongoContentJSONResponse1 string = "{\"id\": \"4\", \"next\": {\"spotlight\"
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
+var mongoContentJSONResponse2 = "{\"id\": \"5\", \"next\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
 
 // then the Get Response in Public would return a 500 error, as content.Current = nil
 // (Private also returns 500)
@@ -245,7 +245,7 @@ var mongoContentJSONResponse2 string = "{\"id\": \"5\", \"next\": {\"spotlight\"
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \"published\"}, \"current\" : {\"state\" : \"published\"} }"
+var mongoContentJSONResponse3 = "{\"id\": \"4\", \"next\": {\"state\" : \"published\"}, \"current\" : {\"state\" : \"published\"} }"
 
 // then the Get Response in Public would this, where TotalCount = 0
 // (in Private mode, Next & Current contain the following)
@@ -283,7 +283,7 @@ var mongoContentJSONResponse3 string = "{\"id\": \"4\", \"next\": {\"state\" : \
 */
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse4 string = "{\"id\": \"5\", \"current\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
+var mongoContentJSONResponse4 = "{\"id\": \"5\", \"current\": {\"spotlight\": [ {\"Href\": \"/article/123\", \"Title\": \"Some article\"}, {\"Href\": \"/dataset/12fasf3\", \"Title\": \"An interesting dataset\" } ], \"state\" : \"published\"} }"
 
 // then the Get Response in Private would return a 500 error, as content.Next = nil
 
@@ -362,13 +362,11 @@ func dbContent8(state models.State) *models.ContentResponse {
 
 // TestGetContentPublicHandler - does what the function name says
 func TestGetContentPublicHandler(t *testing.T) {
-
 	Convey("Given a content API in web mode (private endpoints disabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = false
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetContentFunc: func(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
@@ -410,7 +408,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected content is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -434,7 +432,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned and status code 500", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
@@ -447,7 +445,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned with status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
@@ -459,7 +457,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("topic not found\n"))
 			})
@@ -469,7 +467,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
@@ -481,7 +479,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200, and result is sorted", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -511,7 +509,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -528,7 +526,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -545,7 +543,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -562,7 +560,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -579,7 +577,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -596,7 +594,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected empty response is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusBadRequest)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("content query not recognised\n"))
 				})
@@ -609,7 +607,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -636,7 +634,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -659,7 +657,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected query type is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContent := models.ContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContent)
@@ -675,7 +673,7 @@ func TestGetContentPublicHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
@@ -684,13 +682,11 @@ func TestGetContentPublicHandler(t *testing.T) {
 }
 
 func TestGetContentPrivateHandler(t *testing.T) {
-
 	Convey("Given a content API in publishing mode (private endpoints enabled)", t, func() {
 		cfg, err := config.Get()
 		So(err, ShouldBeNil)
 		cfg.EnablePrivateEndpoints = true
 		Convey("And a content API with mongoDB returning 'next' and 'current' content", func() {
-
 			mongoDBMock := &storeMock.MongoDBMock{
 				GetContentFunc: func(ctx context.Context, id string, queryTypeFlags int) (*models.ContentResponse, error) {
 					switch id {
@@ -735,7 +731,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then the expected content is returned with status code 200", func() {
 					So(w.Code, ShouldEqual, http.StatusOK)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					retContentResponse := models.PrivateContentResponseAPI{}
 					err = json.Unmarshal(payload, &retContentResponse)
@@ -793,7 +789,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				topicAPI.Router.ServeHTTP(w, request)
 				Convey("Then no content is returned with status code 404", func() {
 					So(w.Code, ShouldEqual, http.StatusNotFound)
-					payload, err := ioutil.ReadAll(w.Body)
+					payload, err := io.ReadAll(w.Body)
 					So(err, ShouldBeNil)
 					So(payload, ShouldResemble, []byte("content not found\n"))
 				})
@@ -807,7 +803,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("topic not found\n"))
 			})
@@ -819,7 +815,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
@@ -831,7 +827,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 				w := httptest.NewRecorder()
 				topicAPI.Router.ServeHTTP(w, request)
 				So(w.Code, ShouldEqual, http.StatusNotFound)
-				payload, err := ioutil.ReadAll(w.Body)
+				payload, err := io.ReadAll(w.Body)
 				So(err, ShouldBeNil)
 				So(payload, ShouldResemble, []byte("content not found\n"))
 			})
@@ -947,7 +943,7 @@ func TestGetContentPrivateHandler(t *testing.T) {
 
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingconditions\",\"next\": {\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]},\"current\": {\"state\": \"published\",\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]}}"
+var mongoContentJSONResponse7 = "{\"id\": \"workplacedisputesandworkingconditions\",\"next\": {\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]},\"current\": {\"state\": \"published\",\"state\": \"published\",\"spotlight\": [{\"href\": \"/h2\",\"title\": \"Labour disputes\"},{\"href\": \"/h1\",\"title\": \"Labour disputes in the UK\"}],\"articles\": [{\"href\": \"/a1\",\"title\": \"Labour disputes in the UK1\"}],\"bulletins\": [{\"href\": \"/b1\",\"title\": \"Labour market overview, UK2\"}],\"methodologies\": [{\"href\": \"/m1\",\"title\": \"** broken **\"}],\"methodology_articles\": [{\"href\": \"/ma1\",\"title\": \"Labour Disputes Inquiry QMI\"}],\"static_datasets\": [{\"href\": \"/s1\",\"title\": \"LABD01: Labour disputes\"}],\"timeseries\": [{\"href\": \"/t1\",\"title\": \"Labour disputes;UK\"}]}}"
 
 // then the Get Response in Public would look like (and note spotlight is sorted by href):
 // (in Private mode, Next & Current contain the following)
@@ -1202,7 +1198,7 @@ var mongoContentJSONResponse7 string = "{\"id\": \"workplacedisputesandworkingco
 
 // NOTE: the above has to be on one line ...
 // NOTE: The following HAS to be on ONE line for unmarshal to work (and all the inner double quotes need escaping)
-var mongoContentJSONResponse8 string = "{\"id\": \"8\", \"next\": { \"state\": \"published\" }, \"current\": { \"state\": \"published\" }}"
+var mongoContentJSONResponse8 = "{\"id\": \"8\", \"next\": { \"state\": \"published\" }, \"current\": { \"state\": \"published\" }}"
 
 // then the Get Response in Public would look like (and note spotlight is sorted by href):
 // (in Private mode, Next & Current contain the following)

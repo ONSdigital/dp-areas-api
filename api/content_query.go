@@ -34,7 +34,7 @@ const (
 	datasetsStr            = "datasets"
 )
 
-var querySets map[string]int = map[string]int{
+var querySets = map[string]int{
 	// search keys are done as lower case to make searches work regardless of case
 	spotlightStr:           QuerySpotlightFlag,
 	articlesStr:            QueryArticlesFlag,

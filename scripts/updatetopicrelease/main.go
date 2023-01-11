@@ -15,15 +15,16 @@ func main() {
 	ctx := context.Background()
 	conf, err := config.Get()
 	if err != nil {
-		fmt.Errorf("error getting config: %v", err)
+		_ = fmt.Errorf("error getting config: %v", err)
+		os.Exit(1)
 	}
 
-	for true {
-		var collectionId string
+	for {
+		var collectionID string
 		var releaseDate string
 		fmt.Print("Enter the collection id: ")
-		fmt.Scanf("%s", &collectionId)
-		validateInputValue(collectionId)
+		fmt.Scanf("%s", &collectionID)
+		validateInputValue(collectionID)
 
 		fmt.Print("Enter the release date: ")
 		fmt.Scanf("%s", &releaseDate)
@@ -34,17 +35,22 @@ func main() {
 			os.Exit(1)
 		}
 
-		err = updateTopicReleaseData(ctx, conf.MongoConfig, collectionId, rd)
+		err = updateTopicReleaseData(ctx, conf.MongoConfig, collectionID, rd)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error while updating topic release date")
 			os.Exit(1)
 		}
-		fmt.Printf("Collection Id %s has been updated with release date %v \n", collectionId, rd)
+		fmt.Printf("Collection Id %s has been updated with release date %v \n", collectionID, rd)
 	}
 }
-func updateTopicReleaseData(ctx context.Context, mongoConfig config.MongoConfig, collectionId string, releaseDate *time.Time) error {
+func updateTopicReleaseData(ctx context.Context, mongoConfig config.MongoConfig, collectionID string, releaseDate *time.Time) error {
 	conn, err := mongo.NewDBConnection(ctx, mongoConfig)
-	if err = conn.UpdateReleaseDate(ctx, collectionId, *releaseDate); err != nil {
+	if err != nil {
+		return err
+	}
+
+	err = conn.UpdateReleaseDate(ctx, collectionID, *releaseDate)
+	if err != nil {
 		return err
 	}
 
@@ -52,7 +58,7 @@ func updateTopicReleaseData(ctx context.Context, mongoConfig config.MongoConfig,
 }
 
 func validateInputValue(inputVal string) {
-	if len(strings.TrimSpace(inputVal)) == 0 {
+	if strings.TrimSpace(inputVal) == "" {
 		fmt.Fprintf(os.Stderr, "invalid input value")
 		os.Exit(1)
 	}

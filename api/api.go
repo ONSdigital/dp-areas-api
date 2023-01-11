@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/ONSdigital/dp-authorisation/auth"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
@@ -19,8 +18,6 @@ import (
 )
 
 var (
-	trueStringified = strconv.FormatBool(true)
-
 	createPermission = auth.Permissions{Create: true}
 	readPermission   = auth.Permissions{Read: true}
 	updatePermission = auth.Permissions{Update: true}
@@ -146,18 +143,21 @@ func (api *API) put(path string, handler http.HandlerFunc) {
 }
 
 // get register a POST http.HandlerFunc.
+//
+//nolint:unused // Lint:Method is not currently used but will keep as it's a good reference/completeness for future use.
 func (api *API) post(path string, handler http.HandlerFunc) {
 	api.Router.HandleFunc(path, handler).Methods("POST")
 }
 
 // get register a DELETE http.HandlerFunc.
+//
+//nolint:unused // Lint:Method is not currently used but will keep as it's a good reference/completeness for future use.
 func (api *API) delete(path string, handler http.HandlerFunc) {
 	api.Router.HandleFunc(path, handler).Methods("DELETE")
 }
 
 // WriteJSONBody marshals the provided interface into json, and writes it to the response body.
 func WriteJSONBody(ctx context.Context, v interface{}, w http.ResponseWriter, data log.Data) error {
-
 	// Set headers
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 

@@ -6,7 +6,7 @@ type Language string
 
 const (
 	English Language = "en"
-	Welsh            = "cy"
+	Welsh   Language = "cy"
 )
 
 type Options struct {

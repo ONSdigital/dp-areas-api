@@ -50,14 +50,12 @@ func New(cfg *config.Config, serviceList *ExternalServiceList) *Service {
 
 // Run the service
 func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version string, svcErrors chan error) (err error) {
-
 	// Get MongoDB client
 	svc.mongoDB, err = svc.ServiceList.GetMongoDB(ctx, svc.Config.MongoConfig)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise mongo DB", err)
 		return err
 	}
-	store := store.DataStore{Backend: DatsetAPIStore{svc.mongoDB}}
 
 	// Get Identity Client (only if private endpoints are enabled)
 	if svc.Config.EnablePrivateEndpoints {
@@ -81,9 +79,10 @@ func (svc *Service) Run(ctx context.Context, buildTime, gitCommit, version strin
 	middle := svc.createMiddleware(svc.Config)
 	svc.Server = svc.ServiceList.GetHTTPServer(svc.Config.BindAddr, middle.Then(router))
 
-	// Setup the API
+	// Set up the API
 	permissions := getAuthorisationHandlers(ctx, svc.Config)
-	svc.API = api.Setup(ctx, svc.Config, router, store, permissions)
+	s := store.DataStore{Backend: DatsetAPIStore{svc.mongoDB}}
+	svc.API = api.Setup(ctx, svc.Config, router, s, permissions)
 
 	svc.HealthCheck.Start(ctx)
 
@@ -121,7 +120,6 @@ func getAuthorisationHandlers(ctx context.Context, cfg *config.Config) api.AuthH
 // CreateMiddleware creates an Alice middleware chain of handlers
 // to forward collectionID from cookie from header
 func (svc *Service) createMiddleware(cfg *config.Config) alice.Chain {
-
 	// healthcheck
 	healthcheckHandler := healthcheckMiddleware(svc.HealthCheck.Handler, "/health")
 	middleware := alice.New(healthcheckHandler)
@@ -138,7 +136,6 @@ func (svc *Service) createMiddleware(cfg *config.Config) alice.Chain {
 func healthcheckMiddleware(healthcheckHandler func(http.ResponseWriter, *http.Request), path string) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 			if req.Method == "GET" && req.URL.Path == path {
 				healthcheckHandler(w, req)
 				return
@@ -204,16 +201,13 @@ func (svc *Service) Close(ctx context.Context) error {
 }
 
 // registerCheckers - registers functions which are periodically called to validate
-//      the health state of external services that this application depends upon.
+// the health state of external services that this application depends upon.
 func (svc *Service) registerCheckers(ctx context.Context) (err error) {
-
 	// ADD CODE: add other health checks here, as per dp-upload-service
-
 	hasErrors := false
 
 	if svc.Config.EnablePrivateEndpoints {
 		// Only in Publishing ... add check(s):
-
 		if err = svc.HealthCheck.AddCheck("Zebedee", svc.IdentityClient.Checker); err != nil {
 			hasErrors = true
 			log.Error(ctx, "error adding check for zebedee", err)

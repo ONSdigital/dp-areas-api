@@ -14,7 +14,7 @@ import (
 // getRootTopicsPrivateHandler is a handler that gets a private list of top level root topics by a specific id from MongoDB for Publishing
 func (api *API) getRootTopicsPrivateHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	id := "topic_root" // access specific document to retrieve list
+	const id = "topic_root" // access specific document to retrieve list
 	logdata := log.Data{
 		"request_id": ctx.Value(dprequest.RequestIdKey),
 		"topic_id":   id,

@@ -61,7 +61,7 @@ var (
 				Name:          "nametest",
 				SubtopicItems: &[]models.TopicNonReferential{},
 				Title:         "titletest",
-				Uri:           "uritest",
+				URI:           "uritest",
 			},
 		},
 	}
