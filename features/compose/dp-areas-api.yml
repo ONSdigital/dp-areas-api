@@ -1,0 +1,26 @@
+version: '3.3'
+services:
+    dp-areas-api:
+        build:
+            context: ../../../dp-areas-api
+            dockerfile: Dockerfile.local
+        command:
+            - go
+            - test
+            - -cover
+            - -race
+            - -coverpkg=github.com/ONSdigital/dp-areas-api/...
+            - -component
+        volumes:
+            - ../../:/dp-areas-api
+        ports:
+            - 27100:27100
+        depends_on:
+            - rds
+        environment:
+            USEPOSTGRESLOCAL:   "true"
+            DBUSER:             "test-user"
+            DBPASSWORD:         "test-password"
+            DBHOST:             "rds"
+            DBPORT:             "5432"
+            DBNAME:             "test-db"
